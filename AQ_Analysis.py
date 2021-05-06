@@ -4,17 +4,17 @@ import plotly.express as px
 # from collections import Counter
 # from scipy.spatial.distance import cdist
 # from pandas_profiling import ProfileReport
-# from AirQuality.CoronaBeforeAfter import GroupedBox
-# from AirQuality.GeoMapPlotly import SliderMapCommon
-# from AirQuality.Correlation_Measures import *
-# from AirQuality.DataPreparation import *
+# from CoronaBeforeAfter import GroupedBox
+# from GeoMapPlotly import SliderMapCommon
+# from Correlation_Measures import *
+# from DataPreparation import *
 from sklearn.cluster import KMeans
 from itertools import combinations
 from plotly.subplots import make_subplots
-from AirQuality.GeoPandas import mapArrow, mapPlot
-from AirQuality.MeteoblueInfoAnalysis import *
-from AirQuality.Related.GeoMapMatplotLib import *
-from AirQuality.Visualization_Modules import *
+from GeoPandas import mapArrow, mapPlot
+from MeteoblueInfoAnalysis import *
+from Related.GeoMapMatplotLib import *
+from Visualization_Modules import *
 import more_itertools
 
 month_names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
@@ -37,7 +37,8 @@ def LatexFormatting(stats):
     for axisName in stats.columns: latex_data = latex_data.replace(axisName, f"\\textbf{{{axisName}}}")
     # for axisName in stats.index: latex_data = latex_data.replace(axisName, f"\\textbf{{{axisName}}}")
 
-    latex_data = latex_data.replace('25\%', "\\textbf{Q1}").replace('50\%', "\\textbf{Q2}").replace('75\%', "\\textbf{Q3}")
+    latex_data = latex_data.replace('25\%', "\\textbf{Q1}").replace('50\%', "\\textbf{Q2}").replace('75\%',
+                                                                                                    "\\textbf{Q3}")
     latex_data = latex_data.replace('{Tungi}para', "{Tungipara}")
 
     print(latex_data)
@@ -299,9 +300,6 @@ def Bucketing(reading, bins): return reading.apply(
 def ratioMapPlotting(reading, timeStamp):
     norm = Bucketing(reading, [55.5, 500])
     MapPlotting(meta_data, timeseries.mean().values, ratiodata=norm, title=str(timeStamp.year))
-
-
-
 
 
 def MissingDataInfo(df):
@@ -682,12 +680,14 @@ def changes_in_districts(timeseries):
 
 def overall_stats(timeseries):
     allData = timeseries.stack()
-    print(allData.droplevel(1))
-    # print(allData.describe())
+    # print(allData.droplevel(1))
+    print(allData.describe())
+
 
 def MissingDataFraction(timeseries):
     missing_percentage = (timeseries.isnull().sum() / len(timeseries) * 100).round(2)
     missing_percentage.to_csv('missing_percentage.csv')
+
 
 def FrequencyClustering(df):
     def ElbowPlot(dataPoints):
@@ -718,7 +718,7 @@ def FrequencyClustering(df):
 
     labels = pd.DataFrame(alg.labels_, index=metaFrame.index, columns=['label'])
 
-    print(labels)
+    # print(labels)
     # districtMeanandLabels = pd.concat([df.mean(), labels], axis=1)
     districtMeanandLabels = labels.assign(mean=df.mean())
 
@@ -726,8 +726,8 @@ def FrequencyClustering(df):
         # color=['#C38EC7', '#3BB9FF', '#8AFB17', '#EAC117', '#F70D1A', '#7D0541','#FFFFFF','#000000'][:n_clusters])
         # color=['#3BB9FF', '#8AFB17', '#EAC117', '#F70D1A', '#7D0541','#FFFFFF','#000000'][:n_clusters])
         color=['#ffb2b2', '#FF0000', '#990000'], symbol=['o', 'o', 'o'])
-        # color=['#8AFB17', '#EAC117', '#F70D1A'], symbol=['P', '*', 's'])
-        # color=['#8AFB17', '#EAC117', '#F70D1A', '#170A14'], symbol=['P', '*', 's','o'])
+    # color=['#8AFB17', '#EAC117', '#F70D1A'], symbol=['P', '*', 's'])
+    # color=['#8AFB17', '#EAC117', '#F70D1A', '#170A14'], symbol=['P', '*', 's','o'])
     districtMeanAndGroup.columns = ['category', 'color', 'symbol']
 
     labels['color'] = labels.apply(lambda x: districtMeanAndGroup.loc[x['label']]['color'], axis=1)
@@ -735,33 +735,33 @@ def FrequencyClustering(df):
     # labels['color'] = '#566D7E'
 
     metaFrame = pd.concat([metaFrame, labels], axis=1)
-    print(metaFrame)
+    # print(metaFrame)
 
     representative = districtMeanandLabels.groupby('label').apply(lambda x: x['mean'].idxmax())
     # representative = representative[districtMeanAndGroup.index]
     print(representative)
 
-    # mapPlot(metaFrame, ('Average Reading', districtMeanAndGroup))
+    mapPlot(metaFrame, ('Average Reading', districtMeanAndGroup))
 
     # BoxPlotHour(df[representative])
     # BoxPlotSeason(df[representative])
-    PairDistributionSummary(df[representative])
+    # PairDistributionSummary(df[representative])
     # PLotlyTimeSeries(df['2019-09':'2019-12'][representative])
 
-def DayNightDistribution(timeseries,samplingHours=1):
 
+def DayNightDistribution(timeseries, samplingHours=1):
     timeseries = timeseries.iloc[6:-18]
     timeseries = timeseries.resample(str(samplingHours) + 'H').mean()
     timeseries = timeseries.fillna(-1)
     timeseries = timeseries.stack().reset_index().set_index('time')
-    timeseries = timeseries.replace({-1:None})
-    timeseries.columns = ['zone','reading']
+    timeseries = timeseries.replace({-1: None})
+    timeseries.columns = ['zone', 'reading']
 
     timeseries['daytime'] = np.tile(
-        np.hstack((np.repeat('Day', 12*30 // samplingHours), np.repeat('Night', 12*30 // samplingHours))),
-        ((timeseries.shape[0]* samplingHours) // (24*30)))
+        np.hstack((np.repeat('Day', 12 * 30 // samplingHours), np.repeat('Night', 12 * 30 // samplingHours))),
+        ((timeseries.shape[0] * samplingHours) // (24 * 30)))
 
-    print(timeseries.head(3000).to_string())
+    # print(timeseries.head(3000).to_string())
 
     fig = go.Figure()
 
@@ -778,11 +778,13 @@ def DayNightDistribution(timeseries,samplingHours=1):
                             line_color='blue')
                   )
     fig.update_traces(meanline_visible=True)
-    fig.update_layout(violingap=0, violinmode='overlay',font_size=27,legend_orientation='h')
+    fig.update_layout(violingap=0, violinmode='overlay', font_size=27, legend_orientation='h')
     fig.show()
 
+
 def PairDistribution(timeseries):
-    zones = ['Dhaka','Nagarpur','Kishorganj','Jamalpur','Kushtia','Barisal','Narsingdi','Tongi','Narayanganj'][:]
+    zones = ['Dhaka', 'Nagarpur', 'Kishorganj', 'Jamalpur', 'Kushtia', 'Barisal', 'Narsingdi', 'Tongi', 'Narayanganj'][
+            :]
     g = sns.PairGrid(timeseries[zones].resample('D').mean(), diag_sharey=False)
     g.map_upper(sns.scatterplot, s=15)
     g.map_lower(sns.kdeplot)
@@ -790,16 +792,16 @@ def PairDistribution(timeseries):
     plt.tight_layout()
     plt.show()
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     plt.close("all")
     sns.set()
     # save_data()
     # sns.set_style("whitegrid")
     # meta_data, timeseries = LoadMetadata(), LoadSeries()['2017':'2019']
-    meta_data, timeseries = LoadMetadata(), ReadPandasCSV()
+    meta_data, timeseries = LoadMetadata(), read_csv_series()
 
-    PairDistribution(timeseries)
+    # PairDistribution(timeseries)
     # DayNightDistribution(timeseries)
     # print(Ranking(timeseries))
 
@@ -812,7 +814,7 @@ if __name__ == '__main__':
     # PairDistributionSummary(timeseries.iloc[:,:30])
     # MissingDataHeatmap(timeseries)
     # MissingDataFraction(timeseries)
-    # FrequencyClustering(timeseries)
+    FrequencyClustering(timeseries)
 
     # exit()
 

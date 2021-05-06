@@ -206,7 +206,7 @@ def handle_mislabeled_duplicates(series):
     # print(series.duplicated(keep=False).value_counts())
 
 
-def ReadPandasCSV():
+def read_csv_series():
     zone_data = []
 
     # for idx, row in getZones().iterrows():
@@ -230,7 +230,7 @@ def ReadPandasCSV():
 
 
 if __name__ == '__main__':
-    df = ReadPandasCSV()
+    df = read_csv_series()
     print(df)
 
     # dataSummaries = LoadData()

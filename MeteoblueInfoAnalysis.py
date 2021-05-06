@@ -5,14 +5,14 @@ import time
 from os.path import isfile, join
 from pandas_profiling import ProfileReport
 from os import listdir
-from AirQuality.DataPreparation import *
+from DataPreparation import *
 from timeit import default_timer as timer
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import xarray as xr
 
-from AirQuality.Visualization_Modules import SimpleTimeseries
+from Visualization_Modules import SimpleTimeseries
 
 # factors = ['Temperature [2 m]', 'Relative Humidity [2 m]', 'Mean Sea Level Pressure', 'Precipitation',
 #            'Cloud Cover High', 'Cloud Cover Medium', 'Cloud Cover Low', 'Sunshine Duration', 'Shortwave Radiation',

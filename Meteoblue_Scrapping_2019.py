@@ -13,7 +13,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
-from AirQuality.DataPreparation import *
+from DataPreparation import *
 
 
 def Scrap(savePath):

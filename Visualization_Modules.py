@@ -3,7 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from statsmodels.tsa.seasonal import seasonal_decompose
-from AirQuality.DataPreparation import *
+from DataPreparation import *
 
 
 def SeasonalDecomposition(df):
@@ -88,7 +88,8 @@ def pltSetUp(xlabel=None, ylabel=None, title=None, xlim=None, ylim=None, save=No
         plt.clf()
 
 
-def pltSetUpAx(ax, xlabel=None, ylabel=None, title=None, xlim=None, ylim=None, save='Save'):
+def pltSetUpAx(ax, xlabel=None, ylabel=None, title=None, xlim=None, ylim=None, save='Box_plots/Save'):
+# def pltSetUpAx(ax, xlabel=None, ylabel=None, title=None, xlim=None, ylim=None, save=None):
     if not xlabel is None: ax.set_xlabel(xlabel)
     if not ylabel is None: ax.set_ylabel(ylabel)
     if not title is None: ax.set_title(title)
@@ -115,7 +116,7 @@ def SimpleTimeseries(df):
     aggregated_value.index = [time for time, _ in resampled_df]
 
     # aggregated_value = aggregated_value.iloc[:-1]
-    print(aggregated_value.to_string())
+    # print(aggregated_value.to_string())
     aggregated_value.to_csv('aggregated_value.csv')
 
 

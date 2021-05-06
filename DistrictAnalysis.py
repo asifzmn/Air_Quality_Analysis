@@ -1,4 +1,4 @@
-from AirQuality.DataPreparation import *
+from DataPreparation import *
 from Visualization_Modules import *
 
 def district_aggregation(x, timeseies, zone_dis):

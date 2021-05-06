@@ -3,7 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import statsmodels.api as sm
-from AirQuality.AQ_Analysis import *
+from AQ_Analysis import *
 from sklearn.preprocessing import StandardScaler
 import plotly.express as px
 
@@ -63,14 +63,14 @@ def ModelPreparation(timeSeries, reading):
 def PrepareSeasonData():
     timeRange = pd.date_range('2017-01-01', '2019-12-31')
     timeSeries = pd.concat([pd.read_csv(
-        '/home/asif/Desktop Recent/Misc Dataset/Past Weather/' + str(singleDate.date())).dropna(how='all') for
+        aq_directory+'Past Weather/' + str(singleDate.date())).dropna(how='all') for
                             singleDate in timeRange])
     timeSeries.Time = pd.to_datetime(timeSeries.Time)
     return timeSeries.set_index("Time")
 
 
 def FactorAnalysis():
-    reading = ReadPandasCSV()[['Tongi']]['2017-01-01': '2020-12-31']
+    reading = read_csv_series()[['Tongi']]['2017-01-01': '2020-12-31']
     reading.columns = ['Reading']
 
     timeSeries = PrepareSeasonData()
