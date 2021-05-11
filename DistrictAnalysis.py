@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     # dataSummaries = LoadData()
     timeseies = LoadSeries()
-    metaFrame = LoadMetadata()
+    metaFrame = load_metadata()
 
     timeseies = timeseies["2019":"2020"]
     district_series = zone_district.groupby("District").apply(district_aggregation, timeseies=timeseies,

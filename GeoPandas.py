@@ -10,17 +10,17 @@ from geopy.distance import geodesic
 from matplotlib import cm
 from matplotlib.lines import Line2D
 from plotly.offline import iplot
-from DataPreparation import LoadMetadata, getCategoryInfo, LoadSeries, aq_directory
+from DataPreparation import get_metadata, get_category_info, get_series, aq_directory
 from scipy.interpolate import griddata
 from numpy import linspace
 import plotly.graph_objects as go
 import plotly.express as px
 
-from MeteoblueInfoAnalysis import getFactorData
+from MeteoblueInfoAnalysis import get_factor_data
 
 
 def Distance(dis1, dis2):
-    metaFrame = LoadMetadata()
+    metaFrame = load_metadata()
     origin = metaFrame.loc[dis1]['Latitude'], metaFrame.loc[dis1]['Longitude']
     dest = metaFrame.loc[dis2]['Latitude'], metaFrame.loc[dis2]['Longitude']
 
@@ -29,7 +29,7 @@ def Distance(dis1, dis2):
 
 
 def angleFromCoordinate(dis1, dis2):
-    metaFrame = LoadMetadata()
+    metaFrame = load_metadata()
     lat1, long1, lat2, long2 = metaFrame.loc[dis1]['Latitude'], metaFrame.loc[dis1]['Longitude'], metaFrame.loc[dis2][
         'Latitude'], metaFrame.loc[dis2]['Longitude']
     lat1, lat2, long1, long2 = math.radians(lat1), math.radians(lat2), math.radians(long1), math.radians(long2)
@@ -61,7 +61,7 @@ def draw_pie(ax, ratios, X=0, Y=0, size=1000):
 
 
 def Pie(ax, ratiodata):
-    metaFrame = LoadMetadata()
+    metaFrame = load_metadata()
     for i, txt in enumerate(metaFrame.index): draw_pie(ax, ratiodata[0], metaFrame.iloc[i]['Longitude'],
                                                        metaFrame.iloc[i]['Latitude'], size=800)
 
@@ -77,7 +77,7 @@ def Arrows(ax, vec):
     pal = colorGen(np.linspace(0, 1, 5))[1:5]
     # pal = []
 
-    metaFrame = LoadMetadata()
+    metaFrame = load_metadata()
     for x in range(len(vec)):
         for y in range(len(vec)):
             # if vec[x][y] == 0.0: continue
@@ -102,7 +102,7 @@ def setMap(x=2):
 
 
 def MapScatter(ax, data=None):
-    colorScale, categoryName, AQScale = getCategoryInfo()
+    colorScale, categoryName, AQScale = get_category_info()
 
     # data = np.arange(15, 15 + 22 * 9, 9)
     # color_ton = [colorScale[val] for val in np.digitize(data, AQScale[1:-1])]
@@ -240,7 +240,7 @@ def heatmapgeoJson(metaFrame, title):
 if __name__ == '__main__':
     # meteoData = xr.open_dataset('meteoData.nc')['meteo']
 
-    metaFrame, df = LoadMetadata(), LoadSeries()['2018-01':'2018-12'].resample('W').mean()
+    metaFrame, df = load_metadata(), LoadSeries()['2018-01':'2018-12'].resample('W').mean()
     # metaFrame, df = LoadMetadata(), getFactorData(meteoData, 'Temperature [2 m]')
 
     for i, row in df.sample(5).iterrows():

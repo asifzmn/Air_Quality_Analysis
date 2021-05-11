@@ -20,7 +20,7 @@ import more_itertools
 month_names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
                'November', 'December']
 
-colorScale, categoryName, AQScale = getCategoryInfo()
+colorScale, categoryName, AQScale = get_category_info()
 save = '/home/az/Pictures/'
 
 
@@ -434,7 +434,7 @@ def MeteoAnalysis(df):
          'Soil Moisture [0-10 cm down]']), df.columns.values
 
     for lag in range(0, 3, 3):
-        z = factors.apply(lambda x: df.shift(lag).corrwith(getFactorData(meteoData, x), axis=0))
+        z = factors.apply(lambda x: df.shift(lag).corrwith(get_factor_data(meteoData, x), axis=0))
         z.index = factors.values
 
         print(z)
@@ -611,7 +611,7 @@ def CrossCorrelation(df):
 
     print(lagTimeMatrix.shape)
     print(lagTimeMatrix.stack().value_counts())
-    metaFrame = LoadMetadata().assign(symbol='H')
+    metaFrame = load_metadata().assign(symbol='H')
 
     for key, df in lagTimeMatrix.iloc[:, :].items():
         if df.nunique() > 1:
@@ -624,7 +624,7 @@ def CrossCorrelation(df):
 
 
 def save_data():
-    meta_data, timeseries = LoadMetadata(), LoadSeries()['2017':'2019']
+    meta_data, timeseries = load_metadata(), LoadSeries()['2017':'2019']
     meta_data.to_csv('zone_data.csv')
     timeseries.to_csv('pm_time_series.csv')
 
@@ -667,7 +667,7 @@ def changes_in_districts(timeseries):
 
     fig = go.Figure()
 
-    for id, row in LoadMetadata().iterrows():
+    for id, row in load_metadata().iterrows():
         name = id.replace(' ', '_')
         fig.add_trace(go.Scatter(
             x=pct_change.index,
@@ -706,7 +706,7 @@ def FrequencyClustering(df):
         fig.update_layout(font=dict(size=30), xaxis_title='Number of clusters', yaxis_title='Inertia')
         fig.show()
 
-    metaFrame = LoadMetadata()
+    metaFrame = load_metadata()
     norm = Bucketing(df, AQScale).T
     # dataPoints, n_clusters = norm.values[:, :], 3
     dataPoints, n_clusters = df.resample('M').mean().T, 3
@@ -799,7 +799,7 @@ if __name__ == '__main__':
     # save_data()
     # sns.set_style("whitegrid")
     # meta_data, timeseries = LoadMetadata(), LoadSeries()['2017':'2019']
-    meta_data, timeseries = LoadMetadata(), read_csv_series()
+    meta_data, timeseries = get_metadata(), get_series()
 
     # PairDistribution(timeseries)
     # DayNightDistribution(timeseries)

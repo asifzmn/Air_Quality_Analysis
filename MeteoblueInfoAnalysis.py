@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import xarray as xr
+import statsmodels.api as sm
 
 from Visualization_Modules import SimpleTimeseries
 
@@ -210,22 +211,25 @@ def oneFolderAnother(locationMain, folders):
                         dims=["district", "time", "factor"], name='meteo')
 
 
-def getFactorData(meteoData, factor):
-    return meteoData.sel(factor=factor).to_dataframe().drop('factor',
-                                                            axis=1).unstack().T.droplevel(
-        level=0)
+def get_factor_data(meteoData, factor):
+    return meteoData.sel(factor=factor).to_dataframe().drop('factor', axis=1).unstack().T.droplevel(level=0)
+
+
+def get_district_data(meteoData, district):
+    return meteoData.sel(district=district).to_dataframe().drop('district', axis=1).unstack().T.droplevel(level=0).T
 
 
 if __name__ == '__main__':
-    metaFrame = LoadMetadata()
+    metaFrame = load_metadata()
+    print(metaFrame.index)
 
     # meteoData = GetAllMeteoData()
     # meteoData.to_netcdf('meteoData.nc')
 
-    meteoData = oneFolder(meteoblue_data_path_2019, '2019-01-01 to 2019-12-31')
-    meteoData.to_netcdf('meteoData_2019.nc')
+    # meteoData = oneFolder(meteoblue_data_path_2019, '2019-01-01 to 2019-12-31')
+    # meteoData.to_netcdf('meteoData_2019.nc')
 
-    # meteoData = xr.open_dataset('Files/meteoData.nc')['meteo']
+    meteoData = xr.open_dataset('meteoData_2019.nc')['meteo']
 
     # print(meteoData)
     # print(meteoData.shape)
@@ -240,20 +244,32 @@ if __name__ == '__main__':
     # for sampleFactor in sampleFactors:
     #     getFactorData(meteoData, sampleFactor)['2020'].to_csv(sampleFactor+'.csv')
 
-    factor = factors[-3]
-    df = getFactorData(meteoData, factor)
-    print(df)
-    print(df.index)
-    print(df.columns)
+    # factor = factors[-3]
+    # df = getFactorData(meteoData, factor)
+    # print(df)
+    # print(df.index)
+    # print(df.columns)
+
+    # for factor in factors:
+    #     df = getFactorData(meteoData, factor)
+    #     print(df)
+
+    time_series = data_cleaning_and_preparation()['2019']
+    # print(time_series.columns)
+    # zonal_meteo_data = get_district_data(meteoData, 'Dhaka').assign(Reading=time_series['Dhaka'])
+    # zonal_meteo_data = zonal_meteo_data.reset_index().drop('time', axis=1).dropna()
+    #
+    # model = sm.OLS(zonal_meteo_data['Reading'], zonal_meteo_data.drop('Reading', axis=1))
+    # results = model.fit()
+    # print(results.summary())
+
+    for factor in factors:
+        factor_meteo_data = get_factor_data(meteoData,factor)
+        print(factor)
+        print(time_series.corrwith(factor_meteo_data).mean())
 
     # SimpleTimeseries(df)
     # print(meteoData.to_dataframe())
-
-    # print(meteoData.loc['Azimpur'].to_dataframe(name='value'))
-
-    # meteoData = xr.open_dataset('meteoData.nc').to_dataframe()
-    # df = meteoData.loc['Azimpur'].unstack().T
-    # df.index = df.index.droplevel(0)
 
     # prof = ProfileReport(df, minimal=False,title='Meteo Data')
     # prof.to_file(output_file='Meteo Data.html')

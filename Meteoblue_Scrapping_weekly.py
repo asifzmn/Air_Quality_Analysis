@@ -116,7 +116,7 @@ def Update():
 
 
 if __name__ == '__main__':
-    metaFrame = LoadMetadata()
+    metaFrame = load_metadata()
     runningPath = '/media/az/Study/Air Analysis/AirQuality Dataset/MeteoblueJuly'
 
     Scrap(meteoblue_data_path)

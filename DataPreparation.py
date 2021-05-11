@@ -1,33 +1,35 @@
 from datetime import datetime, timedelta
-from os import listdir
+from os import listdir, getcwd
 from os.path import join, isfile
 from urllib.request import urlopen
-import pandas as pd
 import numpy as np
-import pickle as pk
 import pandas as pd
 
-[Year, Month, Day, UTC_Hour, PM25, PM10_mask, Retrospective] = range(7)
-discard = 'Azimpur,Bhola,Patiya,Laksham,Netrakona,Madaripur,Ishurdi,Pabna,Tungipara,Ramganj,Raipur,Palang,Sherpur,Nagarpur,Sarishabari,Shahzadpur,Pirojpur,Maulavi_Bazar,Habiganj,Bhairab_Bazar,Sandwip,Satkania,Rangpur,Khagrachhari,Lakshmipur,Jamalpur,Saidpur,Chittagong,Lalmanirhat,Thakurgaon,Sylhet,Dinajpur'.split(
-    ',')
-
-aq_directory = '/home/asif/Work/Air Analysis/AQ Dataset/' # change this location
+dataset_url = 'http://berkeleyearth.lbl.gov/air-quality/maps/cities/'
+# aq_directory = '/home/asif/Work/Air Analysis/AQ Dataset/'  # change this location
+aq_directory = getcwd() + '/Project Data/'  # change this location
 
 berkely_earth_data = aq_directory + 'Berkely Earth Data/'
+raw_data_path = berkely_earth_data + 'raw/'
+zone_data_path = berkely_earth_data + 'zones/'
 berkely_earth_data_prepared = berkely_earth_data + 'prepared/'
 meteoblue_data_path = aq_directory + 'Meteoblue Scrapped Data/'
 meteoblue_data_path_2019 = aq_directory + 'MeteoBlue Data 2019'
-raw_data_path = berkely_earth_data + 'raw/'
+
+metadata_attributes = ['Zone', 'Division', 'Population', 'Latitude', 'Longitude']
+rename_dict = {'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}
 
 
-def getCommonID(id=0): return ['all', 'SouthAsianCountries', 'allbd'][id]
+def get_common_id(id=0): return ['study_area', 'SouthAsianCountries', 'allbd'][id]
 
 
-def getZones(): return pd.read_csv(
-    berkely_earth_data + 'zones/' + getCommonID() + '.csv').sort_values('Zone', ascending=True)
+def get_save_location(): return berkely_earth_data_prepared + get_common_id() + '/'
 
 
-def getCategoryInfo():
+def get_zones_info(): return pd.read_csv(zone_data_path + get_common_id() + '.csv').sort_values('Zone', ascending=True)
+
+
+def get_category_info():
     colorScale = np.array(['#46d246', '#ffff00', '#ffa500', '#ff0000', '#800080', '#6a2e20'])
     lcolorScale = np.array(['#a2e8a2', '#ffff7f', '#ffd27f', '#ff7f7f', '#ff40ff', '#d38370'])
     dcolorScale = np.array(['#1b701b', '#7f7f00', '#7f5200', '#7f0000', '#400040', '#351710'])
@@ -37,146 +39,19 @@ def getCategoryInfo():
     return colorScale, categoryName, AQScale
 
 
-def TimetoString(time, timeScale): return (np.array([(str(s.strftime(timeScale[2])).split('-')) for s in time])).astype(
-    'int').astype('str')
+def make_header_only(meta_data):
+    meta_data = meta_data.assign(Country='Bangladesh')
+    meta_data = meta_data.reset_index()[['Country', 'Division', 'Zone']]
+    meta_data.to_csv('headerFile.csv', index=False)
 
 
-def getCommonTimes(allDistrictData, timeKey):
-    print(timeKey)
-    timeScale = {'year': (Year, Year, '%Y'), 'month': (Month, Month, '%m'), 'day': (Day, Day, '%d'),
-                 'hour': (UTC_Hour, UTC_Hour, '%H'), 'yearmonth': (Year, Month, '%Y-%m'),
-                 'monthday': (Month, Day, '%m-%d'), 'yearmonthday': (Year, Day, '%Y-%m-%d'),
-                 'yearmonthdayhour': (Year, UTC_Hour, '%Y-%m-%d-%H')}[timeKey]
-    datetimes = np.array(
-        [[datetime.strptime('-'.join(map(str, x)), timeScale[2]) for x in d[:, timeScale[0]:timeScale[1] + 1]] for d in
-         allDistrictData], dtype='object')
-
-    # for a,d in zip(allDistrictMetaData[:, 0],datetimes):print(a,len(np.unique(TimetoString(d,timeScale))))
-    sortedCommonTime = np.array(sorted(set.intersection(*map(set, [[x for x in d] for d in datetimes]))))
-
-    if timeKey == 'yearmonthdayhour' or timeKey == 'yearmonthday':
-        minutes = 60 if timeKey == 'yearmonthdayhour' else 24 * 60
-        startTime, endTime = np.min([np.min(d) for d in (datetimes)]), np.max([np.max(d) for d in (datetimes)])
-        # startTime, endTime = np.min(sortedCommonTime), np.max(sortedCommonTime)
-        continuousTime = np.array([(startTime + timedelta(seconds=i)) for i in
-                                   range(0, int((endTime - startTime).total_seconds()) + 60 * minutes,
-                                         int(timedelta(minutes=minutes).total_seconds()))])
-        # continuousTimeStr = TimetoString(continuousTime, timeScale)
-        continuousTimeData = (np.full((len(allDistrictData), len(continuousTime)), None))
-        for i, districtData in enumerate(allDistrictData):
-            cur = 0
-            for j, time in enumerate(continuousTime):
-                if cur < len(districtData) and datetimes[i][cur] < time: cur += 1
-
-                commonHourReading = []
-                while cur < len(districtData) and datetimes[i][cur] == time:
-                    commonHourReading.append(districtData[cur].astype('float64')[PM25])
-                    cur += 1
-                if not len(commonHourReading) == 0: continuousTimeData[i][j] = np.mean(np.array(commonHourReading))
-        return continuousTime, np.array(continuousTimeData)
-        # return dataInterpolation((continuousTimeStr, np.array(continuousTimeData)))
-
-    return sortedCommonTime, (np.array([[(np.mean((districtData[:, PM25].astype('float64')[
-        np.transpose(np.where(np.all(districtData[:, timeScale[0]:timeScale[1] + 1] == ct, axis=1)))])[:, 0])) for ct in
-                                         TimetoString(sortedCommonTime, timeScale)] for districtData in
-                                        allDistrictData]))
-
-
-def getAllData(update=True):
-    # allFiles = [f[:-4] for f in listdir(locationMain) if isfile(join(locationMain, f))]
-    allDistrictData, allDistrictMetaData = [], []
-
-    for idx, row in getZones().iterrows():
-        print(row)
-        file = join(raw_data_path + getCommonID(), row['Zone'] + '.txt')
-        if update:
-            data = [line.decode('unicode_escape')[:-1] for line in urlopen(
-                join('http://berkeleyearth.lbl.gov/air-quality/maps/cities/' + row['Country'] + '/',
-                     join(row['Division'].replace(' ', '_'), row['Zone'].replace(' ', '_') + '.txt')))]
-
-            with open(file, 'w') as r:
-                r.write('\n'.join(map(str, data)))
-
-
-        else:
-            data = str(
-                open(file, 'rb').read().decode(
-                    'unicode_escape')).split("\n")
-
-        districtMetaData = np.array([d.split(':')[1][1:-1] for d in data[:9]])
-        districtData = np.array([np.array(x.split('\t')) for x in np.array(data[10:-1])])
-        allDistrictMetaData.append(districtMetaData)
-        allDistrictData.append(districtData)
-
-    return np.array(allDistrictData, dtype='object'), np.array(allDistrictMetaData)[:, [2, 4, 5, 6, 7]]
-
-
-def LoadData():
-    fname = berkely_earth_data + 'prepared/' + getCommonID() + '/reading.pickle'
-    basicTimeParameters = np.array(
-        ['year', 'month', 'day', 'hour', 'yearmonthday', 'yearmonthdayhour'])
-
-    try:
-        raise
-        with open(fname, "rb") as f:
-            dataSummaries, allDistrictMetaData = pk.load(f)
-    except:
-        allDistrictData, allDistrictMetaData = getAllData()
-        # dataSummaries = [getCommonTimes(allDistrictData, timeParam) for timeParam in basicTimeParameters]
-        dataSummaries = getCommonTimes(allDistrictData, basicTimeParameters[-1])
-        with open(fname, "wb") as f:
-            pk.dump((dataSummaries, allDistrictMetaData), f)
-
-    metaFrame = LoadMetadata(allDistrictMetaData)
-    series = LoadSeries(dataSummaries)
-    # print(metaFrame)
-    # print(series)
-    return dataSummaries
-
-
-def LoadSeries(data=None, name='reading'):
-    fname = berkely_earth_data_prepared + getCommonID() + '/timeseries'
-    if data is not None:
-        metaFrame = LoadMetadata()
-        df = pd.DataFrame(data=np.transpose(data[1]), index=data[0],
-                          columns=metaFrame.index).apply(pd.to_numeric)
-        df = df.reset_index()
-        df = df[sorted(df.columns.values)]
-        df.to_feather(fname)
-
-    # return pd.read_feather(fname).set_index('index', drop=True)['2017':]
-    return pd.read_feather(fname).set_index('index', drop=True)['2017':].rename(
-        columns={'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}).sort_index(axis=1)
-
-
-def LoadMetadata(allDistrictMetaData=None):
-    metadataFileName = berkely_earth_data_prepared + getCommonID() + '/metadata'
-    if allDistrictMetaData is not None:
-        metaFrame = pd.DataFrame(columns=['Zone', 'Division', 'Population', 'Latitude', 'Longitude'],
-                                 data=allDistrictMetaData).sort_values('Zone')
-        metaFrame[['Population', 'Latitude', 'Longitude']] = metaFrame[['Population', 'Latitude', 'Longitude']].apply(
-            pd.to_numeric).round(5)
-        metaFrame.to_feather(metadataFileName)
-
-    # return pd.read_feather(metadataFileName).set_index('Zone', drop=True)
-    return pd.read_feather(metadataFileName).set_index('Zone', drop=True).rename(
-        index={'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}).sort_index(
-        axis=0)
-
-
-def makeHeaderFile(metaFrame):
-    metaFrame = metaFrame.assign(Country='Bangladesh')
-    metaFrame = metaFrame.reset_index()[['Country', 'Division', 'Zone']]
-    metaFrame.to_csv('headerFile.csv', index=False)
-
-
-def allZoneRead():
+def read_all_bd_zones_and_make_header():
     alldatapath = berkely_earth_data + 'total/'
     allFiles = [alldatapath + f for f in listdir(alldatapath)]
     allDistrictMetaData = []
 
     for file in allFiles:
-        data = str(open(file, 'rb').read().decode('unicode_escape')).split("\n")
+        data = read_file_as_text(file)
         allDistrictMetaData.append(np.array([d.split(':')[1][1:-1] for d in data[:9]]))
 
     allDistrictMetaData = pd.DataFrame(np.array(allDistrictMetaData)[:, [4, 2]], columns=['Division', 'Zone']).assign(
@@ -186,63 +61,78 @@ def allZoneRead():
 
 
 def handle_mislabeled_duplicates(series):
-    # series = series.set_index('time')
-    # series = series['2018-05']
-    # print(row['Zone'])
-    print(series.to_string())
-
     duplicates = (series.duplicated(subset=['time'], keep='last'))
     duplicated_series = series[duplicates]
     firsts = series.loc[duplicated_series.index].time
     lasts = series.loc[duplicated_series.index + 1].time + timedelta(hours=1)
+    firsts, lasts = firsts.reset_index(), lasts.reset_index()
 
-    firsts = firsts.reset_index()
-    lasts = lasts.reset_index()
-
-    print(firsts)
-    print(lasts)
-    print((firsts.time == lasts.time).value_counts())
+    # print((firsts.time == lasts.time).value_counts())
     # print(duplicated_series.time.dt.year.unique())
     # print(duplicated_series.to_string())
     # print(series.duplicated(keep=False).value_counts())
 
 
-def read_csv_series():
-    zone_data = []
+def web_crawl(zone_file, zone_info):
+    data = [line.decode('unicode_escape')[:-1] for line in urlopen(
+        join(f'{dataset_url}{zone_info["Country"]}/{zone_info["Division"]}/{zone_info["Zone"]} + .txt'))]
 
-    # for idx, row in getZones().iterrows():
-    #     file = join(raw_data_path + getCommonID(), row['Zone'] + '.txt')
-    #     series = pd.read_csv(file, skiprows=10, sep='\t', header=None, usecols=[0, 1, 2, 3, 4])
-    #     series.columns = ['Year', 'Month', 'Day', 'Hour', 'PM25']
-    #     series['time'] = pd.to_datetime(series[['Year', 'Month', 'Day', 'Hour']])
-    #     series = series[['time', 'PM25']]
-    #
-    #     duplicates = (series.duplicated(subset=['time'], keep='first'))
-    #     series.loc[duplicates,'time'] = series.loc[duplicates,'time'] + timedelta(hours=1)
-    #     series = series.set_index('time').reindex(pd.date_range('2017-01-01','2021-01-01',freq = 'h')[:-1])
-    #     series.columns = [row['Zone']]
-    #     zone_data.append(series)
-    # df = pd.concat(zone_data,axis=1)
-    # df.index.name = 'time'
-    # df.to_csv('time_series.csv')
-    # return pd.read_csv('time_series.csv',index_col='time',parse_dates=[0])
-    return pd.read_csv('time_series.csv',index_col='time',parse_dates=[0]).rename(
-        columns={'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}).sort_index(axis=1)
+    with open(zone_file, 'w') as file: file.write('\n'.join(map(str, data)))
+
+
+def read_file_as_text(file):
+    return str(open(file, 'rb').read().decode('unicode_escape')).split("\n")
+
+
+def data_cleaning_and_preparation():
+    zone_reading, zone_metadata = [], []
+
+    for idx, row in get_zones_info().iterrows():
+        file = join(raw_data_path + get_common_id(), row['Zone'] + '.txt')
+        meta_data_list = read_file_as_text(file)
+        zone_metadata.append(pd.Series([d.split(':')[1][1:-1] for d in meta_data_list[:9]]).loc[[2, 4, 5, 6, 7]])
+
+        series = pd.read_csv(file, skiprows=10, sep='\t', header=None, usecols=[0, 1, 2, 3, 4])
+        series.columns = ['Year', 'Month', 'Day', 'Hour', 'PM25']
+        series['time'] = pd.to_datetime(series[series.columns[:4]])
+        series = series[['time', 'PM25']]
+
+        duplicates = (series.duplicated(subset=['time'], keep='first'))
+        series.loc[duplicates, 'time'] = series.loc[duplicates, 'time'] + timedelta(hours=1)
+        series = series.set_index('time').reindex(pd.date_range('2017-01-01', '2021-01-01', freq='h')[:-1])
+        series.columns = [zone_metadata[-1].iloc[0]]
+        zone_reading.append(series)
+
+    metadata = pd.concat(zone_metadata, axis=1).T
+    metadata.columns = metadata_attributes
+    metadata = metadata.sort_values('Zone').set_index('Zone')
+    metadata[metadata_attributes[2:]] = metadata[metadata_attributes[2:]].apply(pd.to_numeric).round(5)
+    metadata.to_csv(get_save_location() + 'metadata.csv')
+
+    time_series = pd.concat(zone_reading, axis=1)
+    time_series.index.name = 'time'
+    time_series.to_csv(get_save_location() + 'time_series.csv')
+
+
+def get_series():
+    # return pd.read_csv(get_save_location() + 'time_series.csv',index_col='time',parse_dates=[0])
+    return pd.read_csv(get_save_location() + 'time_series.csv', index_col='time', parse_dates=[0]).rename(
+        columns=rename_dict).sort_index(axis=1)
+
+
+def get_metadata():
+    # return pd.read_csv(get_save_location() + 'metadata.csv', index_col='Zone', parse_dates=[0])
+    return pd.read_csv(get_save_location() + 'metadata.csv', index_col='Zone', parse_dates=[0]).rename(
+        index=rename_dict).sort_index(axis=0)
 
 
 if __name__ == '__main__':
-    df = read_csv_series()
-    print(df)
+    # df = data_cleaning_and_preparation()
+    # print(df)
 
-    # dataSummaries = LoadData()
-    # timeseies = LoadSeries()
-    # metaFrame = LoadMetadata()
+    timeseies = get_series()
+    meta_data = get_metadata()
 
-    # for i in range(len(dataSummaries[1])): print(metaFrame.iloc[i, 0],
-    #                                                  np.count_nonzero(dataSummaries[1][i] == None))
-    # deviatedList = sorted((np.std(dataSummaries[-1][1], axis=0)).argsort()[-27 * 15:][::-1])
-
-    # metaFrame = metaFrame.assign(avgRead=np.mean(dataSummaries[-1][1][:,:],axis=1))
     # print(metaFrame[['Population','avgRead']].corr())
     # popYear = [157977153,159685424,161376708,163046161]
 
