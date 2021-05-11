@@ -70,7 +70,7 @@ def PrepareSeasonData():
 
 
 def FactorAnalysis():
-    reading = read_csv_series()[['Tongi']]['2017-01-01': '2020-12-31']
+    reading = data_cleaning_and_preparation()[['Tongi']]['2017-01-01': '2020-12-31']
     reading.columns = ['Reading']
 
     timeSeries = PrepareSeasonData()

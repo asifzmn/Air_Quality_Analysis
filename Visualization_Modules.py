@@ -234,7 +234,7 @@ def ViolinPLot(df):
 
 
 def ColorTable():
-    colorScale, categoryName, AQScale = getCategoryInfo()
+    colorScale, categoryName, AQScale = get_category_info()
     range = [str(a) + " - " + str(b) for a, b in zip(AQScale, AQScale[1:])]
     data = {'Category': categoryName, 'Color': colorScale, 'range': range}
     df = pd.DataFrame(data)
@@ -261,5 +261,5 @@ if __name__ == '__main__':
     plt.close("all")
     # sns.set()
     # # sns.set_style("whitegrid")
-    metaFrame, series = LoadMetadata(), LoadSeries()['2017':'2019']
+    metaFrame, series = load_metadata(), LoadSeries()['2017':'2019']
     BoxPlotHour(series)

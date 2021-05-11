@@ -17,7 +17,7 @@ from DataPreparation import *
 
 
 def Scrap(savePath):
-    metaFrame = LoadMetadata()
+    metaFrame = load_metadata()
 
     era5list = ['Temperature [2 m]', 'Growing degree days [2 m]', 'Temperature [900 hPa]', 'Temperature [850 hPa]',
                 'Temperature [800 hPa]', 'Temperature [700 hPa]', 'Temperature [500 hPa]', 'Precipitation amount',

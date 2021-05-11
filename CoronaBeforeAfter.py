@@ -1,6 +1,6 @@
 import pandas as pd
 import plotly.graph_objects as go
-from DataPreparation import LoadMetadata, LoadSeries
+from DataPreparation import load_metadata, LoadSeries
 
 
 def GroupedBox(x):
@@ -28,7 +28,7 @@ def GroupedBox(x):
 
 
 if __name__ == '__main__':
-    metaFrame, df = LoadMetadata(), LoadSeries()
+    metaFrame, df = load_metadata(), LoadSeries()
     print(metaFrame)
 
     df[['Dhaka']].apply(GroupedBox)

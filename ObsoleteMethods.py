@@ -1,7 +1,10 @@
 import pickle
+from os.path import join
+
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import pickle as pk
 from collections import Counter
 from itertools import combinations
 from matplotlib import pyplot as plt, cm
@@ -9,9 +12,12 @@ from plotly import express as px
 from plotly import graph_objects as go
 from sklearn.cluster import Birch, KMeans
 from sklearn.preprocessing import MinMaxScaler
-from DataPreparation import getCategoryInfo, LoadData
+from DataPreparation import get_category_info, get_common_id, read_file_as_text, web_crawl, get_zones_info
 from Related.GeoMapMatplotLib import MapPlotting
 from Related.Heatmap import heatmap, annotate_heatmap
+from datetime import datetime, timedelta
+
+[Year, Month, Day, UTC_Hour, PM25, PM10_mask, Retrospective] = range(7)
 
 cmap = ['Accent', 'Accent_r', 'Blues', 'Blues_r', 'BrBG', 'BrBG_r', 'BuGn', 'BuGn_r', 'BuPu', 'BuPu_r', 'CMRmap',
         'CMRmap_r', 'Dark2', 'Dark2_r', 'GnBu', 'GnBu_r', 'Greens', 'Greens_r', 'Greys', 'Greys_r', 'OrRd',
@@ -46,6 +52,12 @@ cmapPlotly = ['aggrnyl', 'agsunset', 'algae', 'amp', 'armyrose', 'balance',
               'speed', 'sunset', 'sunsetdark', 'teal', 'tealgrn', 'tealrose',
               'tempo', 'temps', 'thermal', 'tropic', 'turbid', 'twilight',
               'viridis', 'ylgn', 'ylgnbu', 'ylorbr', 'ylorrd']
+
+discard = 'Azimpur,Bhola,Patiya,Laksham,Netrakona,Madaripur,Ishurdi,Pabna,Tungipara,Ramganj,Raipur,Palang,Sherpur,Nagarpur,Sarishabari,Shahzadpur,Pirojpur,Maulavi_Bazar,Habiganj,Bhairab_Bazar,Sandwip,Satkania,Rangpur,Khagrachhari,Lakshmipur,Jamalpur,Saidpur,Chittagong,Lalmanirhat,Thakurgaon,Sylhet,Dinajpur'.split(
+    ',')
+
+basicTimeParameters = np.array(
+    ['year', 'month', 'day', 'hour', 'yearmonthday', 'yearmonthdayhour'])
 
 
 def Plotting(Y, labels=None, xlabel='', title='', x=None):
@@ -295,7 +307,7 @@ def SliderMap(df):
     dfre = df.resample(timeformat).mean()
     data, times = (dfre).stack().values, (dfre.index.strftime('%Y %B'))
 
-    colorScale, categoryName, AQScale = getCategoryInfo()
+    colorScale, categoryName, AQScale = get_category_info()
     dataVector, metaFrame = LoadData(name='reading.pickle')
 
     metaFrame = pd.concat([metaFrame] * len(times), ignore_index=True)
@@ -320,7 +332,7 @@ def SliderMapHeat(df, metaFrame, ):
     dfre = df.resample(timeformat).mean()
     data, times = (dfre).stack().values, (dfre.index.strftime('%Y-%B-%D  %H:00:00 '))
 
-    colorScale, categoryName, AQScale = getCategoryInfo()
+    colorScale, categoryName, AQScale = get_category_info()
 
     metaFrame = pd.concat([metaFrame] * len(times), ignore_index=True)
     metaFrame['category'], metaFrame['time'] = data, np.repeat(times, df.shape[1])
@@ -339,7 +351,7 @@ def SliderMapHeat(df, metaFrame, ):
     fig.show()
 
 
-def Imputation():
+def Imputation(df):
     fig, ax = plt.subplots(2, sharex=True)
     data = df.iloc[:10, :2]
     data.asfreq('H').plot(ax=ax[0], marker='o')
@@ -388,6 +400,7 @@ def Bucketing(reading, bins):
                       [np.bincount(inds[i]) for i in range(reading.shape[1])]])
     return binsC / binsC.sum(1, keepdims=True)
 
+
 def LeaderFollower(df):
     t_start, tau, step_size, window_size = 0, 3, 72, 180
     t_end = t_start + window_size
@@ -395,7 +408,7 @@ def LeaderFollower(df):
     while t_end < df.shape[0]:
         d1 = df['Feni'].iloc[t_start:t_end]
         d2 = df['Rajshahi'].iloc[t_start:t_end]
-        rs = [crosscorr(d1, d2, lag) for lag in range(-int(tau), int(tau + 1))]
+        rs = [(d1, d2, lag) for lag in range(-int(tau), int(tau + 1))]
         rss.append(rs)
         t_start += step_size
         t_end += step_size
@@ -408,6 +421,7 @@ def LeaderFollower(df):
     # ax.set_xticklabels([-150, -100, -50, 0, 50, 100, 150]);
     plt.show()
 
+
 def ShortLengthImputation(dataSummaries):
     dataset = dataSummaries[1]
     for i in range(22):
@@ -419,6 +433,119 @@ def ShortLengthImputation(dataSummaries):
                                                                                          gap[1] - gap[0] + 2)[1:-1]
     dataSummaries = dataSummaries[0], dataset
     return dataSummaries
+
+
+def TimetoString(time, timeScale): return (np.array([(str(s.strftime(timeScale[2])).split('-')) for s in time])).astype(
+    'int').astype('str')
+
+
+def getCommonTimes(allDistrictData, timeKey):
+    print(timeKey)
+    timeScale = {'year': (Year, Year, '%Y'), 'month': (Month, Month, '%m'), 'day': (Day, Day, '%d'),
+                 'hour': (UTC_Hour, UTC_Hour, '%H'), 'yearmonth': (Year, Month, '%Y-%m'),
+                 'monthday': (Month, Day, '%m-%d'), 'yearmonthday': (Year, Day, '%Y-%m-%d'),
+                 'yearmonthdayhour': (Year, UTC_Hour, '%Y-%m-%d-%H')}[timeKey]
+    datetimes = np.array(
+        [[datetime.strptime('-'.join(map(str, x)), timeScale[2]) for x in d[:, timeScale[0]:timeScale[1] + 1]] for d in
+         allDistrictData], dtype='object')
+
+    # for a,d in zip(allDistrictMetaData[:, 0],datetimes):print(a,len(np.unique(TimetoString(d,timeScale))))
+    sortedCommonTime = np.array(sorted(set.intersection(*map(set, [[x for x in d] for d in datetimes]))))
+
+    if timeKey == 'yearmonthdayhour' or timeKey == 'yearmonthday':
+        minutes = 60 if timeKey == 'yearmonthdayhour' else 24 * 60
+        startTime, endTime = np.min([np.min(d) for d in (datetimes)]), np.max([np.max(d) for d in (datetimes)])
+        # startTime, endTime = np.min(sortedCommonTime), np.max(sortedCommonTime)
+        continuousTime = np.array([(startTime + timedelta(seconds=i)) for i in
+                                   range(0, int((endTime - startTime).total_seconds()) + 60 * minutes,
+                                         int(timedelta(minutes=minutes).total_seconds()))])
+        # continuousTimeStr = TimetoString(continuousTime, timeScale)
+        continuousTimeData = (np.full((len(allDistrictData), len(continuousTime)), None))
+        for i, districtData in enumerate(allDistrictData):
+            cur = 0
+            for j, time in enumerate(continuousTime):
+                if cur < len(districtData) and datetimes[i][cur] < time: cur += 1
+
+                commonHourReading = []
+                while cur < len(districtData) and datetimes[i][cur] == time:
+                    commonHourReading.append(districtData[cur].astype('float64')[PM25])
+                    cur += 1
+                if not len(commonHourReading) == 0: continuousTimeData[i][j] = np.mean(np.array(commonHourReading))
+        return continuousTime, np.array(continuousTimeData)
+        # return dataInterpolation((continuousTimeStr, np.array(continuousTimeData)))
+
+    return sortedCommonTime, (np.array([[(np.mean((districtData[:, PM25].astype('float64')[
+        np.transpose(np.where(np.all(districtData[:, timeScale[0]:timeScale[1] + 1] == ct, axis=1)))])[:, 0])) for ct in
+                                         TimetoString(sortedCommonTime, timeScale)] for districtData in
+                                        allDistrictData]))
+
+
+def LoadData(berkely_earth_data):
+    fname = berkely_earth_data + 'prepared/' + get_common_id() + '/reading.pickle'
+
+    try:
+        with open(fname, "rb") as f:
+            dataSummaries, allDistrictMetaData = pk.load(f)
+    except:
+        allDistrictData, allDistrictMetaData = getAllData()
+        # dataSummaries = [getCommonTimes(allDistrictData, timeParam) for timeParam in basicTimeParameters]
+        dataSummaries = getCommonTimes(allDistrictData, basicTimeParameters[-1])
+        with open(fname, "wb") as f:
+            pk.dump((dataSummaries, allDistrictMetaData), f)
+
+    metaFrame = load_metadata(allDistrictMetaData)
+    series = LoadSeries(dataSummaries)
+    return dataSummaries
+
+
+def LoadSeries(berkely_earth_data_prepared, data=None, name='reading'):
+    fname = + get_common_id() + '/timeseries'
+    if data is not None:
+        metaFrame = load_metadata()
+        df = pd.DataFrame(data=np.transpose(data[1]), index=data[0],
+                          columns=metaFrame.index).apply(pd.to_numeric)
+        df = df.reset_index()
+        df = df[sorted(df.columns.values)]
+        df.to_feather(fname)
+
+    # return pd.read_feather(fname).set_index('index', drop=True)['2017':]
+    return pd.read_feather(fname).set_index('index', drop=True)['2017':].rename(
+        columns={'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}).sort_index(axis=1)
+
+
+def load_metadata(berkely_earth_data_prepared, all_metadata=None, ):
+    metadataFileName = berkely_earth_data_prepared + get_common_id() + '/metadata'
+    if all_metadata is not None:
+        metaFrame = pd.DataFrame(columns=['Zone', 'Division', 'Population', 'Latitude', 'Longitude'],
+                                 data=all_metadata).sort_values('Zone')
+        metaFrame[['Population', 'Latitude', 'Longitude']] = metaFrame[['Population', 'Latitude', 'Longitude']].apply(
+            pd.to_numeric).round(5)
+        metaFrame.to_feather(metadataFileName)
+
+    # return pd.read_feather(metadataFileName).set_index('Zone', drop=True)
+    return pd.read_feather(metadataFileName).set_index('Zone', drop=True).rename(
+        index={'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}).sort_index(
+        axis=0)
+
+
+def getAllData(raw_data_path, update=True):
+    # allFiles = [f[:-4] for f in listdir(locationMain) if isfile(join(locationMain, f))]
+    allDistrictData, allDistrictMetaData = [], []
+
+    for idx, zone_info in get_zones_info().iterrows():
+        print(zone_info)
+        zone_file = join(raw_data_path + get_common_id(), zone_info['Zone'] + '.txt')
+        if update:
+            web_crawl(zone_file, zone_info)
+
+        data = read_file_as_text(zone_file)
+
+        districtMetaData = np.array([d.split(':')[1][1:-1] for d in data[:9]])
+        districtData = np.array([np.array(x.split('\t')) for x in np.array(data[10:-1])])
+        allDistrictMetaData.append(districtMetaData)
+        allDistrictData.append(districtData)
+
+    return np.array(allDistrictData, dtype='object'), np.array(allDistrictMetaData)[:, [2, 4, 5, 6, 7]]
 
 
 def weightedChoice():
