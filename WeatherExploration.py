@@ -1,4 +1,4 @@
-from DataPreparation import *
+from data_preparation import *
 
 if __name__ == '__main__':
     metaFrame = load_metadata()

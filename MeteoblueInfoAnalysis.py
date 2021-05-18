@@ -5,7 +5,7 @@ import time
 from os.path import isfile, join
 from pandas_profiling import ProfileReport
 from os import listdir
-from DataPreparation import *
+from data_preparation import *
 from timeit import default_timer as timer
 import numpy as np
 import pandas as pd

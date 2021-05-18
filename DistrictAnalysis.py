@@ -1,4 +1,4 @@
-from DataPreparation import *
+from data_preparation import *
 from Visualization_Modules import *
 
 def district_aggregation(x, timeseies, zone_dis):

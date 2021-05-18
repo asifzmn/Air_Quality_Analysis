@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 
 dataset_url = 'http://berkeleyearth.lbl.gov/air-quality/maps/cities/'
-# aq_directory = '/home/asif/Work/Air Analysis/AQ Dataset/'  # change this location
-aq_directory = getcwd() + '/Project Data/'  # change this location
+aq_directory = '/home/asif/Work/Air Analysis/AQ Dataset/'  # change this location
+# aq_directory = getcwd() + '/Project Data/'  # change this location
 
 berkely_earth_data = aq_directory + 'Berkely Earth Data/'
 raw_data_path = berkely_earth_data + 'raw/'
@@ -73,11 +73,13 @@ def handle_mislabeled_duplicates(series):
     # print(series.duplicated(keep=False).value_counts())
 
 
-def web_crawl(zone_file, zone_info):
-    data = [line.decode('unicode_escape')[:-1] for line in urlopen(
-        join(f'{dataset_url}{zone_info["Country"]}/{zone_info["Division"]}/{zone_info["Zone"]} + .txt'))]
-
-    with open(zone_file, 'w') as file: file.write('\n'.join(map(str, data)))
+def web_crawl():
+    for idx, zone_info in get_zones_info().iterrows():
+        zone_file = join(raw_data_path + get_common_id(), zone_info['Zone'] + '.txt')
+        url = f'{dataset_url}{zone_info["Country"]}/{zone_info["Division"]}/{zone_info["Zone"]}.txt'
+        print(url)
+        data = [line.decode('unicode_escape')[:-1] for line in urlopen(url)]
+        with open(zone_file, 'w') as file: file.write('\n'.join(map(str, data)))
 
 
 def read_file_as_text(file):
@@ -127,9 +129,8 @@ def get_metadata():
 
 
 if __name__ == '__main__':
-    # df = data_cleaning_and_preparation()
-    # print(df)
-
+    web_crawl()
+    data_cleaning_and_preparation()
     timeseies = get_series()
     meta_data = get_metadata()
 

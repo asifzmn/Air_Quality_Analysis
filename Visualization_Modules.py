@@ -3,7 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from statsmodels.tsa.seasonal import seasonal_decompose
-from DataPreparation import *
+from data_preparation import *
 
 
 def SeasonalDecomposition(df):

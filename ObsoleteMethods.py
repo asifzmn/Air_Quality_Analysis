@@ -12,7 +12,7 @@ from plotly import express as px
 from plotly import graph_objects as go
 from sklearn.cluster import Birch, KMeans
 from sklearn.preprocessing import MinMaxScaler
-from DataPreparation import get_category_info, get_common_id, read_file_as_text, web_crawl, get_zones_info
+from data_preparation import get_category_info, get_common_id, read_file_as_text, web_crawl, get_zones_info
 from Related.GeoMapMatplotLib import MapPlotting
 from Related.Heatmap import heatmap, annotate_heatmap
 from datetime import datetime, timedelta

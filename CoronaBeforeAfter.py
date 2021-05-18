@@ -1,6 +1,6 @@
 import pandas as pd
 import plotly.graph_objects as go
-from DataPreparation import load_metadata, LoadSeries
+from data_preparation import load_metadata, LoadSeries
 
 
 def GroupedBox(x):

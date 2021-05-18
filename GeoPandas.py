@@ -10,7 +10,7 @@ from geopy.distance import geodesic
 from matplotlib import cm
 from matplotlib.lines import Line2D
 from plotly.offline import iplot
-from DataPreparation import get_metadata, get_category_info, get_series, aq_directory
+from data_preparation import get_metadata, get_category_info, get_series, aq_directory
 from scipy.interpolate import griddata
 from numpy import linspace
 import plotly.graph_objects as go
