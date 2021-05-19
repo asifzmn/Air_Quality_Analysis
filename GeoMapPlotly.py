@@ -3,8 +3,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-from AirQuality.DataPreparation import getCategoryInfo, LoadMetadata, LoadSeries
-from AirQuality.MeteoblueInfoAnalysis import GetAllMeteoData
+from data_preparation import get_category_info, get_metadata, get_series
+from MeteoblueInfoAnalysis import GetAllMeteoData
 
 
 def SliderMapCommon(df, metaFrame, timeformat, discrete=True):
@@ -15,7 +15,7 @@ def SliderMapCommon(df, metaFrame, timeformat, discrete=True):
     metaFrame = pd.concat([metaFrame] * len(times), ignore_index=True)
 
     if discrete:
-        colorScale, categoryName, AQScale = getCategoryInfo()
+        colorScale, categoryName, AQScale = get_category_info()
         metaFrame['category'], metaFrame['time'] = [categoryName[val] for val in
                                                     np.digitize(data, AQScale[1:-1])], np.repeat(times, df.shape[1])
         metaFrame['zone'] = metaFrame.index.values
@@ -65,8 +65,8 @@ if __name__ == '__main__':
     Heatmap()
     exit()
 
-    dataVector = LoadSeries()[:'2020-06-09']
-    metaFrame = LoadMetadata()
+    dataVector = get_series()[:'2020-06-09']
+    metaFrame = get_metadata()
     meteoData = GetAllMeteoData()
     time = meteoData.coords['time'].values
     # data = meteoData.loc[:,:,'Surface Temperature'].values

@@ -17,6 +17,27 @@ from time import sleep
 from data_preparation import *
 
 
+def prepare_firefox_driver(savePath):
+    gecko_path = "/home/asif/Work/Firefox Web Driver/geckodriver.exe"
+    # gecko_path = "/media/az/Study/Work/Firefox Web Driver/geckodriver.exe"
+
+    profile = FirefoxProfile()
+    profile.set_preference('browser.download.folderList', 2)
+    profile.set_preference('browser.download.manager.showWhenStarting', False)
+    # profile.set_preference('browser.download.dir', os.getcwd())
+    profile.set_preference('browser.download.dir', savePath)
+    profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/csv')
+    # profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/plain')
+    # profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'application/octet-stream')
+
+    # profile.set_preference("browser.helperApps.alwaysAsk.force", False)
+    # profile.set_preference("browser.download.manager.showWhenStarting",False)
+
+    profile.set_preference('general.warnOnAboutConfig', False)
+    profile.update_preferences()
+    return Firefox(firefox_profile=profile, executable_path=gecko_path)
+
+
 def Scrap(savePath):
     list = ['Temperature [1000 hPa]', 'Temperature [850 hPa]', 'Temperature [700 hPa]', 'Wind speed [80 m]',
             'Wind gusts [10 m]', 'Wind speed and direction [900 hPa]', 'Wind speed and direction [850 hPa]',
@@ -30,26 +51,7 @@ def Scrap(savePath):
     datePointsupdate = str(lastDate + oneDay) + ' - ' + str(date.today() - oneDay)
     targetPath = savePath + datePoints
 
-    gecko_path = "/home/asif/Work/Firefox Web Driver/geckodriver.exe"
-    # gecko_path = "/media/az/Study/Work/Firefox Web Driver/geckodriver.exe"
-
-    profile = FirefoxProfile()
-    profile.set_preference('browser.download.folderList', 2)
-    profile.set_preference('browser.download.manager.showWhenStarting', False)
-    # profile.set_preference('browser.download.dir', os.getcwd())
-    profile.set_preference('browser.download.dir', targetPath)
-    # profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/plain')
-    profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/csv')
-    # profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'application/octet-stream')
-
-    # profile.set_preference("browser.helperApps.alwaysAsk.force", False)
-    # profile.set_preference("browser.download.manager.showWhenStarting",False)
-
-    profile.set_preference('general.warnOnAboutConfig', False)
-    profile.update_preferences()
-    # path = "/media/az/Study/FFWD/Mozilla Firefox/firefox.exe"
-    # binary = FirefoxBinary(path)
-    driver = Firefox(firefox_profile=profile, executable_path=gecko_path)
+    driver = prepare_firefox_driver()
     driver.get("https://www.meteoblue.com/en/weather/archive/export/shahbag_bangladesh_7697915")
 
     driver.find_element_by_id("gdpr_form").click()
@@ -102,7 +104,7 @@ def readFile(path, index='Dhaka'):
     return meteoInfo
 
 
-def Update():
+def Update(savePath, savePathcp):
     savedata, runningData = readFile(savePath), readFile(runningPath)
     # print((runningData[savedata.index.values[-1]+1:]))
     # print(pd.concat([savedata, runningData], ignore_index=False).drop_duplicates())
@@ -116,7 +118,7 @@ def Update():
 
 
 if __name__ == '__main__':
-    metaFrame = load_metadata()
+    metaFrame = get_metadata()
     runningPath = '/media/az/Study/Air Analysis/AirQuality Dataset/MeteoblueJuly'
 
     Scrap(meteoblue_data_path)

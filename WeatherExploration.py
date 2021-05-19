@@ -1,6 +1,6 @@
 from data_preparation import *
 
 if __name__ == '__main__':
-    metaFrame = load_metadata()
+    meta_data = get_metadata()
     # time_series = ReadPandasCSV()
 

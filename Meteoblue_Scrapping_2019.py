@@ -1,23 +1,8 @@
-import os
-import shutil
-import time
-from datetime import date, timedelta, datetime
-from distutils.dir_util import copy_tree
-from os import listdir
-from pathlib import Path
-from timeit import default_timer as timer
-import pandas as pd
-from selenium.webdriver import FirefoxProfile, Firefox
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
-
-from data_preparation import *
+from Meteoblue_Scrapping_weekly import *
 
 
 def Scrap(savePath):
-    metaFrame = load_metadata()
+    meta_data = get_metadata()
 
     era5list = ['Temperature [2 m]', 'Growing degree days [2 m]', 'Temperature [900 hPa]', 'Temperature [850 hPa]',
                 'Temperature [800 hPa]', 'Temperature [700 hPa]', 'Temperature [500 hPa]', 'Precipitation amount',
@@ -28,30 +13,14 @@ def Scrap(savePath):
                 'Low, mid and high cloud cover', 'Sunshine duration (minutes)', 'Solar radiation', 'Longwave radiation',
                 'UV radiation', 'Pressure [mean sea level]', 'Evapotranspiration']
 
-    gecko_path = "/home/asif/Work/Firefox Web Driver/geckodriver.exe"
-    # gecko_path = "/media/az/Study/Work/Firefox Web Driver/geckodriver.exe"
+    driver = prepare_firefox_driver(savePath)
 
-    profile = FirefoxProfile()
-    profile.set_preference('browser.download.folderList', 2)
-    profile.set_preference('browser.download.manager.showWhenStarting', False)
-    # profile.set_preference('browser.download.dir', os.getcwd())
-    profile.set_preference('browser.download.dir', savePath)
-    # profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/plain')
-    profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/csv')
-    # profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'application/octet-stream')
-
-    # profile.set_preference("browser.helperApps.alwaysAsk.force", False)
-    # profile.set_preference("browser.download.manager.showWhenStarting",False)
-
-    profile.set_preference('general.warnOnAboutConfig', False)
-    profile.update_preferences()
-    driver = Firefox(firefox_profile=profile, executable_path=gecko_path)
     driver.get("https://www.meteoblue.com/en/weather/archive/era5/shahbag_bangladesh_7697915")
 
     driver.find_element_by_id("gdpr_form").click()
 
     start = timer()
-    for index, row in metaFrame.iterrows():
+    for index, row in meta_data.iterrows():
         print(row)
         location = ' '.join(map(str, row[['Latitude', 'Longitude']].values))
         driver.find_element_by_id("gls").send_keys(location + Keys.RETURN)
@@ -72,7 +41,7 @@ def Scrap(savePath):
         print(timer() - start)
 
     time.sleep(30)
-    for file, zone in zip(sorted(Path(savePath).iterdir(), key=os.path.getmtime), metaFrame.index.values):
+    for file, zone in zip(sorted(Path(savePath).iterdir(), key=os.path.getmtime), meta_data.index.values):
         shutil.move(file, os.path.join(savePath, zone + '.csv'))
 
 

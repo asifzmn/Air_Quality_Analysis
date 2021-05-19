@@ -220,7 +220,7 @@ def get_district_data(meteoData, district):
 
 
 if __name__ == '__main__':
-    metaFrame = load_metadata()
+    metaFrame = get_metadata()
     print(metaFrame.index)
 
     # meteoData = GetAllMeteoData()

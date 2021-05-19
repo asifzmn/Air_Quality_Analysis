@@ -20,7 +20,7 @@ from MeteoblueInfoAnalysis import get_factor_data
 
 
 def Distance(dis1, dis2):
-    metaFrame = load_metadata()
+    metaFrame = get_metadata()
     origin = metaFrame.loc[dis1]['Latitude'], metaFrame.loc[dis1]['Longitude']
     dest = metaFrame.loc[dis2]['Latitude'], metaFrame.loc[dis2]['Longitude']
 
@@ -29,7 +29,7 @@ def Distance(dis1, dis2):
 
 
 def angleFromCoordinate(dis1, dis2):
-    metaFrame = load_metadata()
+    metaFrame = get_metadata()
     lat1, long1, lat2, long2 = metaFrame.loc[dis1]['Latitude'], metaFrame.loc[dis1]['Longitude'], metaFrame.loc[dis2][
         'Latitude'], metaFrame.loc[dis2]['Longitude']
     lat1, lat2, long1, long2 = math.radians(lat1), math.radians(lat2), math.radians(long1), math.radians(long2)
@@ -61,7 +61,7 @@ def draw_pie(ax, ratios, X=0, Y=0, size=1000):
 
 
 def Pie(ax, ratiodata):
-    metaFrame = load_metadata()
+    metaFrame = get_metadata()
     for i, txt in enumerate(metaFrame.index): draw_pie(ax, ratiodata[0], metaFrame.iloc[i]['Longitude'],
                                                        metaFrame.iloc[i]['Latitude'], size=800)
 
@@ -77,7 +77,7 @@ def Arrows(ax, vec):
     pal = colorGen(np.linspace(0, 1, 5))[1:5]
     # pal = []
 
-    metaFrame = load_metadata()
+    metaFrame = get_metadata()
     for x in range(len(vec)):
         for y in range(len(vec)):
             # if vec[x][y] == 0.0: continue
@@ -240,7 +240,7 @@ def heatmapgeoJson(metaFrame, title):
 if __name__ == '__main__':
     # meteoData = xr.open_dataset('meteoData.nc')['meteo']
 
-    metaFrame, df = load_metadata(), LoadSeries()['2018-01':'2018-12'].resample('W').mean()
+    metaFrame, df = get_metadata(), get_series()['2018-01':'2018-12'].resample('W').mean()
     # metaFrame, df = LoadMetadata(), getFactorData(meteoData, 'Temperature [2 m]')
 
     for i, row in df.sample(5).iterrows():

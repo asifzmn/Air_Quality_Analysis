@@ -12,8 +12,8 @@ if __name__ == '__main__':
     zone_district = pd.read_csv('/home/asif/Desktop/berkelyearth_bd_zone_district.csv')
 
     # dataSummaries = LoadData()
-    timeseies = LoadSeries()
-    metaFrame = load_metadata()
+    timeseies = get_series()
+    metaFrame = get_metadata()
 
     timeseies = timeseies["2019":"2020"]
     district_series = zone_district.groupby("District").apply(district_aggregation, timeseies=timeseies,
