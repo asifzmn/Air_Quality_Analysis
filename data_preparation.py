@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 from os import listdir, getcwd
 from os.path import join, isfile
 from urllib.request import urlopen
+import plotly.express as px
+import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
 
@@ -126,6 +128,20 @@ def get_metadata():
     # return pd.read_csv(get_save_location() + 'metadata.csv', index_col='Zone', parse_dates=[0])
     return pd.read_csv(get_save_location() + 'metadata.csv', index_col='Zone', parse_dates=[0]).rename(
         index=rename_dict).sort_index(axis=0)
+
+
+def get_diurnal_period():
+    sun_time = pd.read_csv(aq_directory + 'sun_rise_set_time_2019.csv', sep='\t')
+    sun_time['Sunrise_date'] = sun_time['Date '] + ' ' + sun_time['Sunrise ']
+    sun_time['Sunset_date'] = sun_time['Date '] + ' ' + sun_time['Sunset ']
+    sun_time = sun_time[['Sunrise_date', 'Sunset_date']].apply(pd.to_datetime).apply(lambda x: x.dt.round('H'))
+    sun_time_matrix = sun_time.apply(
+        lambda x: pd.Series(['day' if x.Sunrise_date.hour <= i <= x.Sunset_date.hour else 'night' for i in range(24)]),
+        axis=1)
+    sun_time_series = sun_time_matrix.stack().reset_index(drop=True)
+    sun_time_series.index = pd.date_range('2019', '2020', freq='H')[:-1]
+    sun_time_series.name = 'diurnal_name'
+    return sun_time_series
 
 
 if __name__ == '__main__':

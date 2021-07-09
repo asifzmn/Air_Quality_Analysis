@@ -1,5 +1,4 @@
 # import re
-import plotly.express as px
 # import geojsoncontour
 # from collections import Counter
 # from scipy.spatial.distance import cdist
@@ -25,6 +24,7 @@ save = '/home/az/Pictures/'
 
 
 def LatexFormatting(stats):
+    stats.to_csv('Files/general_stats.csv')
     # stats['count'] = stats['count'].astype('int')
 
     # stats = stats.iloc[:,[0,1,2,3,5,7]].round(1)
@@ -359,7 +359,7 @@ def ShiftedSeries(df, dis, lagRange, offset, rs):
     plt.show()
 
 
-def CrossCorr(timeDel, timeStamp, df, lagRange=3):
+def CrossCorr(time_del, time_stamp, df, lagRange=3):
     def crosscorr(datax, datay, lag=0, wrap=False):
         return datax.astype('float64').corr(datay.shift(lag).astype('float64'))
 
@@ -416,7 +416,7 @@ def CrossCorr(timeDel, timeStamp, df, lagRange=3):
 
 def WindGraphTeamEstimate(meteoData, alldis):
     colorPal = np.array(['#ffffff'])
-    directions = np.array([[[getSides(meteoData), 'Wind']]])
+    directions = np.array([[[get_cardinal_direction(meteoData), 'Wind']]])
     PlotlyRosePlot(directions, colorPal, alldis)
 
 
@@ -611,7 +611,7 @@ def CrossCorrelation(df):
 
     print(lagTimeMatrix.shape)
     print(lagTimeMatrix.stack().value_counts())
-    metaFrame = load_metadata().assign(symbol='H')
+    metaFrame = get_metadata().assign(symbol='H')
 
     for key, df in lagTimeMatrix.iloc[:, :].items():
         if df.nunique() > 1:
@@ -624,7 +624,7 @@ def CrossCorrelation(df):
 
 
 def save_data():
-    meta_data, timeseries = load_metadata(), LoadSeries()['2017':'2019']
+    meta_data, timeseries = get_metadata(), get_series()['2017':'2019']
     meta_data.to_csv('zone_data.csv')
     timeseries.to_csv('pm_time_series.csv')
 
@@ -667,7 +667,7 @@ def changes_in_districts(timeseries):
 
     fig = go.Figure()
 
-    for id, row in load_metadata().iterrows():
+    for id, row in get_metadata().iterrows():
         name = id.replace(' ', '_')
         fig.add_trace(go.Scatter(
             x=pct_change.index,
@@ -706,7 +706,7 @@ def FrequencyClustering(df):
         fig.update_layout(font=dict(size=30), xaxis_title='Number of clusters', yaxis_title='Inertia')
         fig.show()
 
-    metaFrame = load_metadata()
+    metaFrame = get_metadata()
     norm = Bucketing(df, AQScale).T
     # dataPoints, n_clusters = norm.values[:, :], 3
     dataPoints, n_clusters = df.resample('M').mean().T, 3
@@ -814,7 +814,7 @@ if __name__ == '__main__':
     # PairDistributionSummary(timeseries.iloc[:,:30])
     # MissingDataHeatmap(timeseries)
     # MissingDataFraction(timeseries)
-    FrequencyClustering(timeseries)
+    # FrequencyClustering(timeseries)
 
     # exit()
 
@@ -837,7 +837,8 @@ if __name__ == '__main__':
 
     # ColorTable()
 
-    # LatexFormatting(df.describe().T)
+    LatexFormatting(timeseries.describe().T)
+    MissingDataFraction(timeseries)
 
     # respresentativeDistricts = ['Kishorganj', 'Bogra', 'Nagarpur', 'Jessore', 'Nawabganj', 'Dhaka']
 

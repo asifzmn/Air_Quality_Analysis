@@ -1,19 +1,15 @@
 import os
-from collections import Counter
-from datetime import datetime, timedelta
 import time
-from os.path import isfile, join
-from pandas_profiling import ProfileReport
 from os import listdir
-from data_preparation import *
+from collections import Counter
+from os.path import isfile, join
+from datetime import datetime, timedelta
 from timeit import default_timer as timer
-import numpy as np
-import pandas as pd
-import plotly.graph_objects as go
+from pandas_profiling import ProfileReport
+from Visualization_Modules import SimpleTimeseries
+from data_preparation import *
 import xarray as xr
 import statsmodels.api as sm
-
-from Visualization_Modules import SimpleTimeseries
 
 # factors = ['Temperature [2 m]', 'Relative Humidity [2 m]', 'Mean Sea Level Pressure', 'Precipitation',
 #            'Cloud Cover High', 'Cloud Cover Medium', 'Cloud Cover Low', 'Sunshine Duration', 'Shortwave Radiation',
@@ -49,6 +45,63 @@ factors = ['Temperature [2 m elevation corrected]', 'Growing Degree Days [2 m el
            'Cloud Cover Low [low cld lay]', 'Sunshine Duration', 'Shortwave Radiation', 'Longwave Radiation',
            'UV Radiation', 'Mean Sea Level Pressure [MSL]', 'Evapotranspiration']
 
+selFactors = ['Temperature [2 m]', 'Surface Temperature', 'Soil Temperature [0-10 cm down]', 'Temperature [700 mb]',
+              'Temperature [850 mb]', 'Temperature [1000 mb]']
+factorUnit = 'Temperature', 'Celcius', ['#260637', '#843B58', '#B73239', '#FFA500', '#F9C53D', '#EADAA2', ]
+
+# selFactors = ['Relative Humidity [2 m]','Soil Moisture [0-10 cm down]']
+# factorUnit = 'Humidity','Fraction',['mediumblue','lightblue']
+
+radiation_factors = ['Shortwave Radiation', 'Direct Shortwave Radiation', 'Diffuse Shortwave Radiation']
+wind_speed = ['Wind Speed [10 m]', 'Wind Speed [80 m]', 'Wind Speed [500 mb]', 'Wind Speed [700 mb]',
+              'Wind Speed [850 mb]',
+              'Wind Speed [900 mb]']
+
+sampleFactors = ['Wind Gust', 'Wind Speed [10 m]', 'Wind Direction [10 m]', 'Temperature [2 m elevation corrected]',
+                 'Relative Humidity [2 m]']
+
+
+def PlotlyRosePlot(info, colorPal, alldistricts):
+    fig = go.Figure()
+    # for [r,name] in info:fig.add_trace(go.Barpolar(r=r,name=name,marker_color=colorPal))
+    for infod in info:
+        for [r, name], colorp in zip(infod, colorPal):
+            fig.add_trace(go.Barpolar(r=r, name=name, marker_color=colorp))
+
+    districtCount, windStaes = info.shape[0], info.shape[1]
+    states = np.full((districtCount, districtCount * windStaes), False, dtype=bool)
+    for i in range(districtCount): states[i][windStaes * i:windStaes * (i + 1)] = True
+
+    fig.update_layout(
+        updatemenus=[
+            dict(
+                buttons=list([
+                    dict(label=district, method="update",
+                         args=[{"visible": state}, {"title": "Wind direction in " + district}])
+                    for district, state in zip(alldistricts, states)]),
+                active=0
+            )
+        ])
+
+    fig.update_traces(
+        text=['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'])
+    # fig.update_traces(text=['North', 'N-E', 'East', 'S-E', 'South', 'S-W', 'West', 'N-W'])
+    fig.update_layout(
+        title='Wind', font_size=16, legend_font_size=16, polar_radialaxis_ticksuffix='', polar_angularaxis_rotation=90,
+        template="plotly_dark", polar_angularaxis_direction="clockwise"
+    )
+    fig.show()
+
+
+def WindGraphTeam(meteoData):
+    windDirNames, colorPal = WindDirFactors()
+    alldis = meteoData['districts'].values
+    directions = np.array(
+        # [[[getSides(meteoData.loc[dis, '2020-03-29':'2020-03-31', factor].values), factor] for factor in windDirNames]
+        [[[get_cardinal_direction(meteoData.loc[dis, :, factor].values), factor] for factor in windDirNames]
+         for dis in alldis])
+    PlotlyRosePlot(directions, colorPal, alldis)
+
 
 def WindDirFactors():
     windDirNames = np.array(
@@ -59,7 +112,7 @@ def WindDirFactors():
     return windDirNames, colorPal
 
 
-def getSides(x, seg=16):
+def get_cardinal_direction(x, seg=16):
     directon = np.floor((x - (360 / seg) / 2) / (360 / seg)).astype('int')
     directon[directon == -1] = seg - 1
     return np.roll(np.hstack((np.bincount(directon), np.zeros(seg - max(directon) - 1))), 1)
@@ -118,9 +171,9 @@ def oneFolder(locationMain, date_folder):
     time = pd.date_range(start=time.min(), end=time.max() + timedelta(days=1), freq='H')[:-1]
 
     meteoData = np.array(
-        [PrepareMeteoData(f'{locationMain}/{date_folder}/{district}.csv', district) for district in metaFrame.index])
+        [PrepareMeteoData(f'{locationMain}/{date_folder}/{district}.csv', district) for district in meta_data.index])
     return xr.DataArray(data=meteoData,
-                        coords={"district": metaFrame.index.values, "time": time, "factor": factors},
+                        coords={"district": meta_data.index.values, "time": time, "factor": factors},
                         dims=["district", "time", "factor"], name='meteo')
 
 
@@ -131,69 +184,15 @@ def GetAllMeteoData():
     #     print(oneFolder(locationMain, date_folder))
 
 
-def PlotlyRosePlot(info, colorPal, alldistricts):
-    fig = go.Figure()
-    # for [r,name] in info:fig.add_trace(go.Barpolar(r=r,name=name,marker_color=colorPal))
-    for infod in info:
-        for [r, name], colorp in zip(infod, colorPal):
-            fig.add_trace(go.Barpolar(r=r, name=name, marker_color=colorp))
-
-    districtCount, windStaes = info.shape[0], info.shape[1]
-    states = np.full((districtCount, districtCount * windStaes), False, dtype=bool)
-    for i in range(districtCount): states[i][windStaes * i:windStaes * (i + 1)] = True
-
-    fig.update_layout(
-        updatemenus=[
-            dict(
-                buttons=list([
-                    dict(label=district, method="update",
-                         args=[{"visible": state}, {"title": "Wind direction in " + district}])
-                    for district, state in zip(alldistricts, states)]),
-                active=0
-            )
-        ])
-
-    fig.update_traces(
-        text=['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'])
-    # fig.update_traces(text=['North', 'N-E', 'East', 'S-E', 'South', 'S-W', 'West', 'N-W'])
-    fig.update_layout(
-        title='Wind', font_size=16, legend_font_size=16, polar_radialaxis_ticksuffix='', polar_angularaxis_rotation=90,
-        template="plotly_dark", polar_angularaxis_direction="clockwise"
-    )
-    fig.show()
-
-
-def WindGraphTeam(meteoData):
-    windDirNames, colorPal = WindDirFactors()
-    alldis = meteoData['districts'].values
-    directions = np.array(
-        # [[[getSides(meteoData.loc[dis, '2020-03-29':'2020-03-31', factor].values), factor] for factor in windDirNames]
-        [[[getSides(meteoData.loc[dis, :, factor].values), factor] for factor in windDirNames]
-         for dis in alldis])
-    PlotlyRosePlot(directions, colorPal, alldis)
-
-
-def MeteoBoxPlot(meteoData):
+def meteo_box_plot(meteoData):
     factor = [['Surface Temperature', 'indianred'], ['Relative Humidity [2 m]', 'skyblue']][1]
     fig = go.Figure()
-    for dis in metaFrame.index.values: fig.add_trace(
+    for dis in meta_data.index.values: fig.add_trace(
         go.Box(y=meteoData.loc[dis, :, factor[0]], name=dis, marker_color=factor[1]))
     fig.show()
 
 
-selFactors = ['Temperature [2 m]', 'Surface Temperature', 'Soil Temperature [0-10 cm down]', 'Temperature [700 mb]',
-              'Temperature [850 mb]', 'Temperature [1000 mb]']
-factorUnit = 'Temperature', 'Celcius', ['#260637', '#843B58', '#B73239', '#FFA500', '#F9C53D', '#EADAA2', ]
-
-# selFactors = ['Relative Humidity [2 m]','Soil Moisture [0-10 cm down]']
-# factorUnit = 'Humidity','Fraction',['mediumblue','lightblue']
-
-rad = ['Shortwave Radiation', 'Direct Shortwave Radiation', 'Diffuse Shortwave Radiation']
-speed = ['Wind Speed [10 m]', 'Wind Speed [80 m]', 'Wind Speed [500 mb]', 'Wind Speed [700 mb]', 'Wind Speed [850 mb]',
-         'Wind Speed [900 mb]']
-
-
-def DateContinuity(df):
+def date_continuity(df):
     all = pd.Series(data=pd.date_range(start=df[0].min(), end=df[0].max(), freq='M'))
     mask = all.isin(df[0].values)
     print(all[~mask])
@@ -204,24 +203,63 @@ def oneFolderAnother(locationMain, folders):
     time = pd.date_range(start=time.min(), end=time.max() + timedelta(days=1), freq='H')[:-1]
 
     meteoData = np.array(
-        [PrepareMeteoData(locationMain + '/' + folders + '/' + district + '.csv') for district in metaFrame.index])
+        [PrepareMeteoData(locationMain + '/' + folders + '/' + district + '.csv') for district in meta_data.index])
 
     return xr.DataArray(data=meteoData,
-                        coords={"district": metaFrame.index.values, "time": time, "factor": factors},
+                        coords={"district": meta_data.index.values, "time": time, "factor": factors},
                         dims=["district", "time", "factor"], name='meteo')
 
 
-def get_factor_data(meteoData, factor):
-    return meteoData.sel(factor=factor).to_dataframe().drop('factor', axis=1).unstack().T.droplevel(level=0)
+def get_factor_data(meteo_data, factor):
+    return meteo_data.sel(factor=factor).to_dataframe().drop('factor', axis=1).unstack().T.droplevel(level=0)
 
 
 def get_district_data(meteoData, district):
     return meteoData.sel(district=district).to_dataframe().drop('district', axis=1).unstack().T.droplevel(level=0).T
 
 
+def pm_vs_factor_scatter():
+    compare_factors = ['Temperature [2 m elevation corrected]', 'Relative Humidity [2 m]', 'Wind Speed [10 m]',
+                       'Mean Sea Level Pressure [MSL]']
+    compare_factors_rename = ['Temperature [Celcius]', 'Relative Humidity [Percentage]',
+                              'Wind Speed [kilometer/second]', 'Mean Sea Level Pressure [hPa]']
+
+    for factor, factor_rename in zip(compare_factors[:], compare_factors_rename):
+        factor_meteo_data = get_factor_data(meteoData, factor)
+        if factor == 'Relative Humidity [2 m]': factor_meteo_data = factor_meteo_data * 100
+        all_data = pd.concat((factor_meteo_data.stack(), time_series.stack(dropna=False)), axis=1).droplevel(1)
+        all_data.columns = [factor_rename, "PM2.5 Reading"]
+        all_data = all_data[all_data.index.month.isin([1, 2, 6, 7, 8, 12])]
+        all_data['month'] = all_data.index.month
+        all_data['season'] = all_data.apply(lambda x: 'summer' if x.month in (range(6, 9)) else 'winter', axis=1)
+
+        # print(factor_rename)
+        # # print((all_data[factor_rename].shift(30*1)))
+        # lag_range = list(range(0,24))
+        # lag_series = pd.Series(data=[abs(all_data['PM2.5 Reading'].shift(30*i).corr(all_data[factor_rename])) for i in lag_range],index=lag_range)
+        # fig = px.scatter(lag_series)
+        # fig.show()
+        # print(lag_series)
+        # print(lag_series.idxmax())
+        # print()
+
+        all_data = all_data.join(get_diurnal_period()).sample(1310 * 3)
+        all_data["seasonal_diurnal"] = all_data['season'] + ' ' + all_data['diurnal_name']
+        # color_map = {'summer day': 'light red','summer night': 'dark red'}
+        color_map = {'winter day': '#82CAFF', 'winter night': '#151B54', 'summer day': '#E67451',
+                     'summer night': '#551606'}
+
+        # print(factor_meteo_data)
+        # print(factor_meteo_data.stack().corr(time_series.stack(dropna=False)))
+        fig = px.scatter(all_data, y="PM2.5 Reading", x=factor_rename, color='seasonal_diurnal', opacity=0.45,
+                         trendline='ols', color_discrete_map=color_map, template='seaborn')
+        # fig = px.scatter(all_data, y="PM2.5 Reading", x=factor_rename,opacity=0.33,trendline='ols',color_discrete_map=color_map)
+        fig.update_layout(height=750, width=750, font=dict(size=18), legend_orientation='h', yaxis_range=[0, 175])
+        fig.show()
+
+
 if __name__ == '__main__':
-    metaFrame = get_metadata()
-    print(metaFrame.index)
+    meta_data, time_series = get_metadata(), get_series()['2019']
 
     # meteoData = GetAllMeteoData()
     # meteoData.to_netcdf('meteoData.nc')
@@ -229,32 +267,27 @@ if __name__ == '__main__':
     # meteoData = oneFolder(meteoblue_data_path_2019, '2019-01-01 to 2019-12-31')
     # meteoData.to_netcdf('meteoData_2019.nc')
 
-    meteoData = xr.open_dataset('meteoData_2019.nc')['meteo']
+    meteoData = xr.open_dataset('Files/meteoData_2019.nc')['meteo']
 
-    # print(meteoData)
-    # print(meteoData.shape)
-    # print(meteoData.dims)
-    # print(meteoData.coords)
-    # for dim in meteoData.dims: print(meteoData.coords[dim])
-    # print(meteoData.loc[:,'2020-07-02':'2020-07-05',['Temperature [2 m]','Precipitation']])
-    # print(meteoData.sel(factor='Temperature [2 m]'))
+    print(meteoData)
+    print(meteoData.shape)
+    print(meteoData.dims)
+    print(meteoData.coords)
+    for dim in meteoData.dims: print(meteoData.coords[dim])
 
-    # factor = 'Temperature [2 m elevation corrected]'
-    # sampleFactors = ['Wind Gust', 'Wind Speed [10 m]', 'Wind Direction [10 m]', 'Temperature [2 m elevation corrected]', 'Relative Humidity [2 m]']
+    factor = 'Temperature [2 m elevation corrected]'
+    # print(meteoData.loc[:, '2019-07-02':'2019-07-05', ['Temperature [2 m]', 'Relative Humidity [2 m]']])
+    print(meteoData.sel(factor=factor))
+
     # for sampleFactor in sampleFactors:
     #     getFactorData(meteoData, sampleFactor)['2020'].to_csv(sampleFactor+'.csv')
 
-    # factor = factors[-3]
-    # df = getFactorData(meteoData, factor)
-    # print(df)
-    # print(df.index)
-    # print(df.columns)
+    factor = factors[-3]
+    df = get_factor_data(meteoData, factor)
+    exit()
 
-    # for factor in factors:
-    #     df = getFactorData(meteoData, factor)
-    #     print(df)
+    # for factor in factors: print(get_factor_data(meteoData, factor))
 
-    time_series = data_cleaning_and_preparation()['2019']
     # print(time_series.columns)
     # zonal_meteo_data = get_district_data(meteoData, 'Dhaka').assign(Reading=time_series['Dhaka'])
     # zonal_meteo_data = zonal_meteo_data.reset_index().drop('time', axis=1).dropna()
@@ -263,19 +296,11 @@ if __name__ == '__main__':
     # results = model.fit()
     # print(results.summary())
 
-    for factor in factors:
-        factor_meteo_data = get_factor_data(meteoData,factor)
-        print(factor)
-        print(time_series.corrwith(factor_meteo_data).mean())
-
-    # SimpleTimeseries(df)
+    # print(time_series.corrwith(factor_meteo_data).median())
     # print(meteoData.to_dataframe())
 
     # prof = ProfileReport(df, minimal=False,title='Meteo Data')
     # prof.to_file(output_file='Meteo Data.html')
-
-    # print(np.array_equal(combined.values,meteoData.values))
-    # print(np.array_equal(merged.values,meteoData.values))
 
     # MeteoTimeSeries(meteoData.loc["Dhaka",:,selFactors],factorUnit[0],factorUnit[1],factorUnit[2])
     # MeteoBoxPlot(meteoData)
