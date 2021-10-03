@@ -8,7 +8,8 @@ def GroupedBox(x):
 
     colorPal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500']
 
-    for year in pd.DatetimeIndex(x.index).year.unique():
+    # for year in pd.DatetimeIndex(x.index).year.unique():
+    for year in x.index.year.unique():
         fig.add_trace(go.Box(
             y=x[str(year)],
             x=pd.DatetimeIndex(x.index).month_name(),
@@ -31,5 +32,5 @@ if __name__ == '__main__':
     metadata, series = get_metadata(), get_series()
     print(metadata)
 
-    series[['Kushtia']].apply(GroupedBox)
-    # df.resample('6H').mean().apply(GroupedBox)
+    # series[['Kushtia']].apply(GroupedBox)
+    series.apply(GroupedBox)

@@ -233,7 +233,7 @@ def ViolinPLot(df):
     fig.show()
 
 
-def ColorTable():
+def prepare_color_table():
     colorScale, categoryName, AQScale = get_category_info()
     range = [str(a) + " - " + str(b) for a, b in zip(AQScale, AQScale[1:])]
     data = {'Category': categoryName, 'Color': colorScale, 'range': range}
@@ -243,21 +243,23 @@ def ColorTable():
         header=dict(
             values=["<b>Category</b>", "<b>Concentration Range (&#956;gm<sup>-3</sup>) </b>"],
             line_color='grey', fill_color='silver',
-            align='center', font=dict(color='black', size=15)
+            align='center', font=dict(color='black', size=12)
         ),
         cells=dict(
             values=[df.Category, df.range],
             line_color='grey', fill_color=[df.Color],
-            align='center', font=dict(color='black', size=12)
+            align='center', font=dict(color='black', size=9)
         ))
     ])
 
-    fig.update_layout(width=666)
+    fig.update_layout(width=333)
 
     fig.show()
 
 
 if __name__ == '__main__':
+    prepare_color_table()
+    exit()
     plt.close("all")
     # sns.set()
     # # sns.set_style("whitegrid")

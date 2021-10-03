@@ -329,7 +329,7 @@ def MissingBar(df):
     fig.show()
 
 
-def ShiftedSeries(df, dis, lagRange, offset, rs):
+def shifted_series(df, dis, lag_range, offset, rs):
     plt.figure(figsize=(9, 3))
     df[dis[0]].plot(linestyle='-', linewidth=1, c="Blue")
     df[dis[1]].plot(linestyle='-', linewidth=1, c="Red")
@@ -345,7 +345,7 @@ def ShiftedSeries(df, dis, lagRange, offset, rs):
     plt.show()
 
     f, ax = plt.subplots(figsize=(9, 3))
-    ax.plot(list(range(-lagRange, lagRange + 1)), rs, marker='o', )
+    ax.plot(list(range(-lag_range, lag_range + 1)), rs, marker='o', )
     # ax.axvline(np.ceil(len(rs) / 2), color='k', linestyle='--', label='Center')
     # ax.axvline(np.argmax(rs), color='r', linestyle='--', label='Peak synchrony')
     ax.axvline(offset, color='k', linestyle='--', label='Peak synchrony')
@@ -749,36 +749,40 @@ def FrequencyClustering(df):
     # PLotlyTimeSeries(df['2019-09':'2019-12'][representative])
 
 
-def DayNightDistribution(timeseries, samplingHours=1):
-    timeseries = timeseries.iloc[6:-18]
-    timeseries = timeseries.resample(str(samplingHours) + 'H').mean()
-    timeseries = timeseries.fillna(-1)
-    timeseries = timeseries.stack().reset_index().set_index('time')
-    timeseries = timeseries.replace({-1: None})
-    timeseries.columns = ['zone', 'reading']
+def day_night_distribution(time_series, sampling_hours=1):
+    # time_series = time_series.iloc[6:-18]
+    time_series = time_series.resample(str(sampling_hours) + 'H').mean()
+    time_series = time_series.fillna(-1)
+    time_series = time_series.stack().reset_index().set_index('time')
+    time_series = time_series.replace({-1: None})
+    time_series.columns = ['zone', 'reading']
 
-    timeseries['daytime'] = np.tile(
-        np.hstack((np.repeat('Day', 12 * 30 // samplingHours), np.repeat('Night', 12 * 30 // samplingHours))),
-        ((timeseries.shape[0] * samplingHours) // (24 * 30)))
+    # time_series['daytime'] = np.tile(
+    #     np.hstack((np.repeat('Day', 12 * 30 // sampling_hours), np.repeat('Night', 12 * 30 // sampling_hours))),
+    #     ((time_series.shape[0] * sampling_hours) // (24 * 30)))
+
+    time_series = time_series.join(get_diurnal_period())
+    print(time_series)
 
     # print(timeseries.head(3000).to_string())
 
     fig = go.Figure()
 
-    fig.add_trace(go.Violin(x=timeseries['zone'][timeseries['daytime'] == 'Day'],
-                            y=timeseries['reading'][timeseries['daytime'] == 'Day'],
+    fig.add_trace(go.Violin(x=time_series['zone'][time_series['diurnal_name'] == 'day'],
+                            y=time_series['reading'][time_series['diurnal_name'] == 'day'],
                             legendgroup='Yes', scalegroup='Yes', name='Day',
                             side='negative',
                             line_color='orange')
                   )
-    fig.add_trace(go.Violin(x=timeseries['zone'][timeseries['daytime'] == 'Night'],
-                            y=timeseries['reading'][timeseries['daytime'] == 'Night'],
+    fig.add_trace(go.Violin(x=time_series['zone'][time_series['diurnal_name'] == 'night'],
+                            y=time_series['reading'][time_series['diurnal_name'] == 'night'],
                             legendgroup='No', scalegroup='No', name='Night',
                             side='positive',
                             line_color='blue')
                   )
     fig.update_traces(meanline_visible=True)
-    fig.update_layout(violingap=0, violinmode='overlay', font_size=27, legend_orientation='h')
+    fig.update_layout(violingap=0, violinmode='overlay', font_size=27, legend_orientation='h',
+                      xaxis_title="Zone",yaxis_title="PM2.5 Concentration", )
     fig.show()
 
 
@@ -802,7 +806,7 @@ if __name__ == '__main__':
     meta_data, timeseries = get_metadata(), get_series()
 
     # PairDistribution(timeseries)
-    # DayNightDistribution(timeseries)
+    day_night_distribution(timeseries)
     # print(Ranking(timeseries))
 
     # changes_in_districts(timeseries)
@@ -816,7 +820,7 @@ if __name__ == '__main__':
     # MissingDataFraction(timeseries)
     # FrequencyClustering(timeseries)
 
-    # exit()
+    exit()
 
     # StackedBar(timeseries)
 

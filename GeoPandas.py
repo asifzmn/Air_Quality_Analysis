@@ -28,6 +28,9 @@ def Distance(dis1, dis2):
     return geodesic(origin, dest).kilometers
 
 
+def compass_bearing():
+    pass
+
 def angleFromCoordinate(dis1, dis2):
     metaFrame = get_metadata()
     lat1, long1, lat2, long2 = metaFrame.loc[dis1]['Latitude'], metaFrame.loc[dis1]['Longitude'], metaFrame.loc[dis2][

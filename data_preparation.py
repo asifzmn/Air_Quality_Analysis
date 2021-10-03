@@ -6,23 +6,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
-
-dataset_url = 'http://berkeleyearth.lbl.gov/air-quality/maps/cities/'
-aq_directory = '/home/asif/Work/Air Analysis/AQ Dataset/'  # change this location
-# aq_directory = getcwd() + '/Project Data/'  # change this location
-
-berkely_earth_data = aq_directory + 'Berkely Earth Data/'
-raw_data_path = berkely_earth_data + 'raw/'
-zone_data_path = berkely_earth_data + 'zones/'
-berkely_earth_data_prepared = berkely_earth_data + 'prepared/'
-meteoblue_data_path = aq_directory + 'Meteoblue Scrapped Data/'
-meteoblue_data_path_2019 = aq_directory + 'MeteoBlue Data 2019'
+from configuration import *
 
 metadata_attributes = ['Zone', 'Division', 'Population', 'Latitude', 'Longitude']
 rename_dict = {'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}
 
 
-def get_common_id(id=0): return ['study_area', 'SouthAsianCountries', 'allbd'][id]
+def get_common_id(id=1): return ['study_area', 'SouthAsianCountries', 'allbd'][id]
 
 
 def get_save_location(): return berkely_earth_data_prepared + get_common_id() + '/'
@@ -101,8 +91,12 @@ def data_cleaning_and_preparation():
         series['time'] = pd.to_datetime(series[series.columns[:4]])
         series = series[['time', 'PM25']]
 
-        duplicates = (series.duplicated(subset=['time'], keep='first'))
-        series.loc[duplicates, 'time'] = series.loc[duplicates, 'time'] + timedelta(hours=1)
+        if get_common_id() != 'SouthAsianCountries':
+            duplicates = (series.duplicated(subset=['time'], keep='first'))
+            series.loc[duplicates, 'time'] = series.loc[duplicates, 'time'] + timedelta(hours=1)
+        else:
+            series = series.groupby('time').PM25.mean().reset_index()
+
         series = series.set_index('time').reindex(pd.date_range('2017-01-01', '2021-01-01', freq='h')[:-1])
         series.columns = [zone_metadata[-1].iloc[0]]
         zone_reading.append(series)
@@ -131,7 +125,7 @@ def get_metadata():
 
 
 def get_diurnal_period():
-    sun_time = pd.read_csv(aq_directory + 'sun_rise_set_time_2019.csv', sep='\t')
+    sun_time = pd.read_csv(aq_directory + 'sun_rise_set_time_2017_2020.csv', sep='\t')
     sun_time['Sunrise_date'] = sun_time['Date '] + ' ' + sun_time['Sunrise ']
     sun_time['Sunset_date'] = sun_time['Date '] + ' ' + sun_time['Sunset ']
     sun_time = sun_time[['Sunrise_date', 'Sunset_date']].apply(pd.to_datetime).apply(lambda x: x.dt.round('H'))
@@ -139,14 +133,17 @@ def get_diurnal_period():
         lambda x: pd.Series(['day' if x.Sunrise_date.hour <= i <= x.Sunset_date.hour else 'night' for i in range(24)]),
         axis=1)
     sun_time_series = sun_time_matrix.stack().reset_index(drop=True)
-    sun_time_series.index = pd.date_range('2019', '2020', freq='H')[:-1]
+    print(sun_time_series)
+
+    print(pd.date_range('2017', '2021', freq='H')[:-1])
+    sun_time_series.index = pd.date_range('2017', '2021', freq='H')[:-1]
     sun_time_series.name = 'diurnal_name'
     return sun_time_series
 
 
 if __name__ == '__main__':
-    web_crawl()
-    data_cleaning_and_preparation()
+    # web_crawl()
+    # data_cleaning_and_preparation()
     timeseies = get_series()
     meta_data = get_metadata()
 

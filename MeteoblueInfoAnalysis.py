@@ -244,6 +244,7 @@ def pm_vs_factor_scatter():
         # print()
 
         all_data = all_data.join(get_diurnal_period()).sample(1310 * 3)
+        # all_data = all_data.join(get_diurnal_period()['2019']).sample(1310 * 3)
         all_data["seasonal_diurnal"] = all_data['season'] + ' ' + all_data['diurnal_name']
         # color_map = {'summer day': 'light red','summer night': 'dark red'}
         color_map = {'winter day': '#82CAFF', 'winter night': '#151B54', 'summer day': '#E67451',
