@@ -6,7 +6,7 @@ from os.path import isfile, join
 from datetime import datetime, timedelta
 from timeit import default_timer as timer
 from pandas_profiling import ProfileReport
-from Visualization_Modules import SimpleTimeseries
+from visualization_modules import SimpleTimeseries
 from data_preparation import *
 import xarray as xr
 import statsmodels.api as sm
@@ -225,7 +225,7 @@ def pm_vs_factor_scatter():
                               'Wind Speed [kilometer/second]', 'Mean Sea Level Pressure [hPa]']
 
     for factor, factor_rename in zip(compare_factors[:], compare_factors_rename):
-        factor_meteo_data = get_factor_data(meteoData, factor)
+        factor_meteo_data = get_factor_data(meteo_data, factor)
         if factor == 'Relative Humidity [2 m]': factor_meteo_data = factor_meteo_data * 100
         all_data = pd.concat((factor_meteo_data.stack(), time_series.stack(dropna=False)), axis=1).droplevel(1)
         all_data.columns = [factor_rename, "PM2.5 Reading"]
@@ -268,23 +268,23 @@ if __name__ == '__main__':
     # meteoData = oneFolder(meteoblue_data_path_2019, '2019-01-01 to 2019-12-31')
     # meteoData.to_netcdf('meteoData_2019.nc')
 
-    meteoData = xr.open_dataset('Files/meteoData_2019.nc')['meteo']
+    meteo_data = xr.open_dataset('Files/meteoData_2019.nc')['meteo']
 
-    print(meteoData)
-    print(meteoData.shape)
-    print(meteoData.dims)
-    print(meteoData.coords)
-    for dim in meteoData.dims: print(meteoData.coords[dim])
+    print(meteo_data)
+    print(meteo_data.shape)
+    print(meteo_data.dims)
+    print(meteo_data.coords)
+    for dim in meteo_data.dims: print(meteo_data.coords[dim])
 
     factor = 'Temperature [2 m elevation corrected]'
     # print(meteoData.loc[:, '2019-07-02':'2019-07-05', ['Temperature [2 m]', 'Relative Humidity [2 m]']])
-    print(meteoData.sel(factor=factor))
+    print(meteo_data.sel(factor=factor))
 
     # for sampleFactor in sampleFactors:
     #     getFactorData(meteoData, sampleFactor)['2020'].to_csv(sampleFactor+'.csv')
 
     factor = factors[-3]
-    df = get_factor_data(meteoData, factor)
+    df = get_factor_data(meteo_data, factor)
     exit()
 
     # for factor in factors: print(get_factor_data(meteoData, factor))

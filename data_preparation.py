@@ -6,13 +6,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
-from configuration import *
+from paths import *
 
 metadata_attributes = ['Zone', 'Division', 'Population', 'Latitude', 'Longitude']
 rename_dict = {'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}
 
 
-def get_common_id(id=1): return ['study_area', 'SouthAsianCountries', 'allbd'][id]
+def get_common_id(id=0): return ['study_area', 'SouthAsianCountries', 'allbd'][id]
 
 
 def get_save_location(): return berkely_earth_data_prepared + get_common_id() + '/'
