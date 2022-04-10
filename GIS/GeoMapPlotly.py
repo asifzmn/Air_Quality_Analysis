@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 from data_preparation import get_category_info, get_metadata, get_series
-from MeteoblueInfoAnalysis import GetAllMeteoData
+from meteorological_variables import GetAllMeteoData
 
 
 def SliderMapCommon(df, metaFrame, timeformat, discrete=True):

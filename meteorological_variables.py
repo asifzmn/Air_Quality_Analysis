@@ -11,6 +11,7 @@ from data_preparation import *
 import xarray as xr
 import statsmodels.api as sm
 
+
 # factors = ['Temperature [2 m]', 'Relative Humidity [2 m]', 'Mean Sea Level Pressure', 'Precipitation',
 #            'Cloud Cover High', 'Cloud Cover Medium', 'Cloud Cover Low', 'Sunshine Duration', 'Shortwave Radiation',
 #            'Direct Shortwave Radiation', 'Diffuse Shortwave Radiation', 'Wind Gust', 'Wind Speed [10 m]',
@@ -33,6 +34,14 @@ import statsmodels.api as sm
 #        'Wind Direction [500 mb]', 'Temperature [1000 mb]',
 #        'Temperature [850 mb]', 'Temperature [700 mb]', 'Temperature',
 #        'Soil Temperature [0-10 cm down]', 'Soil Moisture [0-10 cm down]']
+
+class MeteorologicalVariableType:
+    def __init__(self, name, unit, factor_list, color_list):
+        self.name = name
+        self.unit = unit
+        self.factor_list = factor_list
+        self.color_list = color_list
+
 
 factors = ['Temperature [2 m elevation corrected]', 'Growing Degree Days [2 m elevation corrected]',
            'Temperature [900 mb]', 'Temperature [850 mb]', 'Temperature [800 mb]', 'Temperature [700 mb]',
@@ -260,8 +269,8 @@ def pm_vs_factor_scatter():
 
 
 def prepare_meteo_data():
-    meteoData = oneFolder(meteoblue_data_path_2019, '2019-01-01 to 2019-12-31')
-    meteoData.to_netcdf('meteoData_2019.nc')
+    meteo_data = oneFolder(meteoblue_data_path_2019, '2019-01-01 to 2019-12-31')
+    meteo_data.to_netcdf('meteoData_2019.nc')
 
 
 if __name__ == '__main__':

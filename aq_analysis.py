@@ -11,7 +11,7 @@ from sklearn.cluster import KMeans
 from itertools import combinations
 from plotly.subplots import make_subplots
 from GIS.GeoPandas import mapArrow, mapPlot
-from MeteoblueInfoAnalysis import *
+from meteorological_variables import *
 from related.GeoMapMatplotLib import MapPlotting
 from visualization_modules import *
 import more_itertools
