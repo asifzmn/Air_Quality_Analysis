@@ -59,7 +59,7 @@ def day_night_distribution(time_series, sampling_hours=1):
     fig.show()
 
 
-def PairDistributionSummary(timeseries, samplingHours=1):
+def pair_distribution_summary(timeseries, samplingHours=1):
     # df = df[: str(max(df.index.date) + timedelta(days=-1))].resample(str(samplingHours) + 'H').mean()
     timeseries = timeseries.resample(str(samplingHours) + 'H').mean()
     timeseries['daytime'] = np.tile(

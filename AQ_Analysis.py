@@ -12,6 +12,7 @@ from itertools import combinations
 from plotly.subplots import make_subplots
 from GIS.GeoPandas import mapArrow, mapPlot
 from MeteoblueInfoAnalysis import *
+from related.GeoMapMatplotLib import MapPlotting
 from visualization_modules import *
 import more_itertools
 
@@ -450,7 +451,7 @@ def CrossCorrelation(df):
         ser, ser.name = new_df.stack(), x.name
         return ser
 
-    pth = berkely_earth_data
+    pth = berkeley_earth_data
     window, step, lag = 5, 2, 3
     fileName, indices, freq = 'lagTimeMatrix_', ['Leader', 'Date', 'Follower'], str(window) + 'D'
 
@@ -630,7 +631,7 @@ if __name__ == '__main__':
     meta_data, timeseries = get_metadata(), get_series()
 
     # PairDistribution(timeseries)
-    day_night_distribution(timeseries)
+    # day_night_distribution(timeseries)
     # print(Ranking(timeseries))
 
     # changes_in_districts(timeseries)
@@ -644,7 +645,7 @@ if __name__ == '__main__':
     # MissingDataFraction(timeseries)
     # FrequencyClustering(timeseries)
 
-    exit()
+    # exit()
 
     # StackedBar(timeseries)
 
@@ -656,7 +657,7 @@ if __name__ == '__main__':
     # CrossCorrelation(timeseries)
     # PaperComparision()
 
-    # CityAnalysis(df['Dhaka']['2017'])
+    CityAnalysis(timeseries['Dhaka']['2017'])
     # CityAnalysis(df['Narayanganj']['2017-02':'2018-02'])
     # CityAnalysis(df['Mymensingh']['2019-02':'2019-04'])
 
@@ -665,8 +666,8 @@ if __name__ == '__main__':
 
     # ColorTable()
 
-    latex_custom_table_format(timeseries.describe().T)
-    MissingDataFraction(timeseries)
+    # latex_custom_table_format(timeseries.describe().T)
+    # MissingDataFraction(timeseries)
 
     # respresentativeDistricts = ['Kishorganj', 'Bogra', 'Nagarpur', 'Jessore', 'Nawabganj', 'Dhaka']
 

@@ -47,7 +47,7 @@ factors = ['Temperature [2 m elevation corrected]', 'Growing Degree Days [2 m el
 
 selFactors = ['Temperature [2 m]', 'Surface Temperature', 'Soil Temperature [0-10 cm down]', 'Temperature [700 mb]',
               'Temperature [850 mb]', 'Temperature [1000 mb]']
-factorUnit = 'Temperature', 'Celcius', ['#260637', '#843B58', '#B73239', '#FFA500', '#F9C53D', '#EADAA2', ]
+factorUnit = 'Temperature', 'Celsius', ['#260637', '#843B58', '#B73239', '#FFA500', '#F9C53D', '#EADAA2', ]
 
 # selFactors = ['Relative Humidity [2 m]','Soil Moisture [0-10 cm down]']
 # factorUnit = 'Humidity','Fraction',['mediumblue','lightblue']
@@ -113,9 +113,9 @@ def WindDirFactors():
 
 
 def get_cardinal_direction(x, seg=16):
-    directon = np.floor((x - (360 / seg) / 2) / (360 / seg)).astype('int')
-    directon[directon == -1] = seg - 1
-    return np.roll(np.hstack((np.bincount(directon), np.zeros(seg - max(directon) - 1))), 1)
+    direction = np.floor((x - (360 / seg) / 2) / (360 / seg)).astype('int')
+    direction[direction == -1] = seg - 1
+    return np.roll(np.hstack((np.bincount(direction), np.zeros(seg - max(direction) - 1))), 1)
 
 
 # def WindGraph(x): PlotlyRosePlot([[getSides(x), 'Wind', '#3f65b1']])
@@ -259,14 +259,16 @@ def pm_vs_factor_scatter():
         fig.show()
 
 
+def prepare_meteo_data():
+    meteoData = oneFolder(meteoblue_data_path_2019, '2019-01-01 to 2019-12-31')
+    meteoData.to_netcdf('meteoData_2019.nc')
+
+
 if __name__ == '__main__':
     meta_data, time_series = get_metadata(), get_series()['2019']
 
     # meteoData = GetAllMeteoData()
     # meteoData.to_netcdf('meteoData.nc')
-
-    # meteoData = oneFolder(meteoblue_data_path_2019, '2019-01-01 to 2019-12-31')
-    # meteoData.to_netcdf('meteoData_2019.nc')
 
     meteo_data = xr.open_dataset('Files/meteoData_2019.nc')['meteo']
 
@@ -274,7 +276,8 @@ if __name__ == '__main__':
     print(meteo_data.shape)
     print(meteo_data.dims)
     print(meteo_data.coords)
-    for dim in meteo_data.dims: print(meteo_data.coords[dim])
+    for dim in meteo_data.dims:
+        print(meteo_data.coords[dim])
 
     factor = 'Temperature [2 m elevation corrected]'
     # print(meteoData.loc[:, '2019-07-02':'2019-07-05', ['Temperature [2 m]', 'Relative Humidity [2 m]']])

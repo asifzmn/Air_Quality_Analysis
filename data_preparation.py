@@ -12,10 +12,10 @@ metadata_attributes = ['Zone', 'Division', 'Population', 'Latitude', 'Longitude'
 rename_dict = {'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}
 
 
-def get_common_id(id=0): return ['study_area', 'SouthAsianCountries', 'allbd'][id]
+def get_common_id(id=1): return ['study_area', 'SouthAsianCountries', 'allbd'][id]
 
 
-def get_save_location(): return berkely_earth_data_prepared + get_common_id() + '/'
+def get_save_location(): return berkeley_earth_data_prepared + get_common_id() + '/'
 
 
 def get_zones_info(): return pd.read_csv(zone_data_path + get_common_id() + '.csv').sort_values('Zone', ascending=True)
@@ -38,7 +38,7 @@ def make_header_only(meta_data):
 
 
 def read_all_bd_zones_and_make_header():
-    alldatapath = berkely_earth_data + 'total/'
+    alldatapath = berkeley_earth_data + 'total/'
     allFiles = [alldatapath + f for f in listdir(alldatapath)]
     allDistrictMetaData = []
 
@@ -49,7 +49,7 @@ def read_all_bd_zones_and_make_header():
     allDistrictMetaData = pd.DataFrame(np.array(allDistrictMetaData)[:, [4, 2]], columns=['Division', 'Zone']).assign(
         Country='Bangladesh')
     allDistrictMetaData = allDistrictMetaData[['Country', 'Division', 'Zone']]
-    allDistrictMetaData.to_csv(berkely_earth_data + 'zones/allbd.csv', index=False)
+    allDistrictMetaData.to_csv(berkeley_earth_data + 'zones/allbd.csv', index=False)
 
 
 def handle_mislabeled_duplicates(series):
@@ -142,7 +142,7 @@ def get_diurnal_period():
 
 
 if __name__ == '__main__':
-    # web_crawl()
+    web_crawl()
     # data_cleaning_and_preparation()
     timeseies = get_series()
     meta_data = get_metadata()

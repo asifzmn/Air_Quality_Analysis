@@ -13,8 +13,8 @@ from plotly import graph_objects as go
 from sklearn.cluster import Birch, KMeans
 from sklearn.preprocessing import MinMaxScaler
 from data_preparation import get_category_info, get_common_id, read_file_as_text, web_crawl, get_zones_info
-from meteorological_variables import MapPlotting
-from meteorological_variables import heatmap, annotate_heatmap
+# from meteorological_variables import MapPlotting
+# from meteorological_variables import heatmap, annotate_heatmap
 from datetime import datetime, timedelta
 
 [Year, Month, Day, UTC_Hour, PM25, PM10_mask, Retrospective] = range(7)
@@ -72,13 +72,13 @@ def Plotting(Y, labels=None, xlabel='', title='', x=None):
     plt.show()
 
 
-def HeatMap(data, tag, cbarlabel=None, precision=2, cmap="Purples"):
-    fig, ax = plt.subplots()
-
-    im, cbar = heatmap(data, tag, tag, ax=ax, cmap=cmap, cbarlabel=cbarlabel)
-    _ = annotate_heatmap(im, valfmt="{x:." + str(precision) + "f} ")
-
-    fig.tight_layout()
+# def HeatMap(data, tag, cbarlabel=None, precision=2, cmap="Purples"):
+#     fig, ax = plt.subplots()
+#
+#     im, cbar = heatmap(data, tag, tag, ax=ax, cmap=cmap, cbarlabel=cbarlabel)
+#     _ = annotate_heatmap(im, valfmt="{x:." + str(precision) + "f} ")
+#
+#     fig.tight_layout()
     plt.show()
 
 

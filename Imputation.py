@@ -9,6 +9,7 @@ from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.callbacks import EarlyStopping
 from tensorflow.python.keras.layers import LSTM, Dense, Masking, Dropout
 
+from ObsoleteMethods import LoadData
 from data_preparation import *
 
 
@@ -75,7 +76,7 @@ if __name__ == '__main__':
     basicTimeParameters = np.array(
         ['year', 'month', 'day', 'hour', 'yearmonth', 'monthday', 'yearmonthday', 'yearmonthdayhour'])
 
-    dataSummaries, allDistrictMetaData = LoadData(allFiles, basicTimeParameters, 'reading2.pickle')
+    dataSummaries, allDistrictMetaData = LoadData(allFiles)
     dataSummaries = dataSummaries[-1]
 
     # print(pd.DataFrame(np.transpose(dataSummaries[1])).isnull().sum())

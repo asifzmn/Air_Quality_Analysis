@@ -6,7 +6,7 @@ from data_preparation import get_metadata, get_series
 def GroupedBox(x):
     fig = go.Figure()
 
-    colorPal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500']
+    colorPal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500', '#79C510']
 
     # for year in pd.DatetimeIndex(x.index).year.unique():
     for year in x.index.year.unique():

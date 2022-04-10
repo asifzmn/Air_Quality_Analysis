@@ -1,7 +1,14 @@
 # BoxPlotYear(df)
-# MissingDataHeatmap(df)
 # BoxPlotDistrict(df)
+# MissingDataHeatmap(df)
+# MissingBar(df)
+# PLotlyTimeSeries(df)
 # MeteoAnalysis(df)
+# SliderMapCommon(df, metaFrame, ['M', '%Y %B'])
+# StackedBar(df)
+# MapPlotting(metaFrame, df[date].mean().values,vec=lagMatrix)
+# TriangularHeatmap(df)
+# SeasonalDecomposition(monthData[-1][2].iloc[:,3])
 
 # df = df.fillna(df.rolling(6, min_periods=1, ).mean()).round(3)
 
@@ -33,7 +40,6 @@
 #     [-3+7,-2+7,-1+7,0+7,1+7,2+7,3+7])*24]
 #     df[cols] = df[cols].fillna((pd.concat(ss, axis=1).mean(axis=1)))
 
-# MissingBar(df)
 
 # corrArray = np.array([df['2017-12':'2017-12'].corr().values,
 #                       df['2018-03':'2018-03'].corr().values,
@@ -100,10 +106,6 @@
 #             print(offset)
 #             print(angleFromCoordinate(dis1, dis2))
 
-# SliderMapCommon(df, metaFrame, ['M', '%Y %B'])
-# PLotlyTimeSeries(df)
-# SliderMapCommon(df, metaFrame, ['M', '%Y %B'])
-# MeteoAnalysis(df)
 
 # df = df.resample('3D').max()
 # plt.figure(figsize=(9, 6))
@@ -117,9 +119,6 @@
 # l = ['Day',  'Night']
 # df1['session'] = pd.cut(df.index, bins=b, labels=l)
 
-# MapPlotting(metaFrame, df[date].mean().values,vec=lagMatrix)
-# TriangularHeatmap(df)
-# SeasonalDecomposition(monthData[-1][2].iloc[:,3])
 
 # print([df1[2].mean().mean() for df1 in yearData])
 # popYear = [157977153, 159685424, 161376708, 163046161]
@@ -128,9 +127,7 @@
 
 # data.resample('S', fill_method='pad')  # forming a series of seconds
 
-# MissingDataHeatmap(df)
-# StackedBar(df)
-# BoxPlotDistrict(df, '')
+
 # for label, content in df.items():print(label,content)
 
 # print(df.to_markdown())
