@@ -299,5 +299,5 @@ if __name__ == '__main__':
     plt.close("all")
     # sns.set()
     # # sns.set_style("whitegrid")
-    metaFrame, series = get_metadata(), get_series()
+    metadata, series = get_metadata(), get_series()
     BoxPlotHour(series)

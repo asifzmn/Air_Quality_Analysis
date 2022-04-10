@@ -3,10 +3,10 @@ import plotly.graph_objects as go
 from data_preparation import get_metadata, get_series
 
 
-def GroupedBox(x):
+def grouped_box(x):
     fig = go.Figure()
 
-    colorPal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500', '#79C510']
+    color_pal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500', '#79C510']
 
     # for year in pd.DatetimeIndex(x.index).year.unique():
     for year in x.index.year.unique():
@@ -14,7 +14,7 @@ def GroupedBox(x):
             y=x[str(year)],
             x=pd.DatetimeIndex(x.index).month_name(),
             name=year,
-            marker_color=colorPal[year - 2017]
+            marker_color=color_pal[year - 2017]
         ))
 
     fig.update_layout(
@@ -33,4 +33,4 @@ if __name__ == '__main__':
     print(metadata)
 
     # series[['Kushtia']].apply(GroupedBox)
-    series.apply(GroupedBox)
+    series.apply(grouped_box)

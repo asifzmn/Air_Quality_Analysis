@@ -181,8 +181,7 @@ def MissingBar(df):
     # x = ['One', 'Two', 'Three', 'Four', 'More']
     # y = list(sortedCounts.values())[:4] + [sum(list((sortedCounts.values()))[4:])]
 
-    y = list(sortedCounts.values())
-    x = list(sortedCounts.keys())
+    y, x = list(sortedCounts.values()), list(sortedCounts.keys())
     # x = np.arange(len(y))+1
 
     fig = go.Figure(data=[go.Bar(x=x, y=y)])
@@ -279,7 +278,7 @@ def CrossCorr(time_del, time_stamp, df, lagRange=3):
 def WindGraphTeamEstimate(meteoData, alldis):
     colorPal = np.array(['#ffffff'])
     directions = np.array([[[get_cardinal_direction(meteoData), 'Wind']]])
-    PlotlyRosePlot(directions, colorPal, alldis)
+    plotly_rose_plot(directions, colorPal, alldis)
 
 
 def MeteoAnalysis(df):
@@ -345,7 +344,6 @@ def CorrationSeasonal(corrArray, rows=2, cols=2, title=''):
     import plotly.figure_factory as ff
 
     annotList = []
-
     for i in range(rows):
         for j in range(cols):
             fig1 = ff.create_annotated_heatmap(z=np.flip(np.tril((corrArray[i][j])), 0),
@@ -376,7 +374,6 @@ def CorrationSeasonal(corrArray, rows=2, cols=2, title=''):
         ))
 
     fig.update_layout(title_text=title, height=7500, width=1500)
-
     fig.show()
 
 
@@ -429,7 +426,6 @@ def StackedBar(timeseries):
         template='plotly_white',
         legend={"x": 0, "y": -.3}
     )
-
     fig.show()
 
 
@@ -525,8 +521,6 @@ def changes_in_districts(timeseries):
     pct_change = yearly_average.pct_change().fillna(0) * 100
     print(pct_change.to_string())
 
-    exit()
-
     fig = go.Figure()
 
     for id, row in get_metadata().iterrows():
@@ -536,7 +530,6 @@ def changes_in_districts(timeseries):
             y=pct_change[name],
             name=name
         ))
-
     fig.show()
 
 
@@ -597,7 +590,6 @@ def frequency_clustering(df):
     # labels['color'] = '#566D7E'
 
     metaFrame = pd.concat([metaFrame, labels], axis=1)
-    # print(metaFrame)
 
     representative = districtMeanandLabels.groupby('label').apply(lambda x: x['mean'].idxmax())
     # representative = representative[districtMeanAndGroup.index]
@@ -612,8 +604,7 @@ def frequency_clustering(df):
 
 
 def PairDistribution(timeseries):
-    zones = ['Dhaka', 'Nagarpur', 'Kishorganj', 'Jamalpur', 'Kushtia', 'Barisal', 'Narsingdi', 'Tongi', 'Narayanganj'][
-            :]
+    zones = ['Dhaka', 'Nagarpur', 'Kishorganj', 'Jamalpur', 'Kushtia', 'Barisal', 'Narsingdi', 'Tongi', 'Narayanganj']
     g = sns.PairGrid(timeseries[zones].resample('D').mean(), diag_sharey=False)
     g.map_upper(sns.scatterplot, s=15)
     g.map_lower(sns.kdeplot)
@@ -627,7 +618,6 @@ if __name__ == '__main__':
     sns.set()
     # save_data()
     # sns.set_style("whitegrid")
-    # meta_data, timeseries = LoadMetadata(), LoadSeries()['2017':'2019']
     meta_data, timeseries = get_metadata(), get_series()
 
     # PairDistribution(timeseries)
@@ -645,11 +635,9 @@ if __name__ == '__main__':
     # MissingDataFraction(timeseries)
     # FrequencyClustering(timeseries)
 
-    # exit()
-
-    # StackedBar(timeseries)
-
     # df.describe().T.to_csv('GenralStats.csv')
+
+    # respresentativeDistricts = ['Kishorganj', 'Bogra', 'Nagarpur', 'Jessore', 'Nawabganj', 'Dhaka']
 
     # cross_corr_columns = ['Nawabganj','Sherpur','Kishorganj','Kushtia','Nagarpur',
     # 'Narsingdi','Satkhira','Pirojpur','Lakshmipur']
@@ -657,28 +645,21 @@ if __name__ == '__main__':
     # CrossCorrelation(timeseries)
     # PaperComparision()
 
-    CityAnalysis(timeseries['Dhaka']['2017'])
+    # CityAnalysis(timeseries['Dhaka']['2017'])
     # CityAnalysis(df['Narayanganj']['2017-02':'2018-02'])
     # CityAnalysis(df['Mymensingh']['2019-02':'2019-04'])
-
-    # print(df)
-    # print(metaFrame)
 
     # ColorTable()
 
     # latex_custom_table_format(timeseries.describe().T)
     # MissingDataFraction(timeseries)
 
-    # respresentativeDistricts = ['Kishorganj', 'Bogra', 'Nagarpur', 'Jessore', 'Nawabganj', 'Dhaka']
-
     # df = df.fillna('0')
 
     # BoxPlotDistrict(df)
-
     # ViolinPLot(df)
 
     # df[disRep].apply(GroupedBox)
     # BoxPlotSeason(df[respresentativeDistricts])
     # BoxPlotHour(df[respresentativeDistricts])
-
-    # PairDistributionSummary(df[respresentativeDistricts[:]])
+    # PairDistributionSummary(df[respresentativeDistricts])

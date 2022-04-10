@@ -1,16 +1,15 @@
 import os
 import time
 from os import listdir
+from data_preparation import *
 from collections import Counter
 from os.path import isfile, join
 from datetime import datetime, timedelta
 from timeit import default_timer as timer
 from pandas_profiling import ProfileReport
 from visualization_modules import SimpleTimeseries
-from data_preparation import *
 import xarray as xr
 import statsmodels.api as sm
-
 
 # factors = ['Temperature [2 m]', 'Relative Humidity [2 m]', 'Mean Sea Level Pressure', 'Precipitation',
 #            'Cloud Cover High', 'Cloud Cover Medium', 'Cloud Cover Low', 'Sunshine Duration', 'Shortwave Radiation',
@@ -35,13 +34,6 @@ import statsmodels.api as sm
 #        'Temperature [850 mb]', 'Temperature [700 mb]', 'Temperature',
 #        'Soil Temperature [0-10 cm down]', 'Soil Moisture [0-10 cm down]']
 
-class MeteorologicalVariableType:
-    def __init__(self, name, unit, factor_list, color_list):
-        self.name = name
-        self.unit = unit
-        self.factor_list = factor_list
-        self.color_list = color_list
-
 
 factors = ['Temperature [2 m elevation corrected]', 'Growing Degree Days [2 m elevation corrected]',
            'Temperature [900 mb]', 'Temperature [850 mb]', 'Temperature [800 mb]', 'Temperature [700 mb]',
@@ -54,32 +46,44 @@ factors = ['Temperature [2 m elevation corrected]', 'Growing Degree Days [2 m el
            'Cloud Cover Low [low cld lay]', 'Sunshine Duration', 'Shortwave Radiation', 'Longwave Radiation',
            'UV Radiation', 'Mean Sea Level Pressure [MSL]', 'Evapotranspiration']
 
-selFactors = ['Temperature [2 m]', 'Surface Temperature', 'Soil Temperature [0-10 cm down]', 'Temperature [700 mb]',
-              'Temperature [850 mb]', 'Temperature [1000 mb]']
-factorUnit = 'Temperature', 'Celsius', ['#260637', '#843B58', '#B73239', '#FFA500', '#F9C53D', '#EADAA2', ]
 
-# selFactors = ['Relative Humidity [2 m]','Soil Moisture [0-10 cm down]']
-# factorUnit = 'Humidity','Fraction',['mediumblue','lightblue']
+class MeteorologicalVariableType:
+    def __init__(self, name, unit, factor_list, color_list):
+        assert len(factor_list) == len(color_list)
+        self.name = name
+        self.unit = unit
+        self.factor_list = factor_list
+        self.color_list = color_list
 
-radiation_factors = ['Shortwave Radiation', 'Direct Shortwave Radiation', 'Diffuse Shortwave Radiation']
-wind_speed = ['Wind Speed [10 m]', 'Wind Speed [80 m]', 'Wind Speed [500 mb]', 'Wind Speed [700 mb]',
-              'Wind Speed [850 mb]',
-              'Wind Speed [900 mb]']
+
+factor_list = ['Temperature [2 m]', 'Surface Temperature', 'Soil Temperature [0-10 cm down]', 'Temperature [700 mb]',
+               'Temperature [850 mb]', 'Temperature [1000 mb]']
+name, unit, color_list = 'Temperature', 'Celsius', ['#260637', '#843B58', '#B73239', '#FFA500', '#F9C53D', '#EADAA2']
+
+# factor_list = ['Relative Humidity [2 m]','Soil Moisture [0-10 cm down]']
+# name,unit,color_list = 'Humidity','Fraction',['mediumblue','lightblue']
+
+# factor_list = ['Shortwave Radiation', 'Direct Shortwave Radiation', 'Diffuse Shortwave Radiation']
+# name, unit, color_list = 'Radiation', 'Flux', ['#260637', '#843B58', '#B73239']
+
+# factor_list = ['Wind Speed [10 m]', 'Wind Speed [80 m]', 'Wind Speed [500 mb]', 'Wind Speed [700 mb]',
+#                'Wind Speed [850 mb]', 'Wind Speed [900 mb]']
+# name, unit, color_list = 'Wind', 'M/S', ['#260637', '#843B58', '#B73239', '#FFA500', '#F9C53D', '#EADAA2']
 
 sampleFactors = ['Wind Gust', 'Wind Speed [10 m]', 'Wind Direction [10 m]', 'Temperature [2 m elevation corrected]',
                  'Relative Humidity [2 m]']
 
 
-def PlotlyRosePlot(info, colorPal, alldistricts):
+def plotly_rose_plot(info, color_pal, all_districts):
     fig = go.Figure()
     # for [r,name] in info:fig.add_trace(go.Barpolar(r=r,name=name,marker_color=colorPal))
     for infod in info:
-        for [r, name], colorp in zip(infod, colorPal):
+        for [r, name], colorp in zip(infod, color_pal):
             fig.add_trace(go.Barpolar(r=r, name=name, marker_color=colorp))
 
-    districtCount, windStaes = info.shape[0], info.shape[1]
-    states = np.full((districtCount, districtCount * windStaes), False, dtype=bool)
-    for i in range(districtCount): states[i][windStaes * i:windStaes * (i + 1)] = True
+    district_count, wind_staes = info.shape[0], info.shape[1]
+    states = np.full((district_count, district_count * wind_staes), False, dtype=bool)
+    for i in range(district_count): states[i][wind_staes * i:wind_staes * (i + 1)] = True
 
     fig.update_layout(
         updatemenus=[
@@ -87,7 +91,7 @@ def PlotlyRosePlot(info, colorPal, alldistricts):
                 buttons=list([
                     dict(label=district, method="update",
                          args=[{"visible": state}, {"title": "Wind direction in " + district}])
-                    for district, state in zip(alldistricts, states)]),
+                    for district, state in zip(all_districts, states)]),
                 active=0
             )
         ])
@@ -102,17 +106,17 @@ def PlotlyRosePlot(info, colorPal, alldistricts):
     fig.show()
 
 
-def WindGraphTeam(meteoData):
-    windDirNames, colorPal = WindDirFactors()
-    alldis = meteoData['districts'].values
+def wind_graph_team(meteo_data):
+    wind_dir_names, color_pal = wind_direction_factors()
+    alldis = meteo_data['districts'].values
     directions = np.array(
-        # [[[getSides(meteoData.loc[dis, '2020-03-29':'2020-03-31', factor].values), factor] for factor in windDirNames]
-        [[[get_cardinal_direction(meteoData.loc[dis, :, factor].values), factor] for factor in windDirNames]
+        # [[[getSides(meteoData.loc[dis, '2020-03-29':'2020-03-31', factor].values), factor] for factor in wind_dir_names]
+        [[[get_cardinal_direction(meteo_data.loc[dis, :, factor].values), factor] for factor in wind_dir_names]
          for dis in alldis])
-    PlotlyRosePlot(directions, colorPal, alldis)
+    plotly_rose_plot(directions, color_pal, alldis)
 
 
-def WindDirFactors():
+def wind_direction_factors():
     windDirNames = np.array(
         ['Wind Direction [10 m]', 'Wind Direction [80 m]', 'Wind Direction [500 mb]', 'Wind Direction [700 mb]',
          'Wind Direction [850 mb]', 'Wind Direction [900 mb]'])
@@ -129,7 +133,7 @@ def get_cardinal_direction(x, seg=16):
 
 # def WindGraph(x): PlotlyRosePlot([[getSides(x), 'Wind', '#3f65b1']])
 
-def PrepareMeteoData2(file):
+def prepare_meteo_data2(file):
     def dates(file):
         dates = file.split('/')[-2]
         time = pd.to_datetime(dates.split(' to '))
@@ -149,7 +153,7 @@ def PrepareMeteoDatatime(file): return pd.to_datetime(pd.read_csv(file, sep=',',
 
 def MeteoTimeSeries(meteoData, factorname, unit, colors):
     fig = go.Figure()
-    windDirNames = WindDirFactors()[0]
+    windDirNames = wind_direction_factors()[0]
     for i, factor in enumerate(np.setdiff1d(meteoData['factor'].values, windDirNames)): fig.add_trace(
         go.Scatter(x=pd.Series(meteoData['time'].values), y=meteoData.loc[:, factor], name=factor,
                    marker_color=colors[i]))  # line_color='deepskyblue','dimgray'
@@ -207,7 +211,7 @@ def date_continuity(df):
     print(all[~mask])
 
 
-def oneFolderAnother(locationMain, folders):
+def one_folder_another(locationMain, folders):
     time = pd.to_datetime(folders.split(' to '))
     time = pd.date_range(start=time.min(), end=time.max() + timedelta(days=1), freq='H')[:-1]
 
@@ -263,7 +267,8 @@ def pm_vs_factor_scatter():
         # print(factor_meteo_data.stack().corr(time_series.stack(dropna=False)))
         fig = px.scatter(all_data, y="PM2.5 Reading", x=factor_rename, color='seasonal_diurnal', opacity=0.45,
                          trendline='ols', color_discrete_map=color_map, template='seaborn')
-        # fig = px.scatter(all_data, y="PM2.5 Reading", x=factor_rename,opacity=0.33,trendline='ols',color_discrete_map=color_map)
+        # fig = px.scatter(all_data, y="PM2.5 Reading", x=factor_rename,opacity=0.33,trendline='ols',
+        # color_discrete_map=color_map)
         fig.update_layout(height=750, width=750, font=dict(size=18), legend_orientation='h', yaxis_range=[0, 175])
         fig.show()
 
