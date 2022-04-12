@@ -34,7 +34,6 @@ import statsmodels.api as sm
 #        'Temperature [850 mb]', 'Temperature [700 mb]', 'Temperature',
 #        'Soil Temperature [0-10 cm down]', 'Soil Moisture [0-10 cm down]']
 
-
 factors = ['Temperature [2 m elevation corrected]', 'Growing Degree Days [2 m elevation corrected]',
            'Temperature [900 mb]', 'Temperature [850 mb]', 'Temperature [800 mb]', 'Temperature [700 mb]',
            'Temperature [500 mb]', 'Precipitation Total', 'Precipitation Runoff', 'Relative Humidity [2 m]',
@@ -56,9 +55,9 @@ class MeteorologicalVariableType:
         self.color_list = color_list
 
 
-factor_list = ['Temperature [2 m]', 'Surface Temperature', 'Soil Temperature [0-10 cm down]', 'Temperature [700 mb]',
-               'Temperature [850 mb]', 'Temperature [1000 mb]']
-name, unit, color_list = 'Temperature', 'Celsius', ['#260637', '#843B58', '#B73239', '#FFA500', '#F9C53D', '#EADAA2']
+# factor_list = ['Temperature [2 m]', 'Surface Temperature', 'Soil Temperature [0-10 cm down]', 'Temperature [700 mb]',
+#                'Temperature [850 mb]', 'Temperature [1000 mb]']
+# name, unit, color_list = 'Temperature', 'Celsius', ['#260637', '#843B58', '#B73239', '#FFA500', '#F9C53D', '#EADAA2']
 
 # factor_list = ['Relative Humidity [2 m]','Soil Moisture [0-10 cm down]']
 # name,unit,color_list = 'Humidity','Fraction',['mediumblue','lightblue']
@@ -66,9 +65,12 @@ name, unit, color_list = 'Temperature', 'Celsius', ['#260637', '#843B58', '#B732
 # factor_list = ['Shortwave Radiation', 'Direct Shortwave Radiation', 'Diffuse Shortwave Radiation']
 # name, unit, color_list = 'Radiation', 'Flux', ['#260637', '#843B58', '#B73239']
 
-# factor_list = ['Wind Speed [10 m]', 'Wind Speed [80 m]', 'Wind Speed [500 mb]', 'Wind Speed [700 mb]',
-#                'Wind Speed [850 mb]', 'Wind Speed [900 mb]']
-# name, unit, color_list = 'Wind', 'M/S', ['#260637', '#843B58', '#B73239', '#FFA500', '#F9C53D', '#EADAA2']
+
+factor_list = ['Wind Speed [10 m]', 'Wind Speed [100 m]', 'Wind Speed [500 mb]', 'Wind Speed [700 mb]',
+               'Wind Speed [850 mb]', 'Wind Speed [900 mb]']
+name, unit, color_list = 'Wind', 'M/S', ['#260637', '#843B58', '#B73239', '#FFA500', '#F9C53D', '#EADAA2']
+
+wind_factor = MeteorologicalVariableType(name, unit, factor_list, color_list)
 
 sampleFactors = ['Wind Gust', 'Wind Speed [10 m]', 'Wind Direction [10 m]', 'Temperature [2 m elevation corrected]',
                  'Relative Humidity [2 m]']
@@ -108,21 +110,20 @@ def plotly_rose_plot(info, color_pal, all_districts):
 
 def wind_graph_team(meteo_data):
     wind_dir_names, color_pal = wind_direction_factors()
-    alldis = meteo_data['districts'].values
+    alldis = meteo_data['district'].values
     directions = np.array(
-        # [[[getSides(meteoData.loc[dis, '2020-03-29':'2020-03-31', factor].values), factor] for factor in wind_dir_names]
+        # [[[getSides(meteoData.loc[dis, '2020-03-29':'2020-03-31', factor].values), factor]
+        # for factor in wind_dir_names]
         [[[get_cardinal_direction(meteo_data.loc[dis, :, factor].values), factor] for factor in wind_dir_names]
          for dis in alldis])
     plotly_rose_plot(directions, color_pal, alldis)
 
 
 def wind_direction_factors():
-    windDirNames = np.array(
-        ['Wind Direction [10 m]', 'Wind Direction [80 m]', 'Wind Direction [500 mb]', 'Wind Direction [700 mb]',
-         'Wind Direction [850 mb]', 'Wind Direction [900 mb]'])
-    # colorPal = np.array(['#ffffb1', '#ffd500', '#ffb113', '#ADD8E6', '#87CEEB', '#1E90FF'])
-    colorPal = np.array(['#C0C0C0', '#C0C0C0', '#C0C0C0', '#C0C0C0', '#C0C0C0', '#C0C0C0'])
-    return windDirNames, colorPal
+    wind_dir_names = np.array(wind_factor.factor_list)
+    colorPal = np.array(['#ffffb1', '#ffd500', '#ffb113', '#ADD8E6', '#87CEEB', '#1E90FF'])
+    # colorPal = np.array(['#C0C0C0', '#C0C0C0', '#C0C0C0', '#C0C0C0', '#C0C0C0', '#C0C0C0'])
+    return wind_dir_names, colorPal
 
 
 def get_cardinal_direction(x, seg=16):
@@ -133,25 +134,8 @@ def get_cardinal_direction(x, seg=16):
 
 # def WindGraph(x): PlotlyRosePlot([[getSides(x), 'Wind', '#3f65b1']])
 
-def prepare_meteo_data2(file):
-    def dates(file):
-        dates = file.split('/')[-2]
-        time = pd.to_datetime(dates.split(' to '))
-        return pd.date_range(start=time.min(), end=time.max() + timedelta(days=1), freq='H')[:-1]
 
-    meteoInfo = pd.read_csv(file, sep=',', skiprows=9).replace(-999, 0)
-    meteoInfo.drop(['timestamp'], axis=1, inplace=True)
-    meteoInfo = meteoInfo.apply(pd.to_numeric)
-    meteoInfo.columns, meteoInfo.index = factors, dates(file)
-    meteoInfo.columns.name, meteoInfo.index.name = 'Factors', 'Time'
-    meteoInfo.iloc[:, 1] = meteoInfo.iloc[:, 1] / 100
-    return meteoInfo.stack()
-
-
-def PrepareMeteoDatatime(file): return pd.to_datetime(pd.read_csv(file, sep=',', skiprows=9)['timestamp'])
-
-
-def MeteoTimeSeries(meteoData, factorname, unit, colors):
+def meteo_time_series(meteoData, factorname, unit, colors):
     fig = go.Figure()
     windDirNames = wind_direction_factors()[0]
     for i, factor in enumerate(np.setdiff1d(meteoData['factor'].values, windDirNames)): fig.add_trace(
@@ -164,37 +148,15 @@ def MeteoTimeSeries(meteoData, factorname, unit, colors):
     fig.show()
 
 
-def PrepareMeteoData(file, district):
-    meteoInfo = pd.read_csv(file, sep=',', skiprows=9).replace(-999, 0)
-    meteoInfo.drop(['timestamp'], axis=1, inplace=True)
-    meteoInfo = meteoInfo.apply(pd.to_numeric)
-    meteoInfo.columns = meteoInfo.columns.str.split(" ", len(district.split(' '))).str[-1]
-
-    print(meteoInfo.sample(5).to_string())
-
-    meteoInfo = meteoInfo[factors]
-    # meteoInfo.iloc[:, 1] = meteoInfo.iloc[:, 1] / 100
-    meteoInfo['Relative Humidity [2 m]'] = meteoInfo['Relative Humidity [2 m]'] / 100
-
-    return meteoInfo.values
-
-
-def oneFolder(locationMain, date_folder):
+def one_folder(locationMain, date_folder):
     time = pd.to_datetime(date_folder.split(' to '))
     time = pd.date_range(start=time.min(), end=time.max() + timedelta(days=1), freq='H')[:-1]
 
     meteoData = np.array(
-        [PrepareMeteoData(f'{locationMain}/{date_folder}/{district}.csv', district) for district in meta_data.index])
+        [prepare_meteo_data(f'{locationMain}/{date_folder}/{district}.csv', district) for district in meta_data.index])
     return xr.DataArray(data=meteoData,
                         coords={"district": meta_data.index.values, "time": time, "factor": factors},
                         dims=["district", "time", "factor"], name='meteo')
-
-
-def GetAllMeteoData():
-    locationMain = meteoblue_data_path + 'Meteoblue Scrapped Data'
-    return xr.merge([oneFolder(locationMain, date_folder) for date_folder in listdir(locationMain)[:]])
-    # for date_folder in listdir(locationMain)[:3]:
-    #     print(oneFolder(locationMain, date_folder))
 
 
 def meteo_box_plot(meteoData):
@@ -216,7 +178,7 @@ def one_folder_another(locationMain, folders):
     time = pd.date_range(start=time.min(), end=time.max() + timedelta(days=1), freq='H')[:-1]
 
     meteoData = np.array(
-        [PrepareMeteoData(locationMain + '/' + folders + '/' + district + '.csv') for district in meta_data.index])
+        [prepare_meteo_data(locationMain + '/' + folders + '/' + district + '.csv') for district in meta_data.index])
 
     return xr.DataArray(data=meteoData,
                         coords={"district": meta_data.index.values, "time": time, "factor": factors},
@@ -239,7 +201,8 @@ def pm_vs_factor_scatter():
 
     for factor, factor_rename in zip(compare_factors[:], compare_factors_rename):
         factor_meteo_data = get_factor_data(meteo_data, factor)
-        if factor == 'Relative Humidity [2 m]': factor_meteo_data = factor_meteo_data * 100
+        if factor == 'Relative Humidity [2 m]':
+            factor_meteo_data = factor_meteo_data * 100
         all_data = pd.concat((factor_meteo_data.stack(), time_series.stack(dropna=False)), axis=1).droplevel(1)
         all_data.columns = [factor_rename, "PM2.5 Reading"]
         all_data = all_data[all_data.index.month.isin([1, 2, 6, 7, 8, 12])]
@@ -273,9 +236,49 @@ def pm_vs_factor_scatter():
         fig.show()
 
 
-def prepare_meteo_data():
-    meteo_data = oneFolder(meteoblue_data_path_2019, '2019-01-01 to 2019-12-31')
+def prepare_meteo_data(file, district):
+    meteoInfo = pd.read_csv(file, sep=',', skiprows=9).replace(-999, 0)
+    meteoInfo.drop(['timestamp'], axis=1, inplace=True)
+    meteoInfo = meteoInfo.apply(pd.to_numeric)
+    meteoInfo.columns = meteoInfo.columns.str.split(" ", len(district.split(' '))).str[-1]
+
+    print(meteoInfo.sample(5).to_string())
+
+    meteoInfo = meteoInfo[factors]
+    # meteoInfo.iloc[:, 1] = meteoInfo.iloc[:, 1] / 100
+    meteoInfo['Relative Humidity [2 m]'] = meteoInfo['Relative Humidity [2 m]'] / 100
+
+    return meteoInfo.values
+
+
+def prepare_meteo_data2(file):
+    def dates(file):
+        dates = file.split('/')[-2]
+        time = pd.to_datetime(dates.split(' to '))
+        return pd.date_range(start=time.min(), end=time.max() + timedelta(days=1), freq='H')[:-1]
+
+    meteoInfo = pd.read_csv(file, sep=',', skiprows=9).replace(-999, 0)
+    meteoInfo.drop(['timestamp'], axis=1, inplace=True)
+    meteoInfo = meteoInfo.apply(pd.to_numeric)
+    meteoInfo.columns, meteoInfo.index = factors, dates(file)
+    meteoInfo.columns.name, meteoInfo.index.name = 'Factors', 'Time'
+    meteoInfo.iloc[:, 1] = meteoInfo.iloc[:, 1] / 100
+    return meteoInfo.stack()
+
+
+def create_meteo_data_file():
+    meteo_data = one_folder(meteoblue_data_path_2019, '2019-01-01 to 2019-12-31')
     meteo_data.to_netcdf('meteoData_2019.nc')
+
+
+def prepare_meteo_data_time(file): return pd.to_datetime(pd.read_csv(file, sep=',', skiprows=9)['timestamp'])
+
+
+def get_all_meteo_data_():
+    locationMain = meteoblue_data_path + 'Meteoblue Scrapped Data'
+    return xr.merge([one_folder(locationMain, date_folder) for date_folder in listdir(locationMain)[:]])
+    # for date_folder in listdir(locationMain)[:3]:
+    #     print(oneFolder(locationMain, date_folder))
 
 
 if __name__ == '__main__':
@@ -283,7 +286,6 @@ if __name__ == '__main__':
 
     # meteoData = GetAllMeteoData()
     # meteoData.to_netcdf('meteoData.nc')
-
     meteo_data = xr.open_dataset('Files/meteoData_2019.nc')['meteo']
 
     print(meteo_data)
@@ -302,7 +304,7 @@ if __name__ == '__main__':
 
     factor = factors[-3]
     df = get_factor_data(meteo_data, factor)
-    exit()
+    # exit()
 
     # for factor in factors: print(get_factor_data(meteoData, factor))
 
@@ -321,8 +323,8 @@ if __name__ == '__main__':
     # prof.to_file(output_file='Meteo Data.html')
 
     # MeteoTimeSeries(meteoData.loc["Dhaka",:,selFactors],factorUnit[0],factorUnit[1],factorUnit[2])
-    # MeteoBoxPlot(meteoData)
-    # WindGraphTeam(meteoData)
+    # meteo_box_plot(meteo_data)
+    wind_graph_team(meteo_data)
 
     # for meteoInfo in meteoData[:1]:
     #     # dayGroup = meteoInfo.iloc[:72].groupby(meteoInfo.iloc[:72].index.day)

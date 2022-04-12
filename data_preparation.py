@@ -12,7 +12,7 @@ metadata_attributes = ['Zone', 'Division', 'Population', 'Latitude', 'Longitude'
 rename_dict = {'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}
 
 
-def get_common_id(id=1): return ['study_area', 'SouthAsianCountries', 'allbd'][id]
+def get_common_id(id=0): return ['study_area', 'SouthAsianCountries', 'allbd'][id]
 
 
 def get_save_location(): return berkeley_earth_data_prepared + get_common_id() + '/'

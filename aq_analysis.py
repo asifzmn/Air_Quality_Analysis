@@ -61,7 +61,7 @@ def diurnality(x):
         return 'Night'
 
 
-def CityAnalysis(s):
+def city_analysis(s):
     print(s.mean())
     # print(s.resample('M').mean().values)
 
@@ -71,8 +71,8 @@ def CityAnalysis(s):
     # print(s.groupby('daytime').mean())
 
 
-def PaperComparision():
-    paperData = pd.read_csv('/home/az/Desktop/AQ Overall Comparision.csv', sep='\t')
+def paper_comparision():
+    paperData = pd.read_csv(comp_file, sep='\t')
     latex_custom_table_format(paperData)
 
 
@@ -541,7 +541,7 @@ def overall_stats(timeseries):
 
 def MissingDataFraction(timeseries):
     missing_percentage = (timeseries.isnull().sum() / len(timeseries) * 100).round(2)
-    missing_percentage.to_csv('missing_percentage_1.csv')
+    missing_percentage.to_csv('missing_percentage.csv')
 
 
 def frequency_clustering(df):

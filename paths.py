@@ -12,3 +12,4 @@ berkeley_earth_data_prepared = berkeley_earth_data + 'prepared/'
 meteoblue_data_path = aq_directory + 'Meteoblue Scrapped Data/'
 meteoblue_data_path_2019 = aq_directory + 'MeteoBlue Data 2019'
 
+comp_file = '/home/az/Desktop/AQ Overall Comparision.csv'
