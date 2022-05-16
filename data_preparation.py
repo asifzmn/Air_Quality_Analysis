@@ -1,18 +1,16 @@
-from datetime import datetime, timedelta
+from paths import *
 from os import listdir, getcwd
 from os.path import join, isfile
 from urllib.request import urlopen
-import plotly.express as px
-import plotly.graph_objects as go
+from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
-from paths import *
 
 metadata_attributes = ['Zone', 'Division', 'Population', 'Latitude', 'Longitude']
 rename_dict = {'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}
 
 
-def get_common_id(id=0): return ['study_area', 'SouthAsianCountries', 'allbd'][id]
+def get_common_id(id=3): return ['study_area', 'SouthAsianCountries', 'allbd', 'bd_and_neighbours'][id]
 
 
 def get_save_location(): return berkeley_earth_data_prepared + get_common_id() + '/'
@@ -22,13 +20,13 @@ def get_zones_info(): return pd.read_csv(zone_data_path + get_common_id() + '.cs
 
 
 def get_category_info():
-    colorScale = np.array(['#46d246', '#ffff00', '#ffa500', '#ff0000', '#800080', '#6a2e20'])
-    lcolorScale = np.array(['#a2e8a2', '#ffff7f', '#ffd27f', '#ff7f7f', '#ff40ff', '#d38370'])
-    dcolorScale = np.array(['#1b701b', '#7f7f00', '#7f5200', '#7f0000', '#400040', '#351710'])
-    categoryName = np.array(
+    color_scale = np.array(['#46d246', '#ffff00', '#ffa500', '#ff0000', '#800080', '#6a2e20'])
+    l_color_scale = np.array(['#a2e8a2', '#ffff7f', '#ffd27f', '#ff7f7f', '#ff40ff', '#d38370'])
+    d_color_scale = np.array(['#1b701b', '#7f7f00', '#7f5200', '#7f0000', '#400040', '#351710'])
+    category_name = np.array(
         ['Good', 'Moderate', 'Unhealthy for Sensitive Groups', 'Unhealthy', 'Very Unhealthy', 'Hazardous'])
-    AQScale = np.array([0, 12.1, 35.5, 55.5, 150.5, 250.5, 500])
-    return colorScale, categoryName, AQScale
+    aq_scale = np.array([0, 12.1, 35.5, 55.5, 150.5, 250.5, 500])
+    return color_scale, category_name, aq_scale
 
 
 def make_header_only(meta_data):
@@ -58,7 +56,6 @@ def handle_mislabeled_duplicates(series):
     firsts = series.loc[duplicated_series.index].time
     lasts = series.loc[duplicated_series.index + 1].time + timedelta(hours=1)
     firsts, lasts = firsts.reset_index(), lasts.reset_index()
-
     # print((firsts.time == lasts.time).value_counts())
     # print(duplicated_series.time.dt.year.unique())
     # print(duplicated_series.to_string())
@@ -67,7 +64,7 @@ def handle_mislabeled_duplicates(series):
 
 def web_crawl():
     for idx, zone_info in get_zones_info().iterrows():
-        zone_file = join(raw_data_path + get_common_id(), zone_info['Zone'] + '.txt')
+        zone_file = join(raw_data_path + get_common_id(), zone_info['Division'] + '_' + zone_info['Zone'] + '.txt')
         url = f'{dataset_url}{zone_info["Country"]}/{zone_info["Division"]}/{zone_info["Zone"]}.txt'
         print(url)
         data = [line.decode('unicode_escape')[:-1] for line in urlopen(url)]
@@ -91,13 +88,14 @@ def data_cleaning_and_preparation():
         series['time'] = pd.to_datetime(series[series.columns[:4]])
         series = series[['time', 'PM25']]
 
-        if get_common_id() != 'SouthAsianCountries':
+        if get_common_id() != 'SouthAsianCountries' and get_common_id() != 'bd_and_neighbours':
             duplicates = (series.duplicated(subset=['time'], keep='first'))
             series.loc[duplicates, 'time'] = series.loc[duplicates, 'time'] + timedelta(hours=1)
         else:
             series = series.groupby('time').PM25.mean().reset_index()
 
-        series = series.set_index('time').reindex(pd.date_range('2017-01-01', '2021-01-01', freq='h')[:-1])
+        # print(row)
+        series = series.set_index('time').reindex(pd.date_range('2017-01-01', '2022-01-01', freq='h')[:-1])
         series.columns = [zone_metadata[-1].iloc[0]]
         zone_reading.append(series)
 
@@ -133,7 +131,6 @@ def get_diurnal_period():
         lambda x: pd.Series(['day' if x.Sunrise_date.hour <= i <= x.Sunset_date.hour else 'night' for i in range(24)]),
         axis=1)
     sun_time_series = sun_time_matrix.stack().reset_index(drop=True)
-    print(sun_time_series)
 
     print(pd.date_range('2017', '2021', freq='H')[:-1])
     sun_time_series.index = pd.date_range('2017', '2021', freq='H')[:-1]
@@ -144,10 +141,9 @@ def get_diurnal_period():
 if __name__ == '__main__':
     web_crawl()
     # data_cleaning_and_preparation()
-    timeseies = get_series()
-    meta_data = get_metadata()
+    # timeseies = get_series()
+    # meta_data = get_metadata()
 
     # print(metaFrame[['Population','avgRead']].corr())
     # popYear = [157977153,159685424,161376708,163046161]
-
     exit()

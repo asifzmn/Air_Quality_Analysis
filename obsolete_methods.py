@@ -13,8 +13,8 @@ from plotly import graph_objects as go
 from sklearn.cluster import Birch, KMeans
 from sklearn.preprocessing import MinMaxScaler
 from data_preparation import get_category_info, get_common_id, read_file_as_text, web_crawl, get_zones_info
-# from meteorological_variables import MapPlotting
-# from meteorological_variables import heatmap, annotate_heatmap
+# from meteorological_functions import MapPlotting
+# from meteorological_functions import heatmap, annotate_heatmap
 from datetime import datetime, timedelta
 
 [Year, Month, Day, UTC_Hour, PM25, PM10_mask, Retrospective] = range(7)

@@ -8,6 +8,8 @@ from aq_analysis import *
 from sklearn.preprocessing import StandardScaler
 import plotly.express as px
 
+from meteorological_functions.weather_exploration import FactorAnalysis
+
 
 def prepare_chrome_driver():
     options = webdriver.ChromeOptions()

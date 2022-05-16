@@ -10,7 +10,7 @@ from tensorflow.python.keras.callbacks import EarlyStopping
 from tensorflow.python.keras.layers import LSTM, Dense, Masking, Dropout
 
 from obsolete_methods import LoadData
-from data_preparation import *
+from preparation import *
 
 
 def BasicRNNImputation():

@@ -3,7 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from statsmodels.tsa.seasonal import seasonal_decompose
-from data_preparation import *
+from preparation import *
 
 
 def SeasonalDecomposition(df):
@@ -59,12 +59,12 @@ def day_night_distribution(time_series, sampling_hours=1):
     fig.show()
 
 
-def pair_distribution_summary(timeseries, samplingHours=1):
+def pair_distribution_summary(timeseries, sampling_hours=1):
     # df = df[: str(max(df.index.date) + timedelta(days=-1))].resample(str(samplingHours) + 'H').mean()
-    timeseries = timeseries.resample(str(samplingHours) + 'H').mean()
+    timeseries = timeseries.resample(str(sampling_hours) + 'H').mean()
     timeseries['daytime'] = np.tile(
-        np.hstack((np.repeat('Day', 12 // samplingHours), np.repeat('Night', 12 // samplingHours))),
-        ((timeseries.shape[0] * samplingHours) // 24))
+        np.hstack((np.repeat('Day', 12 // sampling_hours), np.repeat('Night', 12 // sampling_hours))),
+        ((timeseries.shape[0] * sampling_hours) // 24))
     print(timeseries)
 
     timeseries = timeseries.sort_values(by=['daytime'], ascending=False)
@@ -92,8 +92,8 @@ def BoxPlotSeason(timeseries):
         plt.figure(figsize=(8, 8))
         ax = sns.boxplot(x=timeseries.index.month, y=zone, data=timeseries,
                          palette=seasonPalette)  # weekday_name,month,day,hour
-        for seasonName, color in zip(seasons, np.unique(month_colors)): plt.scatter([], [], c=color, alpha=0.66, s=150,
-                                                                                    label=str(seasonName))
+        for seasonName, color in zip(seasons, np.unique(month_colors)):
+            plt.scatter([], [], c=color, alpha=0.66, s=150, label=str(seasonName))
         plt.legend(scatterpoints=1, frameon=False, labelspacing=.5, title='Season')
         pltSetUpAx(ax, xlabel="Month", ylabel="PM Reading", title='Seasonality of months in ' + zone, ylim=(0, 300))
 
@@ -147,7 +147,6 @@ def SimpleTimeseries(df):
     dhaka_series = df["Dhaka"].resample('M').apply(['mean', 'median'])
     barisal_series = df["Barisal"].resample('M').apply(['mean', 'median'])
 
-    # resampled_df = df.resample('D')
     aggregated_value = pd.concat(
         [sampledSeries.stack().apply(['min', 'mean', 'median', 'max']) for _, sampledSeries in resampled_df], axis=1).T
     aggregated_value.index = [time for time, _ in resampled_df]

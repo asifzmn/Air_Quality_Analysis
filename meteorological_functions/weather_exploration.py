@@ -1,4 +1,4 @@
-from data_preparation import *
+from preparation import *
 
 text = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
 angle = np.linspace(0, 360, 17)[:-1]
