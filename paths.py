@@ -14,5 +14,8 @@ meteoblue_data_path_2019 = aq_directory + 'MeteoBlue Data 2019'
 
 mobility_path = aq_directory + 'Mobility/Region_Mobility_Report_CSVs/'
 
+covid_data = 'Covid_Data/'
+confirmed = covid_data + 'time_series_covid19_confirmed_global.csv'
+deaths = covid_data + 'time_series_covid19_deaths_global.csv'
 
 comp_file = '/home/az/Desktop/AQ Overall Comparision.csv'

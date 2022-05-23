@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
-metadata_attributes = ['Zone', 'Division', 'Population', 'Latitude', 'Longitude']
+metadata_attributes = ['Country', 'Zone', 'Division', 'Population', 'Latitude', 'Longitude']
 rename_dict = {'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}
 
 
@@ -79,9 +79,10 @@ def data_cleaning_and_preparation():
     zone_reading, zone_metadata = [], []
 
     for idx, row in get_zones_info().iterrows():
-        file = join(raw_data_path + get_common_id(), row['Zone'] + '.txt')
+        # file = join(raw_data_path + get_common_id(), row['Zone'] + '.txt')
+        file = join(raw_data_path + get_common_id(), row['Division'] + '_' + row['Zone'] + '.txt')
         meta_data_list = read_file_as_text(file)
-        zone_metadata.append(pd.Series([d.split(':')[1][1:-1] for d in meta_data_list[:9]]).loc[[2, 4, 5, 6, 7]])
+        zone_metadata.append(pd.Series([d.split(':')[1][1:-1] for d in meta_data_list[:9]]).loc[[0, 2, 4, 5, 6, 7]])
 
         series = pd.read_csv(file, skiprows=10, sep='\t', header=None, usecols=[0, 1, 2, 3, 4])
         series.columns = ['Year', 'Month', 'Day', 'Hour', 'PM25']
@@ -96,30 +97,46 @@ def data_cleaning_and_preparation():
 
         # print(row)
         series = series.set_index('time').reindex(pd.date_range('2017-01-01', '2022-01-01', freq='h')[:-1])
-        series.columns = [zone_metadata[-1].iloc[0]]
+        series.columns = [zone_metadata[-1].iloc[1]]
         zone_reading.append(series)
 
     metadata = pd.concat(zone_metadata, axis=1).T
     metadata.columns = metadata_attributes
     metadata = metadata.sort_values('Zone').set_index('Zone')
-    metadata[metadata_attributes[2:]] = metadata[metadata_attributes[2:]].apply(pd.to_numeric).round(5)
+    metadata[metadata_attributes[3:]] = metadata[metadata_attributes[3:]].apply(pd.to_numeric).round(5)
+    metadata = metadata.reset_index()
+    metadata.index = metadata.Zone + "_" + metadata.Division
     metadata.to_csv(get_save_location() + 'metadata.csv')
 
     time_series = pd.concat(zone_reading, axis=1)
     time_series.index.name = 'time'
+    time_series.columns = metadata.index
     time_series.to_csv(get_save_location() + 'time_series.csv')
 
 
+def clip_missing_prone_values(metadata, series):
+    metadata = metadata.reset_index()
+    metadata.index = metadata.Zone + "_" + metadata.Division
+    series.columns = metadata.index
+
+    division_missing_counts = metadata.groupby('Division').apply(
+        lambda divisional_zone: series[divisional_zone.index].isna().all(axis=1)).sum(axis=1).sort_values()
+    division_valid_data = division_missing_counts[division_missing_counts < 10000].index
+    metadata = metadata[metadata.Division.isin(division_valid_data)]
+    series = series[metadata.index]
+    return division_missing_counts, metadata, series
+
+
 def get_series():
-    # return pd.read_csv(get_save_location() + 'time_series.csv',index_col='time',parse_dates=[0])
-    return pd.read_csv(get_save_location() + 'time_series.csv', index_col='time', parse_dates=[0]).rename(
-        columns=rename_dict).sort_index(axis=1)
+    return pd.read_csv(get_save_location() + 'time_series.csv', index_col='time', parse_dates=[0])
+    # return pd.read_csv(get_save_location() + 'time_series.csv', index_col='time', parse_dates=[0]).rename(
+    #     columns=rename_dict).sort_index(axis=1)
 
 
 def get_metadata():
-    # return pd.read_csv(get_save_location() + 'metadata.csv', index_col='Zone', parse_dates=[0])
-    return pd.read_csv(get_save_location() + 'metadata.csv', index_col='Zone', parse_dates=[0]).rename(
-        index=rename_dict).sort_index(axis=0)
+    return pd.read_csv(get_save_location() + 'metadata.csv', index_col='Zone', parse_dates=[0])
+    # return pd.read_csv(get_save_location() + 'metadata.csv', index_col='Zone', parse_dates=[0]).rename(
+    #     index=rename_dict).sort_index(axis=0)
 
 
 def get_diurnal_period():
@@ -139,8 +156,8 @@ def get_diurnal_period():
 
 
 if __name__ == '__main__':
-    web_crawl()
-    # data_cleaning_and_preparation()
+    # web_crawl()
+    data_cleaning_and_preparation()
     # timeseies = get_series()
     # meta_data = get_metadata()
 

@@ -1,7 +1,8 @@
 import os
 import time
 from os import listdir
-from preparation import *
+from data_preparation import *
+from aq_analysis import *
 from collections import Counter
 from os.path import isfile, join
 from datetime import datetime, timedelta

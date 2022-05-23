@@ -1,4 +1,8 @@
-from preparation import *
+from sklearn.preprocessing import StandardScaler
+
+from data_preparation import *
+from aq_analysis import *
+import statsmodels.api as sm
 
 text = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
 angle = np.linspace(0, 360, 17)[:-1]

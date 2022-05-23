@@ -11,9 +11,11 @@ from sklearn.cluster import KMeans
 from itertools import combinations
 from plotly.subplots import make_subplots
 from GIS.GeoPandas import mapArrow, mapPlot
-from meteorological_variables import get_factor_data, get_cardinal_direction, plotly_rose_plot
+from meteorological_variables import get_factor_data, get_cardinal_direction, plotly_rose_plot, xr
 from related.GeoMapMatplotLib import MapPlotting
 from visualization_modules import *
+import plotly.express as px
+import plotly.graph_objects as go
 import more_itertools
 
 month_names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
@@ -301,9 +303,7 @@ def MeteoAnalysis(df):
         print(z)
 
         fig = go.Figure(data=go.Heatmap(
-            z=z,
-            y=factors,
-            x=districts,
+            z=z, y=factors, x=districts,
             colorscale='icefire',
             zmin=-1, zmax=1,
             reversescale=True
@@ -427,58 +427,6 @@ def StackedBar(timeseries):
         legend={"x": 0, "y": -.3}
     )
     fig.show()
-
-
-def CrossCorrelation(df):
-    def HeatmapCrossCorr(df):
-        plt.figure(figsize=(9, 9))
-        sns.heatmap(df, vmin=0, vmax=3, cmap='Purples')
-        plt.tight_layout()
-        plt.show()
-
-    def allLagRange(x, df, lag, readings):
-        def bestCorr(x, ss): return ss.apply(lambda y: y.corr(x)).argmax()
-
-        print(x)
-        ss = pd.concat([x.shift(shift) for shift in np.arange(lag + 1)], axis=1)
-        readings = [df[reading[0]:reading[-1]] for reading in readings]
-        new_df = pd.concat([reading.apply(bestCorr, ss=ss) for reading in readings], axis=1)
-        new_df.columns = [str(reading.index.date[0]) + ' to ' + str(reading.index.date[-1]) for reading in readings]
-        ser, ser.name = new_df.stack(), x.name
-        return ser
-
-    pth = berkeley_earth_data
-    window, step, lag = 5, 2, 3
-    fileName, indices, freq = 'lagTimeMatrix_', ['Leader', 'Date', 'Follower'], str(window) + 'D'
-
-    # df = df.rolling(center=True, window=4).mean()
-    df = df['2019']
-    # print(df['2017'].isnull().sum().sum())
-    # print(df['2018'].isnull().sum().sum())
-    # print(df['2019'].isnull().sum().sum())
-
-    readings = np.array(list(more_itertools.windowed(df.index[lag:-lag], n=window * 24, step=step * 24)))
-
-    # lagTimeMatrix = df.apply(allLagRange, df=df, lag=lag, readings=readings).stack()
-    # lagTimeMatrix.index = lagTimeMatrix.index.rename(indices)
-    # lagTimeMatrix.to_csv(pth + fileName + freq)
-
-    lagTimeMatrix = pd.read_csv(pth + fileName + freq, index_col=indices)
-    lagTimeMatrix = lagTimeMatrix.unstack('Date')
-    lagTimeMatrix.columns = lagTimeMatrix.columns.droplevel(0)
-
-    print(lagTimeMatrix.shape)
-    print(lagTimeMatrix.stack().value_counts())
-    metaFrame = get_metadata().assign(symbol='H')
-
-    for key, df in lagTimeMatrix.iloc[:, :].items():
-        if df.nunique() > 1:
-            print(key)
-            if key == '2019-01-27 to 2019-02-01' or key == '2019-10-26 to 2019-10-31':
-                print(df[df != 0])
-                df[df != 0].to_csv(key + '.csv')
-                HeatmapCrossCorr(df.unstack())
-                mapArrow(metaFrame, df.unstack(), df.name)
 
 
 def save_data():
@@ -611,6 +559,58 @@ def PairDistribution(timeseries):
     g.map_diag(sns.kdeplot, lw=3)
     plt.tight_layout()
     plt.show()
+
+
+def CrossCorrelation(df):
+    def HeatmapCrossCorr(df):
+        plt.figure(figsize=(9, 9))
+        sns.heatmap(df, vmin=0, vmax=3, cmap='Purples')
+        plt.tight_layout()
+        plt.show()
+
+    def allLagRange(x, df, lag, readings):
+        def bestCorr(x, ss): return ss.apply(lambda y: y.corr(x)).argmax()
+
+        print(x)
+        ss = pd.concat([x.shift(shift) for shift in np.arange(lag + 1)], axis=1)
+        readings = [df[reading[0]:reading[-1]] for reading in readings]
+        new_df = pd.concat([reading.apply(bestCorr, ss=ss) for reading in readings], axis=1)
+        new_df.columns = [str(reading.index.date[0]) + ' to ' + str(reading.index.date[-1]) for reading in readings]
+        ser, ser.name = new_df.stack(), x.name
+        return ser
+
+    pth = berkeley_earth_data
+    window, step, lag = 5, 2, 3
+    fileName, indices, freq = 'lagTimeMatrix_', ['Leader', 'Date', 'Follower'], str(window) + 'D'
+
+    # df = df.rolling(center=True, window=4).mean()
+    df = df['2019']
+    # print(df['2017'].isnull().sum().sum())
+    # print(df['2018'].isnull().sum().sum())
+    # print(df['2019'].isnull().sum().sum())
+
+    readings = np.array(list(more_itertools.windowed(df.index[lag:-lag], n=window * 24, step=step * 24)))
+
+    # lagTimeMatrix = df.apply(allLagRange, df=df, lag=lag, readings=readings).stack()
+    # lagTimeMatrix.index = lagTimeMatrix.index.rename(indices)
+    # lagTimeMatrix.to_csv(pth + fileName + freq)
+
+    lagTimeMatrix = pd.read_csv(pth + fileName + freq, index_col=indices)
+    lagTimeMatrix = lagTimeMatrix.unstack('Date')
+    lagTimeMatrix.columns = lagTimeMatrix.columns.droplevel(0)
+
+    print(lagTimeMatrix.shape)
+    print(lagTimeMatrix.stack().value_counts())
+    metaFrame = get_metadata().assign(symbol='H')
+
+    for key, df in lagTimeMatrix.iloc[:, :].items():
+        if df.nunique() > 1:
+            print(key)
+            if key == '2019-01-27 to 2019-02-01' or key == '2019-10-26 to 2019-10-31':
+                print(df[df != 0])
+                df[df != 0].to_csv(key + '.csv')
+                HeatmapCrossCorr(df.unstack())
+                mapArrow(metaFrame, df.unstack(), df.name)
 
 
 if __name__ == '__main__':
