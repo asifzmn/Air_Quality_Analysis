@@ -8,7 +8,7 @@ from os.path import isfile, join
 from datetime import datetime, timedelta
 from timeit import default_timer as timer
 from pandas_profiling import ProfileReport
-from visualization_modules import SimpleTimeseries
+from visualization import custom_time_series
 import xarray as xr
 import statsmodels.api as sm
 
@@ -285,7 +285,7 @@ if __name__ == '__main__':
 
     # meteoData = GetAllMeteoData()
     # meteoData.to_netcdf('meteoData.nc')
-    meteo_data = xr.open_dataset('Files/meteoData_2019.nc')['meteo']
+    meteo_data = xr.open_dataset('../Files/meteoData_2019.nc')['meteo']
 
     print(meteo_data)
     print(meteo_data.shape)
@@ -303,7 +303,6 @@ if __name__ == '__main__':
 
     factor = factors[-3]
     df = get_factor_data(meteo_data, factor)
-    # exit()
 
     # for factor in factors: print(get_factor_data(meteo_data, factor))
     # print(time_series.columns)

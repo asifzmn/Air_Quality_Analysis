@@ -1,6 +1,6 @@
 import plotly.graph_objects as go
 
-from preparation import LoadData
+from data_preparation import LoadData
 
 if __name__ == '__main__':
     # with open('bangladesh.geojson') as file : data = json.load(file)

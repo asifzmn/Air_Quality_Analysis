@@ -12,7 +12,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from time import sleep
 
-from preparation import *
+from data_preparation import *
 
 
 def prepare_firefox_driver(savePath):

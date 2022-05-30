@@ -1,55 +1,28 @@
 # import re
 # import geojsoncontour
-from collections import Counter
 # from scipy.spatial.distance import cdist
 # from pandas_profiling import ProfileReport
 # from CoronaBeforeAfter import GroupedBox
 # from GeoMapPlotly import SliderMapCommon
 # from Correlation_Measures import *
-from data_preparation import *
+
+from collections import Counter
 from sklearn.cluster import KMeans
 from itertools import combinations
 from plotly.subplots import make_subplots
 from GIS.GeoPandas import mapArrow, mapPlot
-from meteorological_variables import get_factor_data, get_cardinal_direction, plotly_rose_plot, xr
+from meteorological_functions.meteorological_variables import get_factor_data, get_cardinal_direction, plotly_rose_plot
+from meteorological_functions.meteorological_variables import get_all_meteo_data_
 from related.GeoMapMatplotLib import MapPlotting
-from visualization_modules import *
-import plotly.express as px
+from visualization import *
 import plotly.graph_objects as go
 import more_itertools
 
 month_names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
                'November', 'December']
 
-colorScale, categoryName, AQScale = get_category_info()
 save = '/home/az/Pictures/'
-
-
-def latex_simple_table_format(df):
-    new_df = df.groupby([df.index.year]).agg(['min', 'mean', 'max'])
-    new_df.index.set_names(['Year'], inplace=True)
-    print(new_df.T.to_latex(col_space=3))
-
-
-def latex_custom_table_format(stats):
-    stats.to_csv('Files/general_stats.csv')
-    # stats['count'] = stats['count'].astype('int')
-
-    # stats = stats.iloc[:,[0,1,2,3,5,7]].round(1)
-
-    latex_data = stats.to_latex(col_space=3).replace("\\\n", "\\ \hline\n").replace('\\toprule', '\\toprule\n\\hline')
-    substring = latex_data[
-                latex_data.index('\\begin{tabular}{') + len('\\begin{tabular}{') - 1:latex_data.index('}\n') + 1]
-    latex_data = latex_data.replace(substring, '|'.join(substring))
-
-    for axisName in stats.columns: latex_data = latex_data.replace(axisName, f"\\textbf{{{axisName}}}")
-    # for axisName in stats.index: latex_data = latex_data.replace(axisName, f"\\textbf{{{axisName}}}")
-
-    latex_data = latex_data.replace('25\%', "\\textbf{Q1}").replace('50\%', "\\textbf{Q2}").replace('75\%',
-                                                                                                    "\\textbf{Q3}")
-    latex_data = latex_data.replace('{Tungi}para', "{Tungipara}")
-
-    print(latex_data)
+colorScale, categoryName, AQScale = get_category_info()
 
 
 def diurnality(x):
@@ -71,11 +44,6 @@ def city_analysis(s):
     # s['index'] = s['index'].apply(diurnally)
     # s.columns = ['reading','daytime']
     # print(s.groupby('daytime').mean())
-
-
-def paper_comparision():
-    paperData = pd.read_csv(comp_file, sep='\t')
-    latex_custom_table_format(paperData)
 
 
 def MakeProfileReport(timeseries, name='AirQuality'):
@@ -222,61 +190,6 @@ def shifted_series(df, dis, lag_range, offset, rs):
     plt.show()
 
 
-def CrossCorr(time_del, time_stamp, df, lagRange=3):
-    def crosscorr(datax, datay, lag=0, wrap=False):
-        return datax.astype('float64').corr(datay.shift(lag).astype('float64'))
-
-    # r_window_size = 24
-    #
-    # rolling_r = df.iloc[:, 0].rolling(window=r_window_size, center=True).corr(df.iloc[:, 1])
-    # f, ax = plt.subplots(2, 1, figsize=(14, 6), sharex=True)
-    # df.iloc[:, 0:2].rolling(window=r_window_size, center=True).median().plot(ax=ax[0])
-    # ax[0].set(xlabel='Frame', ylabel='Series')
-    # rolling_r.plot(ax=ax[1])
-    # ax[1].set(xlabel='Frame', ylabel='Pearson r')
-    # plt.suptitle("Rolling window correlation")
-    # plt.show()
-    # print(list(combinations(range(len(df.shape)), 2)))
-
-    lags, lagDir, lagmatrix = [], [], np.zeros((df.shape[1], df.shape[1]))
-    for comb in list(combinations(range((df.shape[1])), 2)):
-        rs = [crosscorr(df[df.columns.values[comb[0]]], df[df.columns.values[comb[1]]], lag) for lag in
-              range(-lagRange, lagRange + 1)]
-        offset = - int(np.floor(len(rs) / 2) - np.argmax(rs))
-        lags.append(offset)
-        lagmatrix[comb[1]][comb[0]], lagmatrix[comb[0]][comb[1]] = offset, -offset
-
-        if offset == 0: continue
-
-        # print(df.columns.values[comb[0]],df.columns.values[comb[1]],offset)
-        # ShiftedSeries(df,[df.columns.values[comb[0]],df.columns.values[comb[1]]],lagRange,offset,rs)
-
-        # if offset < 0:
-        #     dir = (angleFromCoordinate(df.columns.values[comb[0]], df.columns.values[comb[1]]))
-        # else:
-        #     dir = (angleFromCoordinate(df.columns.values[comb[1]], df.columns.values[comb[0]]))
-        # lagDir.append(dir)
-
-    # if len(lagDir)>0:
-    #     WindGraphTeamEstimate(np.array(lagDir), ['Overall'])
-    #     st = ((timeStamp.to_pydatetime()))
-    #     en = ((timeStamp.to_pydatetime())+timedelta(hours=48))
-    #     WindGraphTeam(dfm.loc[:,st:en,:])
-    # print(df.columns.values[comb[0]],df.columns.values[comb[1]],offset)
-
-    if list(Counter(lags).keys()) == [0]: return lagmatrix, lagDir
-
-    mat = pd.DataFrame(data=lagmatrix.astype('int'), columns=df.columns.values, index=df.columns.values)
-    # print(mat.dtypes)
-    # HeatMapDriver(mat, -lagRange, lagRange, str(timeStamp),
-    #               sns.diverging_palette(15, 250, s=90, l=50, n=90, center="light"))
-    # MapPlotting(metaFrame, df.mean().values, vec=lagmatrix, title=str(timeStamp))
-    print(Counter(lags))
-    mapArrow(np.zeros(meta_data.shape[0]).astype('int'), mat, df.index.date)
-
-    return lagmatrix, lagDir
-
-
 def WindGraphTeamEstimate(meteoData, alldis):
     colorPal = np.array(['#ffffff'])
     directions = np.array([[[get_cardinal_direction(meteoData), 'Wind']]])
@@ -335,10 +248,10 @@ def FillMissingDataFromYears(y):
 
 
 def CorrationSeasonal(corrArray, rows=2, cols=2, title=''):
-    subpTitles = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
+    sub_titles = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
                   'November', 'December']
-    # subpTitles = ['Winter', 'Spring', 'Summer', 'Autumn']
-    fig = make_subplots(rows=rows, cols=cols, subplot_titles=subpTitles, vertical_spacing=0.1)
+    # sub_titles = ['Winter', 'Spring', 'Summer', 'Autumn']
+    fig = make_subplots(rows=rows, cols=cols, subplot_titles=sub_titles, vertical_spacing=0.1)
     # fig = fig.update_yaxes(side='right')
 
     import plotly.figure_factory as ff
@@ -366,7 +279,7 @@ def CorrationSeasonal(corrArray, rows=2, cols=2, title=''):
     # for i in range(len(fig.layout.annotations)):
     #     fig.layout.annotations[i].font.size = 9
 
-    for i, t in enumerate(subpTitles):
+    for i, t in enumerate(sub_titles):
         fig['layout']['annotations'][i].update(text=t, font=dict(
             family="Courier New, monospace",
             size=27,
@@ -429,12 +342,6 @@ def StackedBar(timeseries):
     fig.show()
 
 
-def save_data():
-    meta_data, timeseries = get_metadata(), get_series()['2017':'2019']
-    meta_data.to_csv('zone_data.csv')
-    timeseries.to_csv('pm_time_series.csv')
-
-
 def Ranking(timeseries):
     return timeseries.mean().sort_values()
 
@@ -485,11 +392,6 @@ def overall_stats(timeseries):
     allData = timeseries.stack()
     # print(allData.droplevel(1))
     print(allData.describe())
-
-
-def MissingDataFraction(timeseries):
-    missing_percentage = (timeseries.isnull().sum() / len(timeseries) * 100).round(2)
-    missing_percentage.to_csv('missing_percentage.csv')
 
 
 def frequency_clustering(df):
@@ -559,6 +461,61 @@ def PairDistribution(timeseries):
     g.map_diag(sns.kdeplot, lw=3)
     plt.tight_layout()
     plt.show()
+
+
+def CrossCorr(time_del, time_stamp, df, lagRange=3):
+    def crosscorr(datax, datay, lag=0, wrap=False):
+        return datax.astype('float64').corr(datay.shift(lag).astype('float64'))
+
+    # r_window_size = 24
+    #
+    # rolling_r = df.iloc[:, 0].rolling(window=r_window_size, center=True).corr(df.iloc[:, 1])
+    # f, ax = plt.subplots(2, 1, figsize=(14, 6), sharex=True)
+    # df.iloc[:, 0:2].rolling(window=r_window_size, center=True).median().plot(ax=ax[0])
+    # ax[0].set(xlabel='Frame', ylabel='Series')
+    # rolling_r.plot(ax=ax[1])
+    # ax[1].set(xlabel='Frame', ylabel='Pearson r')
+    # plt.suptitle("Rolling window correlation")
+    # plt.show()
+    # print(list(combinations(range(len(df.shape)), 2)))
+
+    lags, lagDir, lagmatrix = [], [], np.zeros((df.shape[1], df.shape[1]))
+    for comb in list(combinations(range((df.shape[1])), 2)):
+        rs = [crosscorr(df[df.columns.values[comb[0]]], df[df.columns.values[comb[1]]], lag) for lag in
+              range(-lagRange, lagRange + 1)]
+        offset = - int(np.floor(len(rs) / 2) - np.argmax(rs))
+        lags.append(offset)
+        lagmatrix[comb[1]][comb[0]], lagmatrix[comb[0]][comb[1]] = offset, -offset
+
+        if offset == 0: continue
+
+        # print(df.columns.values[comb[0]],df.columns.values[comb[1]],offset)
+        # ShiftedSeries(df,[df.columns.values[comb[0]],df.columns.values[comb[1]]],lagRange,offset,rs)
+
+        # if offset < 0:
+        #     dir = (angleFromCoordinate(df.columns.values[comb[0]], df.columns.values[comb[1]]))
+        # else:
+        #     dir = (angleFromCoordinate(df.columns.values[comb[1]], df.columns.values[comb[0]]))
+        # lagDir.append(dir)
+
+    # if len(lagDir)>0:
+    #     WindGraphTeamEstimate(np.array(lagDir), ['Overall'])
+    #     st = ((timeStamp.to_pydatetime()))
+    #     en = ((timeStamp.to_pydatetime())+timedelta(hours=48))
+    #     WindGraphTeam(dfm.loc[:,st:en,:])
+    # print(df.columns.values[comb[0]],df.columns.values[comb[1]],offset)
+
+    if list(Counter(lags).keys()) == [0]: return lagmatrix, lagDir
+
+    mat = pd.DataFrame(data=lagmatrix.astype('int'), columns=df.columns.values, index=df.columns.values)
+    # print(mat.dtypes)
+    # HeatMapDriver(mat, -lagRange, lagRange, str(timeStamp),
+    #               sns.diverging_palette(15, 250, s=90, l=50, n=90, center="light"))
+    # MapPlotting(metaFrame, df.mean().values, vec=lagmatrix, title=str(timeStamp))
+    print(Counter(lags))
+    mapArrow(np.zeros(meta_data.shape[0]).astype('int'), mat, df.index.date)
+
+    return lagmatrix, lagDir
 
 
 def CrossCorrelation(df):

@@ -1,12 +1,12 @@
-
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from statsmodels.tsa.seasonal import seasonal_decompose
 from data_preparation import *
+import plotly.graph_objects as go
 
 
-def SeasonalDecomposition(df):
+def seasonal_decomposition(df):
     result = seasonal_decompose(df)
     print(result)
     result.plot()
@@ -141,7 +141,7 @@ def pltSetUpAx(ax, xlabel=None, ylabel=None, title=None, xlim=None, ylim=None, s
         print(f"{save} {title}.png")
 
 
-def SimpleTimeseries(df):
+def custom_time_series(df):
     resampled_df = df.resample('M')
 
     dhaka_series = df["Dhaka"].resample('M').apply(['mean', 'median'])
@@ -217,7 +217,7 @@ def SimpleTimeseries(df):
     fig.show()
 
 
-def MissingDataHeatmap(df):
+def missing_data_heatmap(df):
     missing = df.T.isnull().astype(int)
     print(df.isnull().sum())
 
@@ -248,18 +248,16 @@ def MissingDataHeatmap(df):
     fig.show()
 
 
-def ViolinPLot(df):
+def violin_plot_year(df):
     fig = go.Figure()
     # df = df.resample('M').mean()
-    years = ['2017', '2018', '2019']
+    years = ['2017', '2018', '2019', '2020', '2021']
 
     for year in years:
         fig.add_trace(go.Violin(y=df[year].stack(),
                                 name=year, box_visible=True,
-                                meanline_visible=True, line_color='#566D7E',
+                                meanline_visible=True, line_color='#566D7E',))
 
-                                )
-                      )
     fig.update_layout(font=dict(size=21), width=900,
                       title="Air quality of Bangladesh over years",
                       yaxis_title="PM2.5 Concentration",
@@ -269,9 +267,9 @@ def ViolinPLot(df):
 
 
 def prepare_color_table():
-    colorScale, categoryName, AQScale = get_category_info()
-    range = [str(a) + " - " + str(b) for a, b in zip(AQScale, AQScale[1:])]
-    data = {'Category': categoryName, 'Color': colorScale, 'range': range}
+    color_scale, category_name, aq_scale = get_category_info()
+    range_str = [str(a) + " - " + str(b) for a, b in zip(aq_scale, aq_scale[1:])]
+    data = {'category_name': category_name, 'color_scale': color_scale, 'range_str': range_str}
     df = pd.DataFrame(data)
 
     fig = go.Figure(data=[go.Table(
@@ -281,22 +279,26 @@ def prepare_color_table():
             align='center', font=dict(color='black', size=12)
         ),
         cells=dict(
-            values=[df.Category, df.range],
-            line_color='grey', fill_color=[df.Color],
+            values=[df.category_name, df.range_str],
+            line_color='grey', fill_color=[df.color_scale],
             align='center', font=dict(color='black', size=9)
         ))
     ])
 
     fig.update_layout(width=333)
-
     fig.show()
 
 
 if __name__ == '__main__':
-    prepare_color_table()
-    exit()
-    plt.close("all")
+    # plt.close("all")
     # sns.set()
     # # sns.set_style("whitegrid")
     metadata, series = get_metadata(), get_series()
-    BoxPlotHour(series)
+    # prepare_color_table()
+    series = series.sample(50, axis=1)["2019":]
+    missing_data_heatmap(series)
+    # violin_plot_year(series)
+    # BoxPlotHour(series)
+
+
+

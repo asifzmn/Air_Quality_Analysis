@@ -140,7 +140,7 @@ def get_metadata():
 
 
 def get_diurnal_period():
-    sun_time = pd.read_csv(aq_directory + 'sun_rise_set_time_2017_2020.csv', sep='\t')
+    sun_time = pd.read_csv(aq_directory + 'Day Night Time/sun_rise_set_time_2017_2020.csv', sep='\t')
     sun_time['Sunrise_date'] = sun_time['Date '] + ' ' + sun_time['Sunrise ']
     sun_time['Sunset_date'] = sun_time['Date '] + ' ' + sun_time['Sunset ']
     sun_time = sun_time[['Sunrise_date', 'Sunset_date']].apply(pd.to_datetime).apply(lambda x: x.dt.round('H'))
@@ -153,6 +153,34 @@ def get_diurnal_period():
     sun_time_series.index = pd.date_range('2017', '2021', freq='H')[:-1]
     sun_time_series.name = 'diurnal_name'
     return sun_time_series
+
+
+def save_data():
+    meta_data, timeseries = get_metadata(), get_series()['2017':'2019']
+    meta_data.to_csv('zone_data.csv')
+    timeseries.to_csv('pm_time_series.csv')
+
+
+def prepare_division_and_country_series(series, metadata):
+    def process_by_region(divisional_zone, series):
+        return series[divisional_zone.index].mean(axis=1)
+
+    metadata_division_group = metadata.groupby('Division')
+    metadata_country_group = metadata.groupby('Country')
+
+    division_series = metadata_division_group.apply(process_by_region, series=series).T
+    country_series = metadata_country_group.apply(process_by_region, series=series).T
+
+    metadata_division = metadata_division_group.agg({
+        'Country': lambda x: x.sample(), 'Population': 'sum', 'Latitude': 'mean', 'Longitude': 'mean'})
+
+    metadata_country = metadata_country_group.agg({
+        'Population': 'sum', 'Latitude': 'mean', 'Longitude': 'mean', })
+
+    metadata_division['Count'] = metadata_division_group.Division.count()
+    metadata_country['Count'] = metadata_country_group.Country.count()
+
+    return division_series, metadata_division, country_series, metadata_country
 
 
 if __name__ == '__main__':

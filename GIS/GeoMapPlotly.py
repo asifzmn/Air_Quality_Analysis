@@ -3,11 +3,10 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-from preparation import get_category_info, get_metadata, get_series
-from meteorological_functions import GetAllMeteoData
+from data_preparation import get_category_info, get_metadata, get_series
 
 
-def SliderMapCommon(df, metaFrame, timeformat, discrete=True):
+def plotly_slider_mapbox(df, metaFrame, timeformat, discrete=True):
     dfre = df.resample(timeformat[0]).mean()
     data, times = (dfre).stack().values, (dfre.index.strftime(timeformat[1]))
 
@@ -46,7 +45,7 @@ def SliderMapCommon(df, metaFrame, timeformat, discrete=True):
     fig.show()
 
 
-def Heatmap():
+def plotly_density_mapbox():
     quakes = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/earthquakes-23k.csv')
     print(quakes)
     fig = go.Figure(go.Densitymapbox(lat=quakes.Latitude, lon=quakes.Longitude, z=quakes.Magnitude,
@@ -57,23 +56,23 @@ def Heatmap():
 
 
 if __name__ == '__main__':
-    # dataVector, metaFrame = LoadData(name='reading1.pickle')
-    # timelist, dataReadings = dataVector[-1]
-    # df = pd.DataFrame(data=np.transpose(dataReadings), index=timelist,columns=[d.replace(' ', '') for d in metaFrame['Zone'].values]).apply(pd.to_numeric)
-    # df = df.fillna(df.rolling(1830, min_periods=1, ).mean())['2017':]
-    # SliderMapCommon(df,metaFrame,['M','%Y %B'])
-    Heatmap()
+    dataVector, metaFrame = LoadData(name='reading1.pickle')
+    timelist, dataReadings = dataVector[-1]
+    df = pd.DataFrame(data=np.transpose(dataReadings), index=timelist,columns=[d.replace(' ', '') for d in metaFrame['Zone'].values]).apply(pd.to_numeric)
+    df = df.fillna(df.rolling(1830, min_periods=1, ).mean())['2017':]
+    SliderMapCommon(df,metaFrame,['M','%Y %B'])
+    # plotly_density_mapbox()
     exit()
 
-    dataVector = get_series()[:'2020-06-09']
-    metaFrame = get_metadata()
-    meteoData = GetAllMeteoData()
-    time = meteoData.coords['time'].values
-    # data = meteoData.loc[:,:,'Surface Temperature'].values
-    data = meteoData.loc[:, :, 'Relative Humidity [2 m]'].values
-
-    meteoVar = pd.DataFrame(data=np.transpose(data), index=time)
-    # print(meteoVar)
-    # print(dataVector)
-    # SliderMapCommon(meteoVar, metaFrame, ['12H', '%Y-%B-%D  %H:00:00'], discrete=False)
-    SliderMapCommon(dataVector, metaFrame, ['12H', '%Y-%B-%D  %H:00:00'], discrete=False)
+    # dataVector = get_series()[:'2020-06-09']
+    # metaFrame = get_metadata()
+    # meteoData = get_all_meteo_data_()
+    # time = meteoData.coords['time'].values
+    # # data = meteoData.loc[:,:,'Surface Temperature'].values
+    # data = meteoData.loc[:, :, 'Relative Humidity [2 m]'].values
+    #
+    # meteoVar = pd.DataFrame(data=np.transpose(data), index=time)
+    # # print(meteoVar)
+    # # print(dataVector)
+    # # SliderMapCommon(meteoVar, metaFrame, ['12H', '%Y-%B-%D  %H:00:00'], discrete=False)
+    # plotly_slider_mapbox(dataVector, metaFrame, ['12H', '%Y-%B-%D  %H:00:00'], discrete=False)

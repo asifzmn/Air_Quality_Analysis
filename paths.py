@@ -5,7 +5,7 @@ aq_directory = '/home/asif/Datasets/AQ Dataset/'  # dataset location
 
 aq_directory_local = 'Files/'
 
-berkeley_earth_data = aq_directory + 'Berkely Earth Data/'
+berkeley_earth_data = aq_directory + 'Berkeley Earth Data/'
 raw_data_path = berkeley_earth_data + 'raw/'
 zone_data_path = berkeley_earth_data + 'zones/'
 berkeley_earth_data_prepared = berkeley_earth_data + 'prepared/'
@@ -17,5 +17,6 @@ mobility_path = aq_directory + 'Mobility/Region_Mobility_Report_CSVs/'
 covid_data = 'Covid_Data/'
 confirmed = covid_data + 'time_series_covid19_confirmed_global.csv'
 deaths = covid_data + 'time_series_covid19_deaths_global.csv'
+recovered = covid_data + 'time_series_covid19_recovered_global.csv'
 
 comp_file = '/home/az/Desktop/AQ Overall Comparision.csv'

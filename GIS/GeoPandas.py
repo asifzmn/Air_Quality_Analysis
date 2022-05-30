@@ -27,6 +27,7 @@ def Distance(dis1, dis2):
 def compass_bearing():
     pass
 
+
 def angleFromCoordinate(dis1, dis2):
     metaFrame = get_metadata()
     lat1, long1, lat2, long2 = metaFrame.loc[dis1]['Latitude'], metaFrame.loc[dis1]['Longitude'], metaFrame.loc[dis2][
@@ -114,7 +115,7 @@ def MapScatter(ax, data=None):
 
     for idx, row in data.iterrows():
         marker_size, marker_color, = 150, '#566D7E'
-        if idx in ['Kishorganj', 'Nagarpur', 'Dhaka']: marker_size, marker_color = 450,'#5b567e'
+        if idx in ['Kishorganj', 'Nagarpur', 'Dhaka']: marker_size, marker_color = 450, '#5b567e'
         ax.scatter(x=row.Longitude, y=row.Latitude, zorder=1, alpha=1,
                    c=row.color, s=marker_size, marker=row.symbol, edgecolor='#3D3C3A', linewidth=1)
 

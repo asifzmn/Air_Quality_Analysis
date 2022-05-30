@@ -1,5 +1,5 @@
 from data_preparation import *
-from visualization_modules import *
+from visualization import *
 
 
 def district_aggregation(x, time_series, zone_dis):
