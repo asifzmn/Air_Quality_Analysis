@@ -1,4 +1,5 @@
-from data_preparation import *
+import pandas as pd
+from paths import confirmed, deaths, mobility_path
 
 
 def prepare_covid_dataset():

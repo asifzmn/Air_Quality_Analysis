@@ -159,7 +159,8 @@ def mapArrow(data, mat, times, save=None):
 
 
 def heatmapgeoJson(metaFrame, title):
-    with open('/home/az/Desktop/bdBounds.geojson') as file: bdBounds = json.load(file)
+    with open('/home/az/Desktop/bdBounds.geojson') as file:
+        bdBounds = json.load(file)
 
     rounding_num, correction_coeff, segments, regions = 0.015, 0.5, 500, 15
     metaFrame["Longitude"] = np.round(metaFrame["Longitude"] / rounding_num) * rounding_num

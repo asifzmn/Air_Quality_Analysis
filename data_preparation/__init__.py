@@ -168,19 +168,19 @@ def prepare_division_and_country_series(series, metadata):
     metadata_division_group = metadata.groupby('Division')
     metadata_country_group = metadata.groupby('Country')
 
-    division_series = metadata_division_group.apply(process_by_region, series=series).T
+    region_series = metadata_division_group.apply(process_by_region, series=series).T
     country_series = metadata_country_group.apply(process_by_region, series=series).T
 
-    metadata_division = metadata_division_group.agg({
+    metadata_region = metadata_division_group.agg({
         'Country': lambda x: x.sample(), 'Population': 'sum', 'Latitude': 'mean', 'Longitude': 'mean'})
 
     metadata_country = metadata_country_group.agg({
         'Population': 'sum', 'Latitude': 'mean', 'Longitude': 'mean', })
 
-    metadata_division['Count'] = metadata_division_group.Division.count()
+    metadata_region['Count'] = metadata_division_group.Division.count()
     metadata_country['Count'] = metadata_country_group.Country.count()
 
-    return division_series, metadata_division, country_series, metadata_country
+    return region_series, metadata_region, country_series, metadata_country
 
 
 if __name__ == '__main__':

@@ -1,9 +1,66 @@
 import plotly.graph_objects as go
+import numpy as np
+import pandas as pd
+import json
 
-from data_preparation import LoadData
+from data_preparation import get_metadata, get_series
+
+
+def plotly_marker_static_map(metaFrame):
+    # df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/2011_february_us_airport_traffic.csv')
+    # df['text'] = df['airport'] + '' + df['city'] + ', ' + df['state'] + '' + 'Arrivals: ' + df['cnt'].astype(str)
+
+    fig = go.Figure(data=go.Scattergeo(
+        lon=metaFrame['Longitude'],
+        lat=metaFrame['Latitude'],
+        text=metaFrame.index,
+        mode='markers',
+        marker_color=metaFrame['Population'],
+    ))
+
+    fig.update_layout(
+        title='Most trafficked US airports<br>(Hover for airport names)',
+        geo_scope='asia',
+    )
+    # fig.update_layout(mapbox_style="carto-positron",
+    #                   mapbox_zoom=3, mapbox_center={"lat": 37.0902, "lon": -95.7129})
+    fig.show()
+
+
+def plotly_marker_scatter_mapbox():
+    # mapbox_access_token = open(".mapbox_token").read()
+    mapbox_access_token = 'pk.eyJ1IjoiaG9vbmtlbmc5MyIsImEiOiJjam43cGhpNng2ZmpxM3JxY3Z4ODl2NWo3In0.SGRvJlToMtgRxw9ZWzPFrA'
+
+    fig = go.Figure(go.Scattermapbox(
+        lat=['45.5017'],
+        lon=['-73.5673'],
+        mode='markers',
+        marker=go.scattermapbox.Marker(
+            size=14
+        ),
+        text=['Montreal'],
+    ))
+
+    fig.update_layout(
+        hovermode='closest',
+        mapbox=dict(
+            accesstoken=mapbox_access_token,
+            bearing=0,
+            center=go.layout.mapbox.Center(
+                lat=45,
+                lon=-73
+            ),
+            pitch=0,
+            zoom=5
+        )
+    )
+
+    fig.show()
+
 
 if __name__ == '__main__':
-    # with open('bangladesh.geojson') as file : data = json.load(file)
+    # with open('bangladesh.geojson') as file:
+    #     data = json.load(file)
     #
     # # print(len(data['features']))
     # for x in (data['features'][:100]):print(x['properties'])
@@ -34,27 +91,9 @@ if __name__ == '__main__':
     #                   mapbox_zoom=3, mapbox_center = {"lat": 37.0902, "lon": -95.7129})
     # fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
     # fig.show()
-    #
 
-    dataVector, metaFrame = LoadData(name='reading1.pickle')
-    # df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/2011_february_us_airport_traffic.csv')
-    # df['text'] = df['airport'] + '' + df['city'] + ', ' + df['state'] + '' + 'Arrivals: ' + df['cnt'].astype(str)
-
-    fig = go.Figure(data=go.Scattergeo(
-        lon=metaFrame['Longitude'],
-        lat=metaFrame['Latitude'],
-        text=metaFrame['Zone'],
-        mode='markers',
-        marker_color=metaFrame['Population'],
-    ))
-
-    fig.update_layout(
-        title='Most trafficked US airports<br>(Hover for airport names)',
-        geo_scope='asia',
-    )
-    # fig.update_layout(mapbox_style="carto-positron",
-    #                   mapbox_zoom=3, mapbox_center={"lat": 37.0902, "lon": -95.7129})
-    fig.show()
+    time_series, meta_data = get_series(), get_metadata()
+    plotly_marker_scatter_mapbox()
 
     # with open("bangladesh.geojson") as json_file:topoJSON = json.loads(json_file.read())
     # # print(topoJSON.keys())
@@ -100,31 +139,3 @@ if __name__ == '__main__':
     # fig = dict(data=data, layout=layout)
     # # fig.show()
     # py.iplot(fig, filename='France-map2d')
-
-    # mapbox_access_token = open(".mapbox_token").read()
-    #
-    # fig = go.Figure(go.Scattermapbox(
-    #     lat=['45.5017'],
-    #     lon=['-73.5673'],
-    #     mode='markers',
-    #     marker=go.scattermapbox.Marker(
-    #         size=14
-    #     ),
-    #     text=['Montreal'],
-    # ))
-    #
-    # fig.update_layout(
-    #     hovermode='closest',
-    #     mapbox=dict(
-    #         accesstoken=mapbox_access_token,
-    #         bearing=0,
-    #         center=go.layout.mapbox.Center(
-    #             lat=45,
-    #             lon=-73
-    #         ),
-    #         pitch=0,
-    #         zoom=5
-    #     )
-    # )
-    #
-    # fig.show()

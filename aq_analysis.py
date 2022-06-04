@@ -10,12 +10,16 @@ from collections import Counter
 from sklearn.cluster import KMeans
 from itertools import combinations
 from plotly.subplots import make_subplots
+from CoronaBeforeAfter import grouped_box
 from GIS.GeoPandas import mapArrow, mapPlot
-from meteorological_functions.meteorological_variables import get_factor_data, get_cardinal_direction, plotly_rose_plot
-from meteorological_functions.meteorological_variables import get_all_meteo_data_
+from cross_correlation import CrossCorrelation
+from data_exporting import latex_custom_table_format, paper_comparison, missing_data_fraction
+from meteorological_functions import get_factor_data, get_cardinal_direction, plotly_rose_plot
+# from meteorological_functions.meteorological_variables import get_all_meteo_data_
 from related.GeoMapMatplotLib import MapPlotting
 from visualization import *
 import plotly.graph_objects as go
+import xarray as xr
 import more_itertools
 
 month_names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
@@ -60,7 +64,7 @@ def extreme_correlation(df):
         [df.columns.values[np.transpose(closeIndexReal)[0]], df.columns.values[np.transpose(closeIndexReal)[1]]]))
 
 
-def HeatMapDriver(data, vmin, vmax, title, cmap):
+def heat_map_driver(data, vmin, vmax, title, cmap):
     mask = np.zeros_like(data, dtype=np.bool)
     mask[np.triu_indices_from(mask)] = True
     with sns.axes_style("white"):
@@ -72,56 +76,16 @@ def HeatMapDriver(data, vmin, vmax, title, cmap):
     plt.show()
 
 
-def KDE(df):
+def triangular_heatmap_correlation(title, df):
+    plt.figure(figsize=(6, 6))
+    heat_map_driver(df.corr(), 0, 1, str(title.year) + '/' + str(title.month), 'Purples')
+
+
+def kde_zone_pair(df):
     for comb in list(combinations(range(len(df.columns.values)), 2)):
         with sns.axes_style('white'): sns.jointplot(df[df.columns.values[comb[0]]], df[df.columns.values[comb[1]]],
                                                     data=df, kind='kde')
         plt.show()
-
-
-def TriangularHeatmap(title, df):
-    plt.figure(figsize=(6, 6))
-    HeatMapDriver(df.corr(), 0, 1, str(title.year) + '/' + str(title.month), 'Purples')
-
-
-def PlotlyRosePlotBasic(info=None):
-    if info is None:
-        info = [[[77.5, 72.5, 70.0, 45.0, 22.5, 42.5, 40.0, 62.5], '11-14 m/s', 'rgb(106,81,163)'],
-                [[55.5, 50.0, 45.0, 35.0, 20.0, 22.5, 37.5, 55.0], '8-11 m/s', 'rgb(158,154,200)'],
-                [[40.0, 30.0, 30.0, 35.0, 7.5, 7.5, 32.5, 40.0], '5-8 m/s', 'rgb(203,201,226)'],
-                [[20.0, 7.5, 15.0, 22.5, 2.5, 2.5, 12.5, 22.5], '< 5 m/s', 'rgb(242,240,247)']
-                ]
-
-    fig = go.Figure()
-    for [r, name, marker_color] in info:
-        fig.add_trace(go.Barpolar(
-            r=r,
-            name=name,
-            marker_color=marker_color
-        ))
-
-    fig.update_traces(
-        text=['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'])
-    # fig.update_traces(text=['North', 'N-E', 'East', 'S-E', 'South', 'S-W', 'West', 'N-W'])
-    fig.update_layout(
-        title='Wind Speed Distribution in Laurel, NE',
-        font_size=16,
-        legend_font_size=16,
-        polar_radialaxis_ticksuffix='%',
-        polar_angularaxis_rotation=90,
-        template="plotly_dark",
-        polar_angularaxis_direction="clockwise"
-    )
-    fig.show()
-
-
-def PLotlyTimeSeries(df, missing=None):
-    fig = go.Figure()
-    for d in df: fig.add_trace(go.Scatter(x=df.index, y=df[d], name=d))
-
-    fig.update_traces(mode='markers+lines', marker=dict(line_width=0, symbol='circle', size=5))
-    # fig.update_layout(title_text='Time Series with Rangeslider',xaxis_rangeslider_visible=True)
-    fig.show()
 
 
 def Bucketing(reading, bins): return reading.apply(
@@ -140,24 +104,6 @@ def MissingDataInfo(df):
     print(df.isnull().all(axis=1).sum())  # all null reading of a district for a time stamp
 
     # HeatMapDriver(dfm.corr(), -1, 1, '', 'RdBu')
-
-
-def MissingBar(df):
-    singleDistrictData = df['Dhaka'].values
-    idx_pairs = np.where(np.diff(np.hstack(([False], (np.isnan(singleDistrictData)), [False]))))[0].reshape(-1, 2)
-    counts = (Counter(idx_pairs[:, 1] - idx_pairs[:, 0]))
-    sortedCounts = dict(sorted(counts.items()))
-
-    # x = ['One', 'Two', 'Three', 'Four', 'More']
-    # y = list(sortedCounts.values())[:4] + [sum(list((sortedCounts.values()))[4:])]
-
-    y, x = list(sortedCounts.values()), list(sortedCounts.keys())
-    # x = np.arange(len(y))+1
-
-    fig = go.Figure(data=[go.Bar(x=x, y=y)])
-    fig.update_traces(marker_color='#3090C7', marker_line_color='#2554C7', marker_line_width=1.2, opacity=0.8)
-    fig.update_layout(title_text='Missing Value Length')
-    fig.show()
 
 
 def shifted_series(df, dis, lag_range, offset, rs):
@@ -188,12 +134,6 @@ def shifted_series(df, dis, lag_range, offset, rs):
     # plt.savefig(loc, dpi=300)
     # plt.clf()
     plt.show()
-
-
-def WindGraphTeamEstimate(meteoData, alldis):
-    colorPal = np.array(['#ffffff'])
-    directions = np.array([[[get_cardinal_direction(meteoData), 'Wind']]])
-    plotly_rose_plot(directions, colorPal, alldis)
 
 
 def MeteoAnalysis(df):
@@ -229,6 +169,24 @@ def MeteoAnalysis(df):
                       )
         )
         fig.show(config={'displayModeBar': False, 'responsive': True})
+
+
+def MissingBar(df):
+    singleDistrictData = df['Dhaka'].values
+    idx_pairs = np.where(np.diff(np.hstack(([False], (np.isnan(singleDistrictData)), [False]))))[0].reshape(-1, 2)
+    counts = (Counter(idx_pairs[:, 1] - idx_pairs[:, 0]))
+    sortedCounts = dict(sorted(counts.items()))
+
+    # x = ['One', 'Two', 'Three', 'Four', 'More']
+    # y = list(sortedCounts.values())[:4] + [sum(list((sortedCounts.values()))[4:])]
+
+    y, x = list(sortedCounts.values()), list(sortedCounts.keys())
+    # x = np.arange(len(y))+1
+
+    fig = go.Figure(data=[go.Bar(x=x, y=y)])
+    fig.update_traces(marker_color='#3090C7', marker_line_color='#2554C7', marker_line_width=1.2, opacity=0.8)
+    fig.update_layout(title_text='Missing Value Length')
+    fig.show()
 
 
 def FillMissingDataFromHours(x, hours=1):
@@ -288,30 +246,6 @@ def CorrationSeasonal(corrArray, rows=2, cols=2, title=''):
 
     fig.update_layout(title_text=title, height=7500, width=1500)
     fig.show()
-
-
-def BoxPlotDistrict(df):
-    plt.figure(figsize=(20, 8))
-    ax = sns.boxplot(data=df, color="grey")
-    for i, c in enumerate(colorScale): ax.axhspan(AQScale[i], AQScale[i + 1], facecolor=c, alpha=0.3)
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right", size=21)
-    ax.set(ylim=(0, 250))
-    plt.show()
-
-
-def BoxPlotWeek(df):
-    weekDay = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    dayColors = ["#ff0000"] * 2 + ["#8fcadd"] * 5
-    seasons = ['Weekday', 'Weekend']
-    my_pal = dict(zip((np.unique(df.index.day_name())), dayColors))
-
-    for d in df.columns.values[3:5]:
-        sns.boxplot(x=df.index.day_name(), y=d, data=df, palette=my_pal)  # weekday_name,month,day,hour
-        for area, color in zip(seasons, np.unique(dayColors)): plt.scatter([], [], c=color, alpha=0.66, s=150,
-                                                                           label=str(area))
-        plt.legend(scatterpoints=1, frameon=False, labelspacing=1, title='Day Type')
-        plt.ylim(0, 350)
-        plt.show()
 
 
 def cutAndCount(x): return pd.cut(x, AQScale, labels=categoryName).value_counts() / x.count()
@@ -453,6 +387,33 @@ def frequency_clustering(df):
     # PLotlyTimeSeries(df['2019-09':'2019-12'][representative])
 
 
+def representative_district_analysis(df):
+    respresentativeDistricts = ['Kishorganj', 'Bogra', 'Nagarpur', 'Jessore', 'Nawabganj', 'Dhaka']
+
+    cross_corr_columns = ['Nawabganj', 'Sherpur', 'Kishorganj', 'Kushtia', 'Nagarpur',
+                          'Narsingdi', 'Satkhira', 'Pirojpur', 'Lakshmipur']
+    CrossCorrelation(timeseries[cross_corr_columns])
+    CrossCorrelation(timeseries)
+    paper_comparison(df)
+
+    city_analysis(timeseries['Dhaka']['2017'])
+    city_analysis(df['Narayanganj']['2017-02':'2018-02'])
+    city_analysis(df['Mymensingh']['2019-02':'2019-04'])
+
+    latex_custom_table_format(timeseries.describe().T)
+    missing_data_fraction(timeseries)
+
+    df = df.fillna('0')
+
+    box_plot_series(df)
+    violin_plot_year(df)
+
+    df[respresentativeDistricts].apply(grouped_box)
+    BoxPlotSeason(df[respresentativeDistricts])
+    BoxPlotHour(df[respresentativeDistricts])
+    pair_distribution_summary(df[respresentativeDistricts])
+
+
 def PairDistribution(timeseries):
     zones = ['Dhaka', 'Nagarpur', 'Kishorganj', 'Jamalpur', 'Kushtia', 'Barisal', 'Narsingdi', 'Tongi', 'Narayanganj']
     g = sns.PairGrid(timeseries[zones].resample('D').mean(), diag_sharey=False)
@@ -461,113 +422,6 @@ def PairDistribution(timeseries):
     g.map_diag(sns.kdeplot, lw=3)
     plt.tight_layout()
     plt.show()
-
-
-def CrossCorr(time_del, time_stamp, df, lagRange=3):
-    def crosscorr(datax, datay, lag=0, wrap=False):
-        return datax.astype('float64').corr(datay.shift(lag).astype('float64'))
-
-    # r_window_size = 24
-    #
-    # rolling_r = df.iloc[:, 0].rolling(window=r_window_size, center=True).corr(df.iloc[:, 1])
-    # f, ax = plt.subplots(2, 1, figsize=(14, 6), sharex=True)
-    # df.iloc[:, 0:2].rolling(window=r_window_size, center=True).median().plot(ax=ax[0])
-    # ax[0].set(xlabel='Frame', ylabel='Series')
-    # rolling_r.plot(ax=ax[1])
-    # ax[1].set(xlabel='Frame', ylabel='Pearson r')
-    # plt.suptitle("Rolling window correlation")
-    # plt.show()
-    # print(list(combinations(range(len(df.shape)), 2)))
-
-    lags, lagDir, lagmatrix = [], [], np.zeros((df.shape[1], df.shape[1]))
-    for comb in list(combinations(range((df.shape[1])), 2)):
-        rs = [crosscorr(df[df.columns.values[comb[0]]], df[df.columns.values[comb[1]]], lag) for lag in
-              range(-lagRange, lagRange + 1)]
-        offset = - int(np.floor(len(rs) / 2) - np.argmax(rs))
-        lags.append(offset)
-        lagmatrix[comb[1]][comb[0]], lagmatrix[comb[0]][comb[1]] = offset, -offset
-
-        if offset == 0: continue
-
-        # print(df.columns.values[comb[0]],df.columns.values[comb[1]],offset)
-        # ShiftedSeries(df,[df.columns.values[comb[0]],df.columns.values[comb[1]]],lagRange,offset,rs)
-
-        # if offset < 0:
-        #     dir = (angleFromCoordinate(df.columns.values[comb[0]], df.columns.values[comb[1]]))
-        # else:
-        #     dir = (angleFromCoordinate(df.columns.values[comb[1]], df.columns.values[comb[0]]))
-        # lagDir.append(dir)
-
-    # if len(lagDir)>0:
-    #     WindGraphTeamEstimate(np.array(lagDir), ['Overall'])
-    #     st = ((timeStamp.to_pydatetime()))
-    #     en = ((timeStamp.to_pydatetime())+timedelta(hours=48))
-    #     WindGraphTeam(dfm.loc[:,st:en,:])
-    # print(df.columns.values[comb[0]],df.columns.values[comb[1]],offset)
-
-    if list(Counter(lags).keys()) == [0]: return lagmatrix, lagDir
-
-    mat = pd.DataFrame(data=lagmatrix.astype('int'), columns=df.columns.values, index=df.columns.values)
-    # print(mat.dtypes)
-    # HeatMapDriver(mat, -lagRange, lagRange, str(timeStamp),
-    #               sns.diverging_palette(15, 250, s=90, l=50, n=90, center="light"))
-    # MapPlotting(metaFrame, df.mean().values, vec=lagmatrix, title=str(timeStamp))
-    print(Counter(lags))
-    mapArrow(np.zeros(meta_data.shape[0]).astype('int'), mat, df.index.date)
-
-    return lagmatrix, lagDir
-
-
-def CrossCorrelation(df):
-    def HeatmapCrossCorr(df):
-        plt.figure(figsize=(9, 9))
-        sns.heatmap(df, vmin=0, vmax=3, cmap='Purples')
-        plt.tight_layout()
-        plt.show()
-
-    def allLagRange(x, df, lag, readings):
-        def bestCorr(x, ss): return ss.apply(lambda y: y.corr(x)).argmax()
-
-        print(x)
-        ss = pd.concat([x.shift(shift) for shift in np.arange(lag + 1)], axis=1)
-        readings = [df[reading[0]:reading[-1]] for reading in readings]
-        new_df = pd.concat([reading.apply(bestCorr, ss=ss) for reading in readings], axis=1)
-        new_df.columns = [str(reading.index.date[0]) + ' to ' + str(reading.index.date[-1]) for reading in readings]
-        ser, ser.name = new_df.stack(), x.name
-        return ser
-
-    pth = berkeley_earth_data
-    window, step, lag = 5, 2, 3
-    fileName, indices, freq = 'lagTimeMatrix_', ['Leader', 'Date', 'Follower'], str(window) + 'D'
-
-    # df = df.rolling(center=True, window=4).mean()
-    df = df['2019']
-    # print(df['2017'].isnull().sum().sum())
-    # print(df['2018'].isnull().sum().sum())
-    # print(df['2019'].isnull().sum().sum())
-
-    readings = np.array(list(more_itertools.windowed(df.index[lag:-lag], n=window * 24, step=step * 24)))
-
-    # lagTimeMatrix = df.apply(allLagRange, df=df, lag=lag, readings=readings).stack()
-    # lagTimeMatrix.index = lagTimeMatrix.index.rename(indices)
-    # lagTimeMatrix.to_csv(pth + fileName + freq)
-
-    lagTimeMatrix = pd.read_csv(pth + fileName + freq, index_col=indices)
-    lagTimeMatrix = lagTimeMatrix.unstack('Date')
-    lagTimeMatrix.columns = lagTimeMatrix.columns.droplevel(0)
-
-    print(lagTimeMatrix.shape)
-    print(lagTimeMatrix.stack().value_counts())
-    metaFrame = get_metadata().assign(symbol='H')
-
-    for key, df in lagTimeMatrix.iloc[:, :].items():
-        if df.nunique() > 1:
-            print(key)
-            if key == '2019-01-27 to 2019-02-01' or key == '2019-10-26 to 2019-10-31':
-                print(df[df != 0])
-                df[df != 0].to_csv(key + '.csv')
-                HeatmapCrossCorr(df.unstack())
-                mapArrow(metaFrame, df.unstack(), df.name)
 
 
 if __name__ == '__main__':
@@ -579,10 +433,9 @@ if __name__ == '__main__':
 
     # PairDistribution(timeseries)
     # day_night_distribution(timeseries)
-    # print(Ranking(timeseries))
-
     # changes_in_districts(timeseries)
     # changes_in_months(timeseries)
+    # print(Ranking(timeseries))
 
     # SimpleTimeseries(timeseries)
     # overall_stats(timeseries)
@@ -591,32 +444,6 @@ if __name__ == '__main__':
     # MissingDataHeatmap(timeseries)
     # MissingDataFraction(timeseries)
     # FrequencyClustering(timeseries)
+    # prepare_color_table()
 
     # df.describe().T.to_csv('GenralStats.csv')
-
-    # respresentativeDistricts = ['Kishorganj', 'Bogra', 'Nagarpur', 'Jessore', 'Nawabganj', 'Dhaka']
-
-    # cross_corr_columns = ['Nawabganj','Sherpur','Kishorganj','Kushtia','Nagarpur',
-    # 'Narsingdi','Satkhira','Pirojpur','Lakshmipur']
-    # CrossCorrelation(timeseries[cross_corr_columns])
-    # CrossCorrelation(timeseries)
-    # PaperComparision()
-
-    # CityAnalysis(timeseries['Dhaka']['2017'])
-    # CityAnalysis(df['Narayanganj']['2017-02':'2018-02'])
-    # CityAnalysis(df['Mymensingh']['2019-02':'2019-04'])
-
-    # ColorTable()
-
-    # latex_custom_table_format(timeseries.describe().T)
-    # MissingDataFraction(timeseries)
-
-    # df = df.fillna('0')
-
-    # BoxPlotDistrict(df)
-    # ViolinPLot(df)
-
-    # df[disRep].apply(GroupedBox)
-    # BoxPlotSeason(df[respresentativeDistricts])
-    # BoxPlotHour(df[respresentativeDistricts])
-    # PairDistributionSummary(df[respresentativeDistricts])

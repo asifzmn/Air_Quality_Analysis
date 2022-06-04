@@ -2,6 +2,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from statsmodels.tsa.seasonal import seasonal_decompose
+
+from aq_analysis import colorScale, AQScale
 from data_preparation import *
 import plotly.graph_objects as go
 
@@ -256,7 +258,7 @@ def violin_plot_year(df):
     for year in years:
         fig.add_trace(go.Violin(y=df[year].stack(),
                                 name=year, box_visible=True,
-                                meanline_visible=True, line_color='#566D7E',))
+                                meanline_visible=True, line_color='#566D7E', ))
 
     fig.update_layout(font=dict(size=21), width=900,
                       title="Air quality of Bangladesh over years",
@@ -289,6 +291,39 @@ def prepare_color_table():
     fig.show()
 
 
+def box_plot_series(df):
+    plt.figure(figsize=(20, 8))
+    ax = sns.boxplot(data=df, color="grey")
+    for i, c in enumerate(colorScale): ax.axhspan(AQScale[i], AQScale[i + 1], facecolor=c, alpha=0.3)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right", size=21)
+    ax.set(ylim=(0, 250))
+    plt.show()
+
+
+def box_plot_week(df):
+    week_day = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    day_colors = ["#ff0000"] * 2 + ["#8fcadd"] * 5
+    seasons = ['Weekday', 'Weekend']
+    my_pal = dict(zip((np.unique(df.index.day_name())), day_colors))
+
+    for d in df.columns.values[3:5]:
+        sns.boxplot(x=df.index.day_name(), y=d, data=df, palette=my_pal)  # weekday_name,month,day,hour
+        for area, color in zip(seasons, np.unique(day_colors)): plt.scatter([], [], c=color, alpha=0.66, s=150,
+                                                                            label=str(area))
+        plt.legend(scatterpoints=1, frameon=False, labelspacing=1, title='Day Type')
+        plt.ylim(0, 350)
+        plt.show()
+
+
+def PLotlyTimeSeries(df, missing=None):
+    fig = go.Figure()
+    for d in df: fig.add_trace(go.Scatter(x=df.index, y=df[d], name=d))
+
+    fig.update_traces(mode='markers+lines', marker=dict(line_width=0, symbol='circle', size=5))
+    # fig.update_layout(title_text='Time Series with Rangeslider',xaxis_rangeslider_visible=True)
+    fig.show()
+
+
 if __name__ == '__main__':
     # plt.close("all")
     # sns.set()
@@ -299,6 +334,3 @@ if __name__ == '__main__':
     missing_data_heatmap(series)
     # violin_plot_year(series)
     # BoxPlotHour(series)
-
-
-

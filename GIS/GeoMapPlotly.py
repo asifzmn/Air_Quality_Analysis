@@ -5,20 +5,22 @@ import plotly.graph_objects as go
 
 from data_preparation import get_category_info, get_metadata, get_series
 
+access_token = 'pk.eyJ1IjoiaG9vbmtlbmc5MyIsImEiOiJjam43cGhpNng2ZmpxM3JxY3Z4ODl2NWo3In0.SGRvJlToMtgRxw9ZWzPFrA'
 
-def plotly_slider_mapbox(df, metaFrame, timeformat, discrete=True):
+
+def plotly_slider_mapbox(df, meta_data, timeformat, discrete=True):
     dfre = df.resample(timeformat[0]).mean()
     data, times = (dfre).stack().values, (dfre.index.strftime(timeformat[1]))
 
-    metaFrame = metaFrame.reset_index()
-    metaFrame = pd.concat([metaFrame] * len(times), ignore_index=True)
+    meta_data = meta_data.reset_index()
+    meta_data = pd.concat([meta_data] * len(times), ignore_index=True)
 
     if discrete:
         colorScale, categoryName, AQScale = get_category_info()
-        metaFrame['category'], metaFrame['time'] = [categoryName[val] for val in
+        meta_data['category'], meta_data['time'] = [categoryName[val] for val in
                                                     np.digitize(data, AQScale[1:-1])], np.repeat(times, df.shape[1])
-        metaFrame['zone'] = metaFrame.index.values
-        fig = px.scatter_mapbox(metaFrame, lat="Latitude", lon="Longitude", hover_name='zone', animation_frame="time",
+        meta_data['zone'] = meta_data.index.values
+        fig = px.scatter_mapbox(meta_data, lat="Latitude", lon="Longitude", hover_name='zone', animation_frame="time",
                                 hover_data=["Zone"],
                                 # zoom=6, height=750,width=750, color="category", color_discrete_sequence=colorScale)
                                 zoom=6, height=750, width=750, color="category", color_discrete_sequence=colorScale)
@@ -28,10 +30,10 @@ def plotly_slider_mapbox(df, metaFrame, timeformat, discrete=True):
         colorRange, colorScale = [0, 1], ([(0, "white"), (0.5, "skyblue"), (1, "blue")])
         # colorRange,colorScale = [10,40],([(0, "yellow"), (0.5, "orange"), (1, "red")])
 
-        print(metaFrame.shape, data.shape)
-        metaFrame['category'] = data
-        metaFrame['time'] = np.repeat(times, df.shape[1])
-        fig = px.scatter_mapbox(metaFrame, lat="Latitude", lon="Longitude", animation_frame="time",
+        print(meta_data.shape, data.shape)
+        meta_data['category'] = data
+        meta_data['time'] = np.repeat(times, df.shape[1])
+        fig = px.scatter_mapbox(meta_data, lat="Latitude", lon="Longitude", animation_frame="time",
                                 # hover_data=["Population"],
                                 zoom=7.5, height=750, color="category", range_color=colorRange,
                                 color_continuous_scale=colorScale)
@@ -56,11 +58,11 @@ def plotly_density_mapbox():
 
 
 if __name__ == '__main__':
-    dataVector, metaFrame = LoadData(name='reading1.pickle')
-    timelist, dataReadings = dataVector[-1]
-    df = pd.DataFrame(data=np.transpose(dataReadings), index=timelist,columns=[d.replace(' ', '') for d in metaFrame['Zone'].values]).apply(pd.to_numeric)
+    metadata, series, = get_metadata(), get_series()
+    df = pd.DataFrame(data=np.transpose(series.values), index=series.index,
+                      columns=[d.replace(' ', '') for d in metadata.index.values]).apply(pd.to_numeric)
     df = df.fillna(df.rolling(1830, min_periods=1, ).mean())['2017':]
-    SliderMapCommon(df,metaFrame,['M','%Y %B'])
+    plotly_slider_mapbox(df, metadata, ['M', '%Y %B'])
     # plotly_density_mapbox()
     exit()
 
