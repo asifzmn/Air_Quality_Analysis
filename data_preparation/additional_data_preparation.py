@@ -21,4 +21,5 @@ def get_mobility_data():
         [pd.read_csv(mobility_path + f'{year}_BD_Region_Mobility_Report.csv') for year in [2020, 2021, 2022]])
     mobility = mobility.iloc[:, 8:].set_index('date')
     mobility.index = pd.to_datetime(mobility.index)
+    mobility.columns = mobility.columns.str.split('_percent').str[0]
     return mobility

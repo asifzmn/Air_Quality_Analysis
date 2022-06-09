@@ -183,6 +183,12 @@ def prepare_division_and_country_series(series, metadata):
     return region_series, metadata_region, country_series, metadata_country
 
 
+def filter_country_bd(meta_data, time_series):
+    meta_data = meta_data[meta_data.Country == 'Bangladesh']
+    time_series = time_series[meta_data.index]
+    return meta_data, time_series
+
+
 if __name__ == '__main__':
     # web_crawl()
     data_cleaning_and_preparation()

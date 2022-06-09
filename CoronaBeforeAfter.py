@@ -23,7 +23,7 @@ def grouped_box(x):
         yaxis_title='PM2.5 Concentration',
         boxmode='group',
         yaxis=dict(
-            range=[0, 250]),
+            range=[0, 180]),
         legend_orientation="h")
 
     fig.show()

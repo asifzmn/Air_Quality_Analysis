@@ -2,10 +2,10 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from statsmodels.tsa.seasonal import seasonal_decompose
-
-from aq_analysis import colorScale, AQScale
 from data_preparation import *
 import plotly.graph_objects as go
+
+color_scale, category_name, aq_scale = get_category_info()
 
 
 def seasonal_decomposition(df):
@@ -46,14 +46,12 @@ def day_night_distribution(time_series, sampling_hours=1):
     fig.add_trace(go.Violin(x=time_series['zone'][time_series['diurnal_name'] == 'day'],
                             y=time_series['reading'][time_series['diurnal_name'] == 'day'],
                             legendgroup='Yes', scalegroup='Yes', name='Day',
-                            side='negative',
-                            line_color='orange')
+                            side='negative', line_color='orange')
                   )
     fig.add_trace(go.Violin(x=time_series['zone'][time_series['diurnal_name'] == 'night'],
                             y=time_series['reading'][time_series['diurnal_name'] == 'night'],
                             legendgroup='No', scalegroup='No', name='Night',
-                            side='positive',
-                            line_color='blue')
+                            side='positive', line_color='blue')
                   )
     fig.update_traces(meanline_visible=True)
     fig.update_layout(violingap=0, violinmode='overlay', font_size=27, legend_orientation='h',
@@ -237,7 +235,6 @@ def missing_data_heatmap(df):
         colorscale=dcolorsc,
         colorbar=dict(thickness=75, tickvals=tickvals, ticktext=ticktext),
     ))
-
     fig.update_layout(
         title="Missing Data Information",
         yaxis_title="District",
@@ -286,7 +283,6 @@ def prepare_color_table():
             align='center', font=dict(color='black', size=9)
         ))
     ])
-
     fig.update_layout(width=333)
     fig.show()
 
@@ -294,7 +290,7 @@ def prepare_color_table():
 def box_plot_series(df):
     plt.figure(figsize=(20, 8))
     ax = sns.boxplot(data=df, color="grey")
-    for i, c in enumerate(colorScale): ax.axhspan(AQScale[i], AQScale[i + 1], facecolor=c, alpha=0.3)
+    for i, c in enumerate(color_scale): ax.axhspan(aq_scale[i], aq_scale[i + 1], facecolor=c, alpha=0.3)
     ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right", size=21)
     ax.set(ylim=(0, 250))
     plt.show()
@@ -306,7 +302,7 @@ def box_plot_week(df):
     seasons = ['Weekday', 'Weekend']
     my_pal = dict(zip((np.unique(df.index.day_name())), day_colors))
 
-    for d in df.columns.values[3:5]:
+    for d in df:
         sns.boxplot(x=df.index.day_name(), y=d, data=df, palette=my_pal)  # weekday_name,month,day,hour
         for area, color in zip(seasons, np.unique(day_colors)): plt.scatter([], [], c=color, alpha=0.66, s=150,
                                                                             label=str(area))

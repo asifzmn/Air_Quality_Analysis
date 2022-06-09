@@ -83,22 +83,23 @@ def triangular_heatmap_correlation(title, df):
 
 def kde_zone_pair(df):
     for comb in list(combinations(range(len(df.columns.values)), 2)):
-        with sns.axes_style('white'): sns.jointplot(df[df.columns.values[comb[0]]], df[df.columns.values[comb[1]]],
-                                                    data=df, kind='kde')
+        with sns.axes_style('white'):
+            sns.jointplot(df[df.columns.values[comb[0]]], df[df.columns.values[comb[1]]],
+                          data=df, kind='kde')
         plt.show()
 
 
-def Bucketing(reading, bins): return reading.apply(
+def bucketing(reading, bins): return reading.apply(
     lambda x: pd.cut(x, bins).value_counts().sort_index()).apply(
     lambda x: x / x.sum())
 
 
-def ratioMapPlotting(reading, timeStamp):
-    norm = Bucketing(reading, [55.5, 500])
-    MapPlotting(meta_data, timeseries.mean().values, ratiodata=norm, title=str(timeStamp.year))
+def ratio_map_plotting(reading, time_stamp):
+    norm = bucketing(reading, [55.5, 500])
+    MapPlotting(meta_data, timeseries.mean().values, ratiodata=norm, title=str(time_stamp.year))
 
 
-def MissingDataInfo(df):
+def missing_data_info(df):
     print((df.isna().sum()))
     print(df.isnull().any(axis=1).sum())  # any null reading of a district for a time stamp
     print(df.isnull().all(axis=1).sum())  # all null reading of a district for a time stamp
@@ -136,8 +137,8 @@ def shifted_series(df, dis, lag_range, offset, rs):
     plt.show()
 
 
-def MeteoAnalysis(df):
-    meteoData = xr.open_dataset('Files/meteoData.nc')['meteo']
+def meteo_analysis(df):
+    meteo_data = xr.open_dataset('Files/meteo_data.nc')['meteo']
 
     factors, districts = pd.Series(
         ['Temperature [2 m]', 'Relative Humidity [2 m]', 'Mean Sea Level Pressure', 'Precipitation',
@@ -150,7 +151,7 @@ def MeteoAnalysis(df):
          'Soil Moisture [0-10 cm down]']), df.columns.values
 
     for lag in range(0, 3, 3):
-        z = factors.apply(lambda x: df.shift(lag).corrwith(get_factor_data(meteoData, x), axis=0))
+        z = factors.apply(lambda x: df.shift(lag).corrwith(get_factor_data(meteo_data, x), axis=0))
         z.index = factors.values
 
         print(z)
@@ -171,16 +172,16 @@ def MeteoAnalysis(df):
         fig.show(config={'displayModeBar': False, 'responsive': True})
 
 
-def MissingBar(df):
-    singleDistrictData = df['Dhaka'].values
-    idx_pairs = np.where(np.diff(np.hstack(([False], (np.isnan(singleDistrictData)), [False]))))[0].reshape(-1, 2)
+def missing_bar(df):
+    single_district_data = df['Dhaka'].values
+    idx_pairs = np.where(np.diff(np.hstack(([False], (np.isnan(single_district_data)), [False]))))[0].reshape(-1, 2)
     counts = (Counter(idx_pairs[:, 1] - idx_pairs[:, 0]))
-    sortedCounts = dict(sorted(counts.items()))
+    sorted_counts = dict(sorted(counts.items()))
 
     # x = ['One', 'Two', 'Three', 'Four', 'More']
-    # y = list(sortedCounts.values())[:4] + [sum(list((sortedCounts.values()))[4:])]
+    # y = list(sorted_counts.values())[:4] + [sum(list((sorted_counts.values()))[4:])]
 
-    y, x = list(sortedCounts.values()), list(sortedCounts.keys())
+    y, x = list(sorted_counts.values()), list(sorted_counts.keys())
     # x = np.arange(len(y))+1
 
     fig = go.Figure(data=[go.Bar(x=x, y=y)])
@@ -346,7 +347,7 @@ def frequency_clustering(df):
         fig.show()
 
     metaFrame = get_metadata()
-    norm = Bucketing(df, AQScale).T
+    norm = bucketing(df, AQScale).T
     # dataPoints, n_clusters = norm.values[:, :], 3
     dataPoints, n_clusters = df.resample('M').mean().T, 3
 
@@ -357,7 +358,6 @@ def frequency_clustering(df):
 
     labels = pd.DataFrame(alg.labels_, index=metaFrame.index, columns=['label'])
 
-    # print(labels)
     # districtMeanandLabels = pd.concat([df.mean(), labels], axis=1)
     districtMeanandLabels = labels.assign(mean=df.mean())
 
@@ -414,7 +414,7 @@ def representative_district_analysis(df):
     pair_distribution_summary(df[respresentativeDistricts])
 
 
-def PairDistribution(timeseries):
+def pair_distribution(timeseries):
     zones = ['Dhaka', 'Nagarpur', 'Kishorganj', 'Jamalpur', 'Kushtia', 'Barisal', 'Narsingdi', 'Tongi', 'Narayanganj']
     g = sns.PairGrid(timeseries[zones].resample('D').mean(), diag_sharey=False)
     g.map_upper(sns.scatterplot, s=15)
