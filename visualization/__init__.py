@@ -8,6 +8,18 @@ import plotly.graph_objects as go
 color_scale, category_name, aq_scale = get_category_info()
 
 
+def yearly_seasonal_decomposition_bd(series):
+    series_bd_weekly = series.resample('W', label='left', loffset=pd.DateOffset(days=1)).mean()
+    # .resample('W').mean().fillna(country_series.Bangladesh.mean())
+    result = seasonal_decompose(series_bd_weekly)
+    seasonal_component = result.seasonal.resample('H').ffill().reindex(series.index).ffill()
+    stationary = (series - seasonal_component).to_frame()
+    # stationary_diff = stationary.diff()
+    # PLotlyTimeSeries(stationary)
+    # PLotlyTimeSeries(stationary_diff)
+    return stationary
+
+
 def seasonal_decomposition(df):
     result = seasonal_decompose(df)
     print(result)
@@ -32,7 +44,7 @@ def day_night_distribution(time_series, sampling_hours=1):
     time_series = time_series.replace({-1: None})
     time_series.columns = ['zone', 'reading']
 
-    # time_series['daytime'] = np.tile(
+    # time_series['diurnal_name'] = np.tile(
     #     np.hstack((np.repeat('Day', 12 * 30 // sampling_hours), np.repeat('Night', 12 * 30 // sampling_hours))),
     #     ((time_series.shape[0] * sampling_hours) // (24 * 30)))
 
@@ -321,12 +333,20 @@ def PLotlyTimeSeries(df, missing=None):
 
 
 if __name__ == '__main__':
-    # plt.close("all")
-    # sns.set()
-    # # sns.set_style("whitegrid")
-    metadata, series = get_metadata(), get_series()
-    # prepare_color_table()
-    series = series.sample(50, axis=1)["2019":]
-    missing_data_heatmap(series)
-    # violin_plot_year(series)
-    # BoxPlotHour(series)
+    # # plt.close("all")
+    # # sns.set()
+    # # # sns.set_style("whitegrid")
+    # metadata, series = get_metadata(), get_series()
+    # # prepare_color_table()
+    # series = series.sample(50, axis=1)["2019":]
+    # missing_data_heatmap(series)
+    # # violin_plot_year(series)
+    # # BoxPlotHour(series)
+
+    series_with_heavy_missing, metadata_with_heavy_missing = get_series()['2018':], get_metadata()
+    division_missing_counts, metadata, series = clip_missing_prone_values(metadata_with_heavy_missing,
+                                                                          series_with_heavy_missing)
+    region_series, metadata_region, country_series, metadata_country = prepare_division_and_country_series(series,
+                                                                                                               metadata)
+    # day_night_distribution(country_series)
+    PLotlyTimeSeries(country_series)

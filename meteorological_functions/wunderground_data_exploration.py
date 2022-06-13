@@ -57,15 +57,6 @@ def ModelPreparation(timeSeries, reading):
     print(results.summary())
 
 
-def PrepareSeasonData():
-    timeRange = pd.date_range('2017-01-01', '2019-12-31')
-    timeSeries = pd.concat([pd.read_csv(
-        aq_directory + 'Past Weather/' + str(singleDate.date())).dropna(how='all') for
-                            singleDate in timeRange])
-    timeSeries.Time = pd.to_datetime(timeSeries.Time)
-    return timeSeries.set_index("Time")
-
-
 def FactorAnalysis():
     reading = get_series()[['Tongi']]['2017-01-01': '2020-12-31']
     reading.columns = ['Reading']
@@ -109,6 +100,15 @@ def VectorAnalysis():
     # print(timeSeries.Wind.value_counts())
     # print(timeSeries.Wind.value_counts().sort_index())
     # print(timeSeries.Condition.value_counts())
+
+
+def PrepareSeasonData():
+    timeRange = pd.date_range('2017-01-01', '2019-12-31')
+    timeSeries = pd.concat([pd.read_csv(
+        aq_directory + 'Past Weather/' + str(singleDate.date())).dropna(how='all') for
+                            singleDate in timeRange])
+    timeSeries.Time = pd.to_datetime(timeSeries.Time)
+    return timeSeries.set_index("Time")
 
 
 if __name__ == '__main__':

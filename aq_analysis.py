@@ -10,12 +10,11 @@ from collections import Counter
 from sklearn.cluster import KMeans
 from itertools import combinations
 from plotly.subplots import make_subplots
-from CoronaBeforeAfter import grouped_box
 from GIS.GeoPandas import mapArrow, mapPlot
+from covid_mobility import grouped_box
 from cross_correlation import CrossCorrelation
 from data_exporting import latex_custom_table_format, paper_comparison, missing_data_fraction
 from meteorological_functions import get_factor_data, get_cardinal_direction, plotly_rose_plot
-# from meteorological_functions.meteorological_variables import get_all_meteo_data_
 from related.GeoMapMatplotLib import MapPlotting
 from visualization import *
 import plotly.graph_objects as go
@@ -153,7 +152,6 @@ def meteo_analysis(df):
     for lag in range(0, 3, 3):
         z = factors.apply(lambda x: df.shift(lag).corrwith(get_factor_data(meteo_data, x), axis=0))
         z.index = factors.values
-
         print(z)
 
         fig = go.Figure(data=go.Heatmap(
@@ -202,11 +200,10 @@ def FillMissingDataFromDays(x, days=3):
 
 def FillMissingDataFromYears(y):
     ss = [y.shift(shft, freq='D') for shft in [-365 * 2, -365, 365, 365 * 2]]
-    # ss = [x.shift(shft, freq='D') for shft in [-365, 365]]
     return y.fillna((pd.concat(ss, axis=1).mean(axis=1)))
 
 
-def CorrationSeasonal(corrArray, rows=2, cols=2, title=''):
+def correlation_seasonal(corrArray, rows=2, cols=2, title=''):
     sub_titles = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
                   'November', 'December']
     # sub_titles = ['Winter', 'Spring', 'Summer', 'Autumn']
@@ -249,12 +246,13 @@ def CorrationSeasonal(corrArray, rows=2, cols=2, title=''):
     fig.show()
 
 
-def cutAndCount(x): return pd.cut(x, AQScale, labels=categoryName).value_counts() / x.count()
+def stacked_bar(timeseries):
+    def ranking(timeseries): return timeseries.mean().sort_values()
 
+    def cut_and_count(x): return pd.cut(x, AQScale, labels=categoryName).value_counts() / x.count()
 
-def StackedBar(timeseries):
-    ranking = Ranking(timeseries)
-    category_frquency = timeseries.apply(cutAndCount)
+    ranking = ranking(timeseries)
+    category_frquency = timeseries.apply(cut_and_count)
     category_frquency = category_frquency[ranking.index]
 
     # category_frquency = category_frquency.T
@@ -275,10 +273,6 @@ def StackedBar(timeseries):
         legend={"x": 0, "y": -.3}
     )
     fig.show()
-
-
-def Ranking(timeseries):
-    return timeseries.mean().sort_values()
 
 
 def changes_in_months(timeseries):

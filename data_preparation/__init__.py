@@ -96,7 +96,7 @@ def data_cleaning_and_preparation():
             series = series.groupby('time').PM25.mean().reset_index()
 
         # print(row)
-        series = series.set_index('time').reindex(pd.date_range('2017-01-01', '2022-01-01', freq='h')[:-1])
+        series = series.set_index('time').reindex(pd.date_range('2017-01-01', '2022-05-01', freq='h')[:-1])
         series.columns = [zone_metadata[-1].iloc[1]]
         zone_reading.append(series)
 
@@ -168,8 +168,8 @@ def prepare_division_and_country_series(series, metadata):
     metadata_division_group = metadata.groupby('Division')
     metadata_country_group = metadata.groupby('Country')
 
-    region_series = metadata_division_group.apply(process_by_region, series=series).T
-    country_series = metadata_country_group.apply(process_by_region, series=series).T
+    region_series = metadata_division_group.apply(process_by_region, series=series).T.round(2)
+    country_series = metadata_country_group.apply(process_by_region, series=series).T.round(2)
 
     metadata_region = metadata_division_group.agg({
         'Country': lambda x: x.sample(), 'Population': 'sum', 'Latitude': 'mean', 'Longitude': 'mean'})
