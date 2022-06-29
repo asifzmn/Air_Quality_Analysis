@@ -158,45 +158,47 @@ def mapArrow(data, mat, times, save=None):
         plt.clf()
 
 
-def heatmapgeoJson(metaFrame, title):
-    with open('/home/az/Desktop/bdBounds.geojson') as file:
+def heatmapgeoJson(meta_data, title):
+    with open('/home/asif/Datasets/Bangladesh/bdBounds.geojson') as file:
         bdBounds = json.load(file)
 
-    rounding_num, correction_coeff, segments, regions = 0.015, 0.5, 500, 15
-    metaFrame["Longitude"] = np.round(metaFrame["Longitude"] / rounding_num) * rounding_num
-    metaFrame["Latitude"] = np.round(metaFrame["Latitude"] / (rounding_num * correction_coeff)) * (
+    rounding_num, correction_coeff, segments, regions = 0.015, 0.5, 500, 75
+    meta_data["Longitude"] = np.round(meta_data["Longitude"] / rounding_num) * rounding_num
+    meta_data["Latitude"] = np.round(meta_data["Latitude"] / (rounding_num * correction_coeff)) * (
             rounding_num * correction_coeff)
 
-    z, y, x = metaFrame['Value'], metaFrame['Latitude'], metaFrame['Longitude']
+    z, y, x = meta_data['Value'], meta_data['Latitude'], meta_data['Longitude']
     xi, yi = linspace(x.min(), x.max(), segments), linspace(y.min(), y.max(), segments)
     zi = griddata((x, y), z, (xi[None, :], yi[:, None]))
 
+    print(zi)
     step_size = math.ceil((np.nanmax(zi) - np.nanmin(zi)) / regions)
     cs = plt.contourf(xi, yi, zi, range(int(np.nanmin(zi)), int(np.nanmax(zi)) + step_size + 1, step_size))
 
-    price_geojson = eval(geojsoncontour.contourf_to_geojson(contourf=cs, ndigits=10, ))
+    data_geojson = eval(geojsoncontour.contourf_to_geojson(contourf=cs, ndigits=10, ))
 
-    price_geojson["features"] = [price_geojson["features"][i] for i in range(len(price_geojson["features"])) if
-                                 len(price_geojson["features"][i]['geometry']['coordinates']) > 0]
+    data_geojson["features"] = [data_geojson["features"][i] for i in range(len(data_geojson["features"])) if
+                                 len(data_geojson["features"][i]['geometry']['coordinates']) > 0]
 
-    arr_temp = np.ones([len(price_geojson["features"]), 2])
+    arr_temp = np.ones([len(data_geojson["features"]), 2])
 
-    for i in range(len(price_geojson["features"])):
-        price_geojson["features"][i]['properties']["id"] = i
-        arr_temp[i] = i, float(price_geojson["features"][i]["properties"]["title"].split('-')[0])
+    for i in range(len(data_geojson["features"])):
+        data_geojson["features"][i]['properties']["id"] = i
+        arr_temp[i] = i, float(data_geojson["features"][i]["properties"]["title"].split('-')[0])
 
     df_contour = pd.DataFrame(arr_temp, columns=["Id", "Value"])
-    center_coors = 23.6850, 90.3563
+    center_coors = 23.6850, 90.3563  # BD
+    center_coors = 22.55, 88.36  # Three Country
 
     district = (go.Scattermapbox(
         mode="markers", showlegend=False,
-        lon=metaFrame['Longitude'], lat=metaFrame['Latitude'], text=metaFrame.index,
+        lon=meta_data['Longitude'], lat=meta_data['Latitude'], text=meta_data.index,
         marker=go.scattermapbox.Marker(size=6, color='#43BFC7')
     ))
 
     districtBorder = (go.Scattermapbox(
         mode="markers", showlegend=False,
-        lon=metaFrame['Longitude'], lat=metaFrame['Latitude'],
+        lon=meta_data['Longitude'], lat=meta_data['Latitude'],
         marker=go.scattermapbox.Marker(size=9, color='#504A4B')
     ))
 
@@ -208,9 +210,9 @@ def heatmapgeoJson(metaFrame, title):
     )
 
     trace = go.Choroplethmapbox(
-        geojson=price_geojson, z=df_contour.Value,
+        geojson=data_geojson, z=df_contour.Value,
         locations=df_contour.Id, featureidkey="properties.id",
-        marker=dict(opacity=0.45), marker_line_width=0,
+        marker=dict(opacity=0.15), marker_line_width=0,
         zmin=0, zmax=250,
         # zmin=25, zmax=35,
         # colorscale=[(0, '#46d246'), (0.05, '#46d246'), (0.05, '#ffff00'), (0.14, '#ffff00'),
@@ -224,31 +226,49 @@ def heatmapgeoJson(metaFrame, title):
 
     layout = go.Layout(
         title=title, title_x=0.4,
-        width=750,
+        width=1250,
         margin=dict(t=80, b=0, l=0, r=0),
         font=dict(color='dark grey', size=18),
         mapbox=dict(
             center=dict(lat=center_coors[0], lon=center_coors[1]),
-            zoom=6.5,
+            # zoom=6.5,
+            zoom=4.5,
             style="carto-positron"
         )
     )
 
     figure = dict(data=[tracebd, trace, districtBorder, district], layout=layout)
+    # print(figure)
     iplot(figure)
 
 
 if __name__ == '__main__':
     # meteoData = xr.open_dataset('meteoData.nc')['meteo']
 
-    metaFrame, df = get_metadata(), get_series()['2018-01':'2018-12'].resample('W').mean()
+    metaFrame, df = get_metadata(), get_series()['2018-01':'2021-12'].resample('H').mean()
     # metaFrame, df = LoadMetadata(), getFactorData(meteoData, 'Temperature [2 m]')
 
-    for i, row in df.sample(5).iterrows():
-        if row.isnull().any(): continue
-        metadata = metaFrame.assign(Value=row)
+    from data_preparation import get_metadata, get_series, clip_missing_prone_values, \
+        prepare_division_and_country_series
+
+    series_with_heavy_missing, metadata_with_heavy_missing = get_series(), get_metadata()
+    division_missing_counts, metadata, series = clip_missing_prone_values(metadata_with_heavy_missing,
+                                                                          series_with_heavy_missing)
+    region_series, metadata_region, country_series, metadata_country = prepare_division_and_country_series(series,
+                                                                                                           metadata)
+
+    # df, metaFrame= region_series.groupby(country_series.index.month).mean() , metadata_region
+    # df, metaFrame= region_series.groupby(country_series.index.year).median() , metadata_region
+
+    for i, row in df.iloc[:48].iterrows():
+        # if row.isnull().any(): continue
+        if row.isnull().any(): row = row.fillna(1)
+        metadata = metaFrame.assign(Value=row.values)
+        # print(row)
+        # print(metadata)
         # title = (str(i.date()-pd.Timedelta(days=7))+" "+str(i.date()))
-        title = (str(i.date()))
+        # title = (str(i.date()))
+        title = (str(i))
         heatmapgeoJson(metadata, title)
     exit()
 

@@ -59,6 +59,8 @@ def Scrap_2019(savePath):
         print(row)
         location = ' '.join(map(str, row[['Latitude', 'Longitude']].values))
         driver.find_element_by_id("gls").send_keys(location + Keys.RETURN)
+        # driver.implicitly_wait(1)
+        # driver.find_element_by_id("gls").send_keys(Keys.ENTER)
 
         searchTable = WebDriverWait(driver, 30).until(expected_conditions.presence_of_all_elements_located(
             (By.XPATH, "//table[@class = 'search_results']//tr")))
@@ -163,7 +165,7 @@ if __name__ == '__main__':
     metaFrame = get_metadata()
     runningPath = '/media/az/Study/Air Analysis/AirQuality Dataset/MeteoblueJuly'
 
-    Scrap(meteoblue_data_path)
+    # Scrap(meteoblue_data_path)
     Scrap_2019(meteoblue_data_path_2019)
 
     # df = pd.read_excel('/home/asif/Work/Air Analysis/AQ Dataset/Meteoblue Scrapped Data/2021-03-08 to 2021-03-22/Azimpur.xlsx',engine='openpyxl',header=9)

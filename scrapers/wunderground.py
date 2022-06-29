@@ -1,13 +1,11 @@
 from selenium import webdriver
-from selenium.webdriver import FirefoxProfile,Firefox
+from selenium.webdriver import FirefoxProfile, Firefox
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from aq_analysis import *
+import pandas as pd
 from sklearn.preprocessing import StandardScaler
 import plotly.express as px
-
-from meteorological_functions.wunderground_data_exploration import FactorAnalysis
 
 
 def prepare_chrome_driver():
@@ -33,8 +31,8 @@ def prepare_firefox_driver():
     profile.update_preferences()
     return Firefox(firefox_profile=profile, executable_path=gecko_path)
 
+
 if __name__ == '__main__':
-    FactorAnalysis()
     # VectorAnalysis()
     exit()
 
