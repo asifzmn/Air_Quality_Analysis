@@ -19,6 +19,7 @@ zone_data_path = berkeley_earth_data + 'zones/'
 berkeley_earth_data_prepared = berkeley_earth_data + 'prepared/'
 meteoblue_data_path = aq_directory + 'Meteoblue Scrapped Data/'
 meteoblue_data_path_2019 = aq_directory + 'MeteoBlue Data 2019'
+wunderground_data_path = aq_directory + 'Wunderground Data/'
 
 mobility_path = aq_directory + 'Mobility/Region_Mobility_Report_CSVs/'
 

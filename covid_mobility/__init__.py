@@ -16,7 +16,7 @@ def grouped_box(x):
             y=x[str(year)],
             x=pd.DatetimeIndex(x.index).month_name(),
             name=year,
-            marker_color=color_pal[year - 2018]
+            marker_color=color_pal[year - 2017]
         ))
 
     fig.update_layout(
@@ -25,13 +25,16 @@ def grouped_box(x):
         boxmode='group',
         yaxis=dict(
             range=[0, 180]),
-        legend_orientation="h")
+        legend_orientation="h",
+        height = 450,
+        font_size = 18
+    )
 
     fig.show()
 
 
 if __name__ == '__main__':
-    series_with_heavy_missing, metadata_with_heavy_missing = get_series()['2018':], get_metadata()
+    series_with_heavy_missing, metadata_with_heavy_missing = get_series()[:'2021'], get_metadata()
     division_missing_counts, metadata, series = clip_missing_prone_values(metadata_with_heavy_missing,
                                                                           series_with_heavy_missing)
     region_series, metadata_region, country_series, metadata_country = prepare_division_and_country_series(series,

@@ -14,7 +14,7 @@ from GIS.GeoPandas import mapArrow, mapPlot
 from covid_mobility import grouped_box
 from cross_correlation import CrossCorrelation
 from data_exporting import latex_custom_table_format, paper_comparison, missing_data_fraction
-from meteorological_functions import get_factor_data, get_cardinal_direction, plotly_rose_plot
+# from meteorological_functions import get_factor_data, get_cardinal_direction, plotly_rose_plot
 from related.GeoMapMatplotLib import MapPlotting
 from visualization import *
 import plotly.graph_objects as go
@@ -266,6 +266,7 @@ def stacked_bar(timeseries):
                     name=idx, opacity=.666) for idx, row in category_frquency.iterrows()]
     fig = go.Figure(data=datas)
     fig.update_layout(
+        width = 300,
         legend_orientation="h",
         font=dict(size=24),
         barmode='stack',
@@ -441,3 +442,13 @@ if __name__ == '__main__':
     # prepare_color_table()
 
     # df.describe().T.to_csv('GenralStats.csv')
+
+    series_with_heavy_missing, metadata_with_heavy_missing = get_series(), get_metadata()
+    division_missing_counts, metadata, series = clip_missing_prone_values(metadata_with_heavy_missing,
+                                                                          series_with_heavy_missing)
+    region_series, metadata_region, country_series, metadata_country = prepare_division_and_country_series(series,
+                                                                                                           metadata)
+    # day_night_distribution(country_series)
+    # PLotlyTimeSeries(country_series)
+    stacked_bar(country_series)
+    stacked_bar(region_series)

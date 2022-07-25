@@ -7,6 +7,8 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 import plotly.express as px
 
+from paths import wunderground_data_path
+
 
 def prepare_chrome_driver():
     options = webdriver.ChromeOptions()
@@ -33,22 +35,27 @@ def prepare_firefox_driver():
 
 
 if __name__ == '__main__':
-    # VectorAnalysis()
-    exit()
-
+    regions = ['Dhaka', 'West Bengal', 'NCT', 'Uttar Pradesh', 'Telangana', 'Shan'][1] + '/'
+    region_url_key = ['bd/dhaka/VGHS', 'in/dum-dum/VECC', 'in/new-delhi/VIDP',
+            'in/lucknow/VILK', 'in/hyderabad/VOHS', 'mm/yangon/VYYY'][1]
     viewButton = '//*[@id="inner-content"]/div[2]/div[1]/div[1]/div[1]/div/lib-date-selector/div/input'
     tableElem = '//*[@id="inner-content"]/div[2]/div[1]/div[5]/div[1]/div/lib-city-history-observation/div/div[2]/table'
 
-    options = webdriver.ChromeOptions()
-    options.add_argument("--start-maximized")
-    prefs = {"translate_whitelists": {"bn": "en"}, "translate": {"enabled": "true"}}
-    options.add_experimental_option("prefs", prefs)
-    driver = webdriver.Chrome('/home/az/.wdm/drivers/chromedriver/linux64/86.0.4240.22/chromedriver', options=options)
-    timeRange = pd.date_range('2020-01-01', '2020-12-31')
+    temp_columns = ['Temperature', 'Dew Point']
+    string_columns = ['Time', 'Wind', 'Condition']
 
-    for singleDate in timeRange:
-        print(singleDate)
-        driver.get('https://www.wunderground.com/history/daily/bd/dhaka/VGHS/date/' + str(singleDate.date()))
+    # options = webdriver.ChromeOptions()
+    # options.add_argument("--start-maximized")
+    # prefs = {"translate_whitelists": {"bn": "en"}, "translate": {"enabled": "true"}}
+    # options.add_experimental_option("prefs", prefs)
+    # driver = webdriver.Chrome('/home/az/.wdm/drivers/chromedriver/linux64/86.0.4240.22/chromedriver', options=options)
+    driver = prepare_firefox_driver()
+    timeRange = pd.date_range('2021-06-15', '2021-12-31')
+
+    for single_date in timeRange:
+        print(single_date)
+        url = f'https://www.wunderground.com/history/daily/{region_url_key}/date/' + str(single_date.date())
+        driver.get(url)
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, viewButton))).click()
 
         table = WebDriverWait(driver, 180).until(EC.presence_of_element_located((By.XPATH, tableElem)))
@@ -57,12 +64,13 @@ if __name__ == '__main__':
                     table.find_elements_by_xpath(".//tr")[1:]]
 
         df = pd.DataFrame(data=bodyInfo, columns=headers).set_index('Time')
-        df.index = pd.to_datetime(str(singleDate.date()) + ' ' + df.index)
-        df[df.columns.difference(['Time', 'Wind', 'Condition'])] = df[
-            df.columns.difference(['Time', 'Wind', 'Condition'])].apply(lambda x: x.str.split().str[0].astype('float'))
-        df[['Temperature', 'Dew Point']] = df[['Temperature', 'Dew Point']].apply(lambda x: ((x - 32) * 5 / 9).round(2))
+        df.index = pd.to_datetime(str(single_date.date()) + ' ' + df.index)
+        df[df.columns.difference(string_columns)] = df[df.columns.difference(string_columns)].apply(
+            lambda x: x.str.split().str[0].astype('float'))
+        df[temp_columns] = df[temp_columns].apply(lambda x: ((x - 32) * 5 / 9).round(2))
         # df.agg({'Time': lambda x: pd.to_datetime(str(singleDate.date()) + ' ' + x)})
-        df.to_csv('/home/az/PycharmProjects/Data Science/Misc/Past Weather/' + str(singleDate.date()))
+        save_path = wunderground_data_path + regions + str(single_date.date())
+        df.to_csv(save_path)
 
     # headers = ['Time', 'Temperature', 'Dew Point', 'Humidity', 'Wind', 'Wind Speed', 'Wind Gust', 'Pressure', 'Precip.',
     #  'Condition']

@@ -2,10 +2,35 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from statsmodels.tsa.seasonal import seasonal_decompose
+
 from data_preparation import *
 import plotly.graph_objects as go
 
 color_scale, category_name, aq_scale = get_category_info()
+
+country_color_dict = {'India':'#F4C430','Myanmar': '#990000', 'Bangladesh': '#228B22'}
+
+
+def prepare_color_table():
+    color_scale, category_name, aq_scale = get_category_info()
+    range_str = [str(a) + " - " + str(b) for a, b in zip(aq_scale, aq_scale[1:])]
+    data = {'category_name': category_name, 'color_scale': color_scale, 'range_str': range_str}
+    df = pd.DataFrame(data)
+
+    fig = go.Figure(data=[go.Table(
+        header=dict(
+            values=["<b>Category</b>", "<b>Concentration Range (&#956;gm<sup>-3</sup>) </b>"],
+            line_color='grey', fill_color='silver',
+            align='center', font=dict(color='black', size=12)
+        ),
+        cells=dict(
+            values=[df.category_name, df.range_str],
+            line_color='grey', fill_color=[df.color_scale],
+            align='center', font=dict(color='black', size=9)
+        ))
+    ])
+    fig.update_layout(width=333)
+    fig.show()
 
 
 def yearly_seasonal_decomposition_bd(series):
@@ -156,8 +181,7 @@ def pltSetUpAx(ax, xlabel=None, ylabel=None, title=None, xlim=None, ylim=None, s
 def custom_time_series(df):
     resampled_df = df.resample('M')
 
-    dhaka_series = df["Dhaka"].resample('M').apply(['mean', 'median'])
-    barisal_series = df["Barisal"].resample('M').apply(['mean', 'median'])
+
 
     aggregated_value = pd.concat(
         [sampledSeries.stack().apply(['min', 'mean', 'median', 'max']) for _, sampledSeries in resampled_df], axis=1).T
@@ -165,7 +189,7 @@ def custom_time_series(df):
 
     # aggregated_value = aggregated_value.iloc[:-1]
     # print(aggregated_value.to_string())
-    aggregated_value.to_csv('aggregated_value.csv')
+    # aggregated_value.to_csv('aggregated_value.csv')
 
     fig = go.Figure()
 
@@ -187,25 +211,37 @@ def custom_time_series(df):
         line_color='rgba(255, 216, 1,.75)', line_width=5, name='Median',
     ))
 
-    fig.add_trace(go.Scatter(
-        x=dhaka_series.index.tolist(), y=dhaka_series['mean'].tolist(),
-        line_color='#2C3539', line_width=2, name='Dhaka_Mean',
-    ))
+    # dhaka_series = df["Dhaka"].resample('M').apply(['mean', 'median'])
+    # barisal_series = df["Barisal"].resample('M').apply(['mean', 'median'])
+    #
+    # fig.add_trace(go.Scatter(
+    #     x=dhaka_series.index.tolist(), y=dhaka_series['mean'].tolist(),
+    #     line_color='#2C3539', line_width=2, name='Dhaka_Mean',
+    # ))
+    #
+    # fig.add_trace(go.Scatter(
+    #     x=dhaka_series.index.tolist(), y=dhaka_series['median'].tolist(),
+    #     line_color='#737CA1', line_width=2, name='Dhaka_Median',
+    # ))
+    #
+    # fig.add_trace(go.Scatter(
+    #     x=barisal_series.index.tolist(), y=barisal_series['mean'].tolist(),
+    #     line_color='#E238EC', line_width=2, name='Barisal_Mean',
+    # ))
+    #
+    # fig.add_trace(go.Scatter(
+    #     x=barisal_series.index.tolist(), y=barisal_series['median'].tolist(),
+    #     line_color='#C12283', line_width=2, name='Barisal_Median',
+    # ))
 
-    fig.add_trace(go.Scatter(
-        x=dhaka_series.index.tolist(), y=dhaka_series['median'].tolist(),
-        line_color='#737CA1', line_width=2, name='Dhaka_Median',
-    ))
-
-    fig.add_trace(go.Scatter(
-        x=barisal_series.index.tolist(), y=barisal_series['mean'].tolist(),
-        line_color='#E238EC', line_width=2, name='Barisal_Mean',
-    ))
-
-    fig.add_trace(go.Scatter(
-        x=barisal_series.index.tolist(), y=barisal_series['median'].tolist(),
-        line_color='#C12283', line_width=2, name='Barisal_Median',
-    ))
+    # for country_name in df:
+    #     print(country_name)
+    #     country_monthly_series = df[country_name].resample('M').mean()
+    #
+    #     fig.add_trace(go.Scatter(
+    #         x=country_monthly_series.index.tolist(), y=country_monthly_series,
+    #         line_color=country_color_dict[country_name], line_width=2, name=country_name,
+    #     ))
 
     # # annotate_points = ['2017-01-01', '2018-01-14', '2019-01-13', '2017-07-02', '2018-07-15', '2019-07-14']
     # annotate_points = ['2017-01-31', '2018-01-31', '2019-01-31', '2017-07-31', '2018-07-31', '2019-07-31']
@@ -222,7 +258,7 @@ def custom_time_series(df):
     fig.update_layout(
         yaxis_title="PM2.5 Concentration",
         xaxis_title="Time",
-        font=dict(size=27, ),
+        font=dict(size=27),
         legend_orientation="h",
         template='plotly_white'
     )
@@ -277,28 +313,6 @@ def violin_plot_year(df):
     fig.show()
 
 
-def prepare_color_table():
-    color_scale, category_name, aq_scale = get_category_info()
-    range_str = [str(a) + " - " + str(b) for a, b in zip(aq_scale, aq_scale[1:])]
-    data = {'category_name': category_name, 'color_scale': color_scale, 'range_str': range_str}
-    df = pd.DataFrame(data)
-
-    fig = go.Figure(data=[go.Table(
-        header=dict(
-            values=["<b>Category</b>", "<b>Concentration Range (&#956;gm<sup>-3</sup>) </b>"],
-            line_color='grey', fill_color='silver',
-            align='center', font=dict(color='black', size=12)
-        ),
-        cells=dict(
-            values=[df.category_name, df.range_str],
-            line_color='grey', fill_color=[df.color_scale],
-            align='center', font=dict(color='black', size=9)
-        ))
-    ])
-    fig.update_layout(width=333)
-    fig.show()
-
-
 def box_plot_series(df):
     plt.figure(figsize=(20, 8))
     ax = sns.boxplot(data=df, color="grey")
@@ -309,7 +323,7 @@ def box_plot_series(df):
 
 
 def box_plot_week(df):
-    week_day = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
     day_colors = ["#ff0000"] * 2 + ["#8fcadd"] * 5
     seasons = ['Weekday', 'Weekend']
     my_pal = dict(zip((np.unique(df.index.day_name())), day_colors))
@@ -337,16 +351,19 @@ if __name__ == '__main__':
     # # sns.set()
     # # # sns.set_style("whitegrid")
     # metadata, series = get_metadata(), get_series()
-    # # prepare_color_table()
+    # prepare_color_table()
+    # exit()
     # series = series.sample(50, axis=1)["2019":]
     # missing_data_heatmap(series)
     # # violin_plot_year(series)
     # # BoxPlotHour(series)
 
-    series_with_heavy_missing, metadata_with_heavy_missing = get_series()['2018':], get_metadata()
+    series_with_heavy_missing, metadata_with_heavy_missing = get_series()[:], get_metadata()
     division_missing_counts, metadata, series = clip_missing_prone_values(metadata_with_heavy_missing,
                                                                           series_with_heavy_missing)
     region_series, metadata_region, country_series, metadata_country = prepare_division_and_country_series(series,
-                                                                                                               metadata)
+                                                                                                           metadata)
     # day_night_distribution(country_series)
-    PLotlyTimeSeries(country_series)
+    # PLotlyTimeSeries(country_series)
+    # custom_time_series(country_series)
+    box_plot_week(country_series)

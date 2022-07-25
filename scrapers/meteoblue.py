@@ -63,15 +63,21 @@ def Scrap_2019(savePath):
         # driver.find_element_by_id("gls").send_keys(Keys.ENTER)
 
         searchTable = WebDriverWait(driver, 30).until(expected_conditions.presence_of_all_elements_located(
-            (By.XPATH, "//table[@class = 'search_results']//tr")))
+            (By.XPATH, "//table[@class = 'search-results']//tr")))
         searchTable[1].find_elements_by_xpath(".//td")[1].click()
 
-        factorInput = '/html/body/div[3]/div/main/div/div[2]/form/div[5]/div[1]/span[1]/span[1]/span/ul/li/input'
-        factors = WebDriverWait(driver, 30).until(expected_conditions.presence_of_all_elements_located
-                                                  ((By.XPATH, factorInput)))[0]
-        # factors.send_keys('Total cloud cover' + '\n' )
-        factors.send_keys('\n'.join(map(str, era5list)) + '\n')
-        time.sleep(1)
+        # factorInput = '/html/body/div[3]/div/main/div/div[2]/form/div[5]/div[1]/span[1]/span[1]/span/ul/li/input'
+        # factors = WebDriverWait(driver, 30).until(expected_conditions.presence_of_all_elements_located
+        #                                           ((By.XPATH, factorInput)))[0]
+        # # factors.send_keys('Total cloud cover' + '\n' )
+        # factors.send_keys('\n'.join(map(str, era5list)) + '\n')
+
+        # WebDriverWait(driver, 30).until(
+        #     expected_conditions.element_to_be_clickable((By.CLASS_NAME, 'select-all'))).click()
+        select_all_button = driver.find_element_by_class_name('select-all')
+        time.sleep(3)
+        # select_all_button.click()
+        driver.execute_script("arguments[0].click();", select_all_button)
 
         driver.find_element_by_name("submit_csv").click()
         time.sleep(3)
