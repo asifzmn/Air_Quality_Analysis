@@ -5,11 +5,10 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
-
 dataset_url = 'http://berkeleyearth.lbl.gov/air-quality/maps/cities/'
 
-aq_directory = '/home/asif/Datasets/AQ Dataset/'  # dataset location
-# aq_directory = getcwd() + '/Project Data/'  # change this location
+aq_directory = '/home/asif/Datasets/AQ Dataset/'  # change this main dataset location
+# aq_directory = getcwd() + '/Project Data/'
 
 aq_directory_local = 'Files/'
 
@@ -18,12 +17,12 @@ raw_data_path = berkeley_earth_data + 'raw/'
 zone_data_path = berkeley_earth_data + 'zones/'
 berkeley_earth_data_prepared = berkeley_earth_data + 'prepared/'
 meteoblue_data_path = aq_directory + 'Meteoblue Scrapped Data/'
-meteoblue_data_path_2019 = aq_directory + 'MeteoBlue Data 2019'
+meteoblue_data_path_2019 = aq_directory + 'Meteoblue Data/MeteoBlue Data 2019'
 wunderground_data_path = aq_directory + 'Wunderground Data/'
 
 mobility_path = aq_directory + 'Mobility/Region_Mobility_Report_CSVs/'
 
-covid_data = 'Covid_Data/'
+covid_data = aq_directory + 'Covid_Data/'
 confirmed = covid_data + 'time_series_covid19_confirmed_global.csv'
 deaths = covid_data + 'time_series_covid19_deaths_global.csv'
 recovered = covid_data + 'time_series_covid19_recovered_global.csv'

@@ -249,13 +249,13 @@ if __name__ == '__main__':
     # metaFrame, df = LoadMetadata(), getFactorData(meteoData, 'Temperature [2 m]')
 
     from data_preparation import get_metadata, get_series, clip_missing_prone_values, \
-        prepare_division_and_country_series
+        prepare_region_and_country_series
 
     series_with_heavy_missing, metadata_with_heavy_missing = get_series(), get_metadata()
     division_missing_counts, metadata, series = clip_missing_prone_values(metadata_with_heavy_missing,
                                                                           series_with_heavy_missing)
-    region_series, metadata_region, country_series, metadata_country = prepare_division_and_country_series(series,
-                                                                                                           metadata)
+    region_series, metadata_region, country_series, metadata_country = prepare_region_and_country_series(series,
+                                                                                                         metadata)
 
     # df, metaFrame= region_series.groupby(country_series.index.month).mean() , metadata_region
     # df, metaFrame= region_series.groupby(country_series.index.year).median() , metadata_region

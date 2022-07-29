@@ -15,6 +15,7 @@ from covid_mobility import grouped_box
 from cross_correlation import CrossCorrelation
 from data_exporting import latex_custom_table_format, paper_comparison, missing_data_fraction
 # from meteorological_functions import get_factor_data, get_cardinal_direction, plotly_rose_plot
+from meteorological_functions import get_factor_data
 from related.GeoMapMatplotLib import MapPlotting
 from visualization import *
 import plotly.graph_objects as go
@@ -446,8 +447,8 @@ if __name__ == '__main__':
     series_with_heavy_missing, metadata_with_heavy_missing = get_series(), get_metadata()
     division_missing_counts, metadata, series = clip_missing_prone_values(metadata_with_heavy_missing,
                                                                           series_with_heavy_missing)
-    region_series, metadata_region, country_series, metadata_country = prepare_division_and_country_series(series,
-                                                                                                           metadata)
+    region_series, metadata_region, country_series, metadata_country = prepare_region_and_country_series(series,
+                                                                                                         metadata)
     # day_night_distribution(country_series)
     # PLotlyTimeSeries(country_series)
     stacked_bar(country_series)

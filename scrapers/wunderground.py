@@ -1,5 +1,3 @@
-from selenium import webdriver
-from selenium.webdriver import FirefoxProfile, Firefox
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -8,36 +6,12 @@ from sklearn.preprocessing import StandardScaler
 import plotly.express as px
 
 from paths import wunderground_data_path
-
-
-def prepare_chrome_driver():
-    options = webdriver.ChromeOptions()
-    options.add_argument("--start-maximized")
-    options.headless = True
-    prefs = {"translate_whitelists": {"bn": "en"}, "translate": {"enabled": "true"}}
-    options.add_experimental_option("prefs", prefs)
-    # driver = webdriver.Chrome('/home/az/.wdm/drivers/chromedriver/linux64/86.0.4240.22/chromedriver', options=options)
-    return webdriver.Chrome('/home/az/Desktop/chromedriver', options=options)
-
-
-def prepare_firefox_driver():
-    gecko_path = "/home/asif/Work/Firefox Web Driver/geckodriver.exe"
-    # gecko_path = "/media/az/Study/Work/Firefox Web Driver/geckodriver.exe"
-
-    profile = FirefoxProfile()
-
-    # profile.set_preference("browser.helperApps.alwaysAsk.force", False)
-    # profile.set_preference("browser.download.manager.showWhenStarting",False)
-
-    profile.set_preference('general.warnOnAboutConfig', False)
-    profile.update_preferences()
-    return Firefox(firefox_profile=profile, executable_path=gecko_path)
-
+from scrapers import prepare_firefox_driver
 
 if __name__ == '__main__':
     regions = ['Dhaka', 'West Bengal', 'NCT', 'Uttar Pradesh', 'Telangana', 'Shan'][1] + '/'
     region_url_key = ['bd/dhaka/VGHS', 'in/dum-dum/VECC', 'in/new-delhi/VIDP',
-            'in/lucknow/VILK', 'in/hyderabad/VOHS', 'mm/yangon/VYYY'][1]
+                      'in/lucknow/VILK', 'in/hyderabad/VOHS', 'mm/yangon/VYYY'][1]
     viewButton = '//*[@id="inner-content"]/div[2]/div[1]/div[1]/div[1]/div/lib-date-selector/div/input'
     tableElem = '//*[@id="inner-content"]/div[2]/div[1]/div[5]/div[1]/div/lib-city-history-observation/div/div[2]/table'
 

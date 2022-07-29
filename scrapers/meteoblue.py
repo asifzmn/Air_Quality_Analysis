@@ -15,6 +15,13 @@ from time import sleep
 from data_preparation import *
 
 
+def selcet_meteoblue_zones(meta_data):
+    india_bd_trajectory_regions = ['NCT', 'West Bengal', 'Uttar Pradesh', 'Haryana', 'Bihar'][:2]
+    meta_data = meta_data[(meta_data.Country == 'Bangladesh') | (
+            (meta_data.Country == 'India') & (meta_data.Division.isin(india_bd_trajectory_regions)))]
+    return meta_data
+
+
 def prepare_firefox_driver(savePath):
     gecko_path = "/home/asif/Work/Firefox Web Driver/geckodriver.exe"
     # gecko_path = "/media/az/Study/Work/Firefox Web Driver/geckodriver.exe"
@@ -38,6 +45,9 @@ def prepare_firefox_driver(savePath):
 
 def Scrap_2019(savePath):
     meta_data = get_metadata()
+    meta_data = selcet_meteoblue_zones(meta_data)
+    print(meta_data[meta_data.Division=='NCT'])
+    exit()
 
     era5list = ['Temperature [2 m]', 'Growing degree days [2 m]', 'Temperature [900 hPa]', 'Temperature [850 hPa]',
                 'Temperature [800 hPa]', 'Temperature [700 hPa]', 'Temperature [500 hPa]', 'Precipitation amount',
@@ -56,7 +66,7 @@ def Scrap_2019(savePath):
 
     start = timer()
     for index, row in meta_data.iterrows():
-        print(row)
+        print(index)
         location = ' '.join(map(str, row[['Latitude', 'Longitude']].values))
         driver.find_element_by_id("gls").send_keys(location + Keys.RETURN)
         # driver.implicitly_wait(1)
@@ -75,16 +85,16 @@ def Scrap_2019(savePath):
         # WebDriverWait(driver, 30).until(
         #     expected_conditions.element_to_be_clickable((By.CLASS_NAME, 'select-all'))).click()
         select_all_button = driver.find_element_by_class_name('select-all')
-        time.sleep(3)
+        # time.sleep(3)
         # select_all_button.click()
         driver.execute_script("arguments[0].click();", select_all_button)
 
         driver.find_element_by_name("submit_csv").click()
-        time.sleep(3)
+        time.sleep(5)
         print(timer() - start)
 
     time.sleep(30)
-    for file, zone in zip(sorted(Path(savePath).iterdir(), key=os.path.getmtime), meta_data.index.values):
+    for file, zone in zip(sorted(Path(savePath).iterdir(), key=os.path.getmtime), meta_data.Zone.values):
         shutil.move(file, os.path.join(savePath, zone + '.csv'))
 
 

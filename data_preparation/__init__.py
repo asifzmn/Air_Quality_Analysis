@@ -115,8 +115,8 @@ def data_cleaning_and_preparation():
 
 
 def clip_missing_prone_values(metadata, series):
-    metadata = metadata.reset_index()
-    metadata.index = metadata.Zone + "_" + metadata.Division
+    # metadata = metadata.reset_index()
+    # metadata.index = metadata.Zone + "_" + metadata.Division
     series.columns = metadata.index
 
     division_missing_counts = metadata.groupby('Division').apply(
@@ -134,7 +134,7 @@ def get_series():
 
 
 def get_metadata():
-    return pd.read_csv(get_save_location() + 'metadata.csv', index_col='Zone', parse_dates=[0])
+    return pd.read_csv(get_save_location() + 'metadata.csv', index_col='index', parse_dates=[0])
     # return pd.read_csv(get_save_location() + 'metadata.csv', index_col='Zone', parse_dates=[0]).rename(
     #     index=rename_dict).sort_index(axis=0)
 
@@ -161,7 +161,7 @@ def save_data():
     timeseries.to_csv('pm_time_series.csv')
 
 
-def prepare_division_and_country_series(series, metadata):
+def prepare_region_and_country_series(series, metadata):
     def process_by_region(divisional_zone, series):
         return series[divisional_zone.index].mean(axis=1)
 

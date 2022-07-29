@@ -361,8 +361,8 @@ if __name__ == '__main__':
     series_with_heavy_missing, metadata_with_heavy_missing = get_series()[:], get_metadata()
     division_missing_counts, metadata, series = clip_missing_prone_values(metadata_with_heavy_missing,
                                                                           series_with_heavy_missing)
-    region_series, metadata_region, country_series, metadata_country = prepare_division_and_country_series(series,
-                                                                                                           metadata)
+    region_series, metadata_region, country_series, metadata_country = prepare_region_and_country_series(series,
+                                                                                                         metadata)
     # day_night_distribution(country_series)
     # PLotlyTimeSeries(country_series)
     # custom_time_series(country_series)
