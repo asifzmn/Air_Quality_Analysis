@@ -14,12 +14,13 @@ from pandas_profiling import ProfileReport
 
 from data_preparation import *
 
-from meteoblue_data_preparation import factors, factor
+from meteoblue_data_preparation import factors, factor, get_factor_data
 from meteoblue_data_preparation import prepare_multi_file_and_save_meteo_data, \
     meteorological_variable_type_list_linear
 from meteoblue_data_preparation import temperature_factor, humidity_factor, precipitation_factor
 from meteoblue_data_preparation import cloud_cover_factor, radiation_factor, pressure_factor
 from meteoblue_data_preparation import wind_speed_factor, wind_direction_factor
+from meteorological_functions.linear_data_visualization import meteo_time_series
 
 from meteorological_functions.wind_data_exploration import wind_direction_factors
 from meteorological_functions.wind_data_exploration import *
@@ -29,15 +30,6 @@ def date_continuity(df):
     all = pd.Series(data=pd.date_range(start=df[0].min(), end=df[0].max(), freq='M'))
     mask = all.isin(df[0].values)
     print(all[~mask])
-
-
-def get_factor_data(meteo_data, factor):
-    return meteo_data.sel(factor=factor).to_dataframe().drop('factor', axis=1).unstack().T.droplevel(level=0)
-
-
-def get_district_data(meteo_data, district):
-    return meteo_data.sel(district=district).to_dataframe().drop('district', axis=1).unstack().T.droplevel(level=0).T
-
 
 def profile_report():
     df = get_factor_data(meteo_data, factor)

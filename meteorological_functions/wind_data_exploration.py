@@ -1,5 +1,9 @@
 import numpy as np
+import pandas as pd
 import plotly.graph_objs as go
+
+from meteorological_functions.wunderground_data_preparation import prepare_data, text_to_angle
+
 
 def PlotlyRosePlotBasic(info=None):
     if info is None:
@@ -85,7 +89,7 @@ def WindGraphTeamEstimate(meteoData, alldis):
     plotly_rose_plot(directions, colorPal, alldis)
 
 
-def wind_graph_multi_zone(meteo_data,wind_direction_factor):
+def wind_graph_multi_zone(meteo_data, wind_direction_factor):
     wind_dir_names, color_pal = wind_direction_factors(wind_direction_factor)
     alldis = meteo_data['district'].values
     directions = np.array(
@@ -96,11 +100,22 @@ def wind_graph_multi_zone(meteo_data,wind_direction_factor):
     plotly_rose_plot(directions, color_pal, alldis)
 
 
-def monthly_rose_plot(meteo_data,wind_direction_factor):
+def monthly_rose_plot(meteo_data, wind_direction_factor):
     meteo_data_wind_direction = meteo_data.loc[:, :, wind_direction_factors(wind_direction_factor)[0]]
     for month, data in meteo_data_wind_direction.groupby('time.month'):
         print(data.shape)
         # wind_graph_multi_zone(data)
         WindGraphTeamEstimate(data.stack(z=("time", "district", "factor")).values, ['bd'])
 
+
 # def WindGraph(x): PlotlyRosePlot([[getSides(x), 'Wind', '#3f65b1']])
+
+def VectorAnalysis():
+    timeSeries = prepare_data()
+    print(timeSeries.sample(15).to_string())
+
+    timeSeries['wind_angle'] = timeSeries.apply(lambda x: text_to_angle.get(x.Wind), axis=1)
+    print(timeSeries['wind_angle'].resample('M').agg(pd.Series.mode))
+    # print(timeSeries['wind_angle'].resample('M').apply(lambda x: x.value_counts().iloc[:3]))
+    # print(timeSeries.Wind.value_counts())
+    # print(timeSeries.Wind.value_counts().sort_index())

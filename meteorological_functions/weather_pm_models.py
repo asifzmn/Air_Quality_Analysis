@@ -1,7 +1,7 @@
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 
-from meteorological_functions import get_district_data
+from meteorological_functions.meteoblue_data_preparation import get_district_data
 import statsmodels.api as sm
 
 

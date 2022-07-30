@@ -1,5 +1,5 @@
 from data_preparation import get_diurnal_period
-from meteorological_functions import get_factor_data
+from meteorological_functions.meteoblue_data_preparation import get_factor_data
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
@@ -107,3 +107,4 @@ def nominal_condition_stats(all_data):
         go.Bar(y=direction_group.Reading, x=direction_group.index, marker_color="grey")
     ])
     fig.show()
+
