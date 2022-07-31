@@ -16,6 +16,9 @@ def get_common_id(id=3): return ['study_area', 'SouthAsianCountries', 'allbd', '
 def get_save_location(): return berkeley_earth_data_prepared + get_common_id() + '/'
 
 
+def get_compressed_save_location(): return berkeley_earth_data_compressed + get_common_id() + '/'
+
+
 def get_zones_info(): return pd.read_csv(zone_data_path + get_common_id() + '.csv').sort_values('Zone', ascending=True)
 
 
@@ -180,6 +183,15 @@ def prepare_region_and_country_series(series, metadata):
     metadata_region['Count'] = metadata_division_group.Division.count()
     metadata_country['Count'] = metadata_country_group.Country.count()
 
+    return region_series, metadata_region, country_series, metadata_country
+
+
+def read_region_and_country_series():
+    files_path = get_compressed_save_location()
+    region_series = pd.read_csv(files_path + "region_series.csv", index_col='time')
+    metadata_region = pd.read_csv(files_path + "metadata_region.csv", index_col='Division')
+    country_series = pd.read_csv(files_path + "country_series.csv", index_col='time')
+    metadata_country = pd.read_csv(files_path + "metadata_country.csv", index_col='Country')
     return region_series, metadata_region, country_series, metadata_country
 
 

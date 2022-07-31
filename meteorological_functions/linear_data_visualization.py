@@ -32,7 +32,7 @@ def meteo_box_plot(meteo_data, time_series):
     fig.show()
 
 
-def pm_vs_factor_scatter(meteo_data, time_series):
+def scatter_plot_factor_vs_pm_diurnal_seasonal(meteo_data, time_series):
     compare_factors = ['Temperature [2 m elevation corrected]', 'Relative Humidity [2 m]', 'Wind Speed [10 m]',
                        'Mean Sea Level Pressure [MSL]']
     compare_factors_rename = ['Temperature [Celcius]', 'Relative Humidity [Percentage]',

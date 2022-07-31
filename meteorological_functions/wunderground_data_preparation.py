@@ -1,13 +1,13 @@
 import math
-
 import pandas as pd
 import numpy as np
 
+from meteorological_functions import MeteorologicalVariableType
 from paths import wunderground_data_path
 
 regions = ['Dhaka', 'West Bengal', 'NCT']
 
-linear_var = ['Temperature', 'Dew Point', 'Humidity', 'Wind Gust', 'Pressure', 'Precip.','Wind Speed']
+linear_var = ['Temperature', 'Humidity', 'Wind Gust', 'Pressure', 'Precip.', 'Wind Speed']
 circular_var = ['Wind Direction', 'Wind Speed']
 nominal_var = ['Condition']
 
@@ -15,35 +15,29 @@ text = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW
 angle = np.linspace(0, 360, 17)[:-1]
 text_to_angle = dict(zip(text, angle))
 
+factor_list = ['Temperature']
+name, unit, color_list = 'Temperature', 'Celsius', ['#260637']
+temperature_factor = MeteorologicalVariableType(name, unit, factor_list, color_list)
 
-# Time,Celcius,Celcius,%,Direction,mph,mph,in,in,Category
+factor_list = ['Humidity']
+name, unit, color_list = 'Humidity', 'Fraction', ['#87CEEB']
+humidity_factor = MeteorologicalVariableType(name, unit, factor_list, color_list)
 
-def vector_calculation(x):
-    EW_Vector = (np.sin(np.radians(x['Wind Direction'])) * x['Wind Speed']).sum()
-    NS_Vector = (np.cos(np.radians(x['Wind Direction'])) * x['Wind Speed']).sum()
+factor_list = ['Pressure']
+name, unit, color_list = 'Pressure', 'hPa', ['#2B65EC']
+Pressure_factor = MeteorologicalVariableType(name, unit, factor_list, color_list)
 
-    EW_Average = (EW_Vector / x.shape[0]) * 1
-    NS_Average = (NS_Vector / x.shape[0]) * 1
+factor_list = ['Wind Speed']
+name, unit, color_list = 'Wind Speed', 'KM/H', ['#347C2C']
+wind_speed_factor = MeteorologicalVariableType(name, unit, factor_list, color_list)
 
-    averageWindSpeed = np.sqrt(EW_Average * EW_Average + NS_Average * NS_Average)
-
-    Atan2Direction = math.atan2(EW_Average, NS_Average)
-
-    averageWindDirection = np.degrees(Atan2Direction)
-
-    # //Correction As specified in webmet.com webpage http://www.webmet.com/met_monitoring/622.html
-    # if(AvgDirectionInDeg > 180):
-    #     AvgDirectionInDeg = AvgDirectionInDeg - 180
-    # elif (AvgDirectionInDeg < 180):
-    #     AvgDirectionInDeg = AvgDirectionInDeg + 180
-
-    if averageWindDirection < 0:
-        averageWindDirection += 360
-
-    return averageWindSpeed, averageWindDirection
+factor_list = ['Wind Direction']
+name, unit, color_list = 'Wind Direction', 'KM/H', ['#347C2C']
+wind_direction_factor = MeteorologicalVariableType(name, unit, factor_list, color_list)
 
 
 def prepare_data(region="Dhaka"):
+    # Time,Celcius,Celcius,%,Direction,mph,mph,in,in,Category
     region = region + '/'
     # region = "NCT/"
     time_range = pd.date_range('2019-01-01', '2021-12-31')
@@ -51,5 +45,9 @@ def prepare_data(region="Dhaka"):
         wunderground_data_path + region + str(singleDate.date())).dropna(how='all') for singleDate in time_range])
     time_series.Time = pd.to_datetime(time_series.Time)
     time_series['Wind Direction'] = time_series.apply(lambda x: text_to_angle.get(x.Wind), axis=1)
-    time_series = time_series.drop('Wind',axis=1)
+    time_series['Wind Speed'] = time_series['Wind Speed'] * 1.6
+    time_series['Wind Gust'] = time_series['Wind Gust'] * 1.6
+    time_series['Pressure'] = time_series['Pressure'] * 33.86
+    time_series['Precip.'] = time_series['Precip.'] * 25.4
+    time_series = time_series.drop('Wind', axis=1)
     return time_series.set_index("Time")

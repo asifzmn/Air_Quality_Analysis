@@ -7,6 +7,7 @@ import xarray as xr
 from os import listdir
 
 from data_preparation import get_metadata
+from meteorological_functions import MeteorologicalVariableType
 from paths import meteoblue_data_path, meteoblue_data_path_2019
 from scrapers.meteoblue import selcet_meteoblue_zones
 
@@ -44,15 +45,6 @@ factors = ['Temperature [2 m elevation corrected]', 'Growing Degree Days [2 m el
 factor = factors[-3]
 
 
-class MeteorologicalVariableType:
-    def __init__(self, name, unit, factor_list, color_list):
-        assert len(factor_list) == len(color_list)
-        self.name = name
-        self.unit = unit
-        self.factor_list = factor_list
-        self.color_list = color_list
-
-
 factor_list = ['Temperature [2 m elevation corrected]', 'Temperature [900 mb]', 'Temperature [850 mb]',
                'Temperature [800 mb]', 'Temperature [700 mb]', 'Temperature [500 mb]']
 name, unit, color_list = 'Temperature', 'Celsius', ['#260637', '#843B58', '#B73239', '#FFA500', '#F9C53D', '#EADAA2']
@@ -81,7 +73,7 @@ pressure_factor = MeteorologicalVariableType(name, unit, factor_list, color_list
 
 factor_list = ['Wind Speed [10 m]', 'Wind Speed [100 m]', 'Wind Speed [250 mb]', 'Wind Speed [500 mb]',
                'Wind Speed [700 mb]', 'Wind Speed [850 mb]', 'Wind Speed [900 mb]']
-name, unit, color_list = 'Wind Speed', 'KM/S', ['#347C2C', '#254117', '#ffd500', '#ffb113', '#ADD8E6', '#87CEEB',
+name, unit, color_list = 'Wind Speed', 'KM/H', ['#347C2C', '#254117', '#ffd500', '#ffb113', '#ADD8E6', '#87CEEB',
                                                 '#1E90FF']
 wind_speed_factor = MeteorologicalVariableType(name, unit, factor_list, color_list)
 
