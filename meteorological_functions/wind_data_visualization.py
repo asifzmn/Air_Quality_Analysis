@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
 
-from meteorological_functions.wunderground_data_preparation import prepare_data, text_to_angle
+from meteorological_functions.wunderground_data_preparation import read_single_date_data, text_to_angle
 
 
 def PlotlyRosePlotBasic(info=None):
@@ -112,7 +112,7 @@ def monthly_rose_plot(meteo_data, wind_direction_factor):
 # def WindGraph(x): PlotlyRosePlot([[getSides(x), 'Wind', '#3f65b1']])
 
 def VectorAnalysis():
-    timeSeries = prepare_data()
+    timeSeries = read_single_date_data()
     print(timeSeries.sample(15).to_string())
 
     timeSeries['wind_angle'] = timeSeries.apply(lambda x: text_to_angle.get(x.Wind), axis=1)
@@ -122,26 +122,17 @@ def VectorAnalysis():
     # print(timeSeries.Wind.value_counts().sort_index())
 
 
-def vector_calculation(x):
-    EW_Vector = (np.sin(np.radians(x['Wind Direction'])) * x['Wind Speed']).sum()
-    NS_Vector = (np.cos(np.radians(x['Wind Direction'])) * x['Wind Speed']).sum()
 
-    EW_Average = (EW_Vector / x.shape[0]) * 1
-    NS_Average = (NS_Vector / x.shape[0]) * 1
 
-    averageWindSpeed = np.sqrt(EW_Average * EW_Average + NS_Average * NS_Average)
-
-    Atan2Direction = math.atan2(EW_Average, NS_Average)
-
-    averageWindDirection = np.degrees(Atan2Direction)
-
-    # //Correction As specified in webmet.com webpage http://www.webmet.com/met_monitoring/622.html
-    # if(AvgDirectionInDeg > 180):
-    #     AvgDirectionInDeg = AvgDirectionInDeg - 180
-    # elif (AvgDirectionInDeg < 180):
-    #     AvgDirectionInDeg = AvgDirectionInDeg + 180
-
-    if averageWindDirection < 0:
-        averageWindDirection += 360
-
-    return averageWindSpeed, averageWindDirection
+# [totalReadings]; // number between 0 and 360
+# SpeedArray[totalReadings]; //speed of wind
+#
+# for(int i=0; i<totalReadings; i++)
+#
+# {
+# EW_Vector += SIN(DegreeToRadians(DirectionArray[i])) * SpeedArray[i]
+# NS_Vector += COS(DegreeToRadians(DirectionArray[i])) * SpeedArray[i]
+# }
+#
+# EW_Average = (EW_Vector / totalReadings) * -1 //Average in Radians
+# NS_Average = (NS_Vector / totalReadings) * -1 //Average in Radians

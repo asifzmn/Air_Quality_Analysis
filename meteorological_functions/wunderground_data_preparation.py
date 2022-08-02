@@ -2,12 +2,12 @@ import math
 import pandas as pd
 import numpy as np
 
-from meteorological_functions import MeteorologicalVariableType
-from paths import wunderground_data_path
+from meteorological_functions import MeteorologicalVariableType, vector_calculation
+from paths import wunderground_data_path, wunderground_data_path_compressed
 
 regions = ['Dhaka', 'West Bengal', 'NCT']
 
-linear_var = ['Temperature', 'Humidity', 'Wind Gust', 'Pressure', 'Precip.', 'Wind Speed']
+linear_var = ['Temperature', 'Dew Point', 'Humidity', 'Wind Gust', 'Pressure', 'Precip.']
 circular_var = ['Wind Direction', 'Wind Speed']
 nominal_var = ['Condition']
 
@@ -16,7 +16,7 @@ angle = np.linspace(0, 360, 17)[:-1]
 text_to_angle = dict(zip(text, angle))
 
 factor_list = ['Temperature']
-name, unit, color_list = 'Temperature', 'Celsius', ['#260637']
+name, unit, color_list = 'Temperature', 'Celsius', ['#FFA500']
 temperature_factor = MeteorologicalVariableType(name, unit, factor_list, color_list)
 
 factor_list = ['Humidity']
@@ -25,7 +25,7 @@ humidity_factor = MeteorologicalVariableType(name, unit, factor_list, color_list
 
 factor_list = ['Pressure']
 name, unit, color_list = 'Pressure', 'hPa', ['#2B65EC']
-Pressure_factor = MeteorologicalVariableType(name, unit, factor_list, color_list)
+pressure_factor = MeteorologicalVariableType(name, unit, factor_list, color_list)
 
 factor_list = ['Wind Speed']
 name, unit, color_list = 'Wind Speed', 'KM/H', ['#347C2C']
@@ -36,18 +36,57 @@ name, unit, color_list = 'Wind Direction', 'KM/H', ['#347C2C']
 wind_direction_factor = MeteorologicalVariableType(name, unit, factor_list, color_list)
 
 
-def prepare_data(region="Dhaka"):
+def read_single_date_data(region="Dhaka"):
     # Time,Celcius,Celcius,%,Direction,mph,mph,in,in,Category
     region = region + '/'
-    # region = "NCT/"
     time_range = pd.date_range('2019-01-01', '2021-12-31')
     time_series = pd.concat([pd.read_csv(
         wunderground_data_path + region + str(singleDate.date())).dropna(how='all') for singleDate in time_range])
     time_series.Time = pd.to_datetime(time_series.Time)
+    # time_series.to_csv(wunderground_data_path_compressed + region + '.csv')
+    return time_series.set_index("Time")
+
+
+def read_compressed_data(region="Dhaka"):
+    time_series = pd.read_csv(wunderground_data_path_compressed + region + '.csv').dropna(how='all')
+    time_series.Time = pd.to_datetime(time_series.Time)
     time_series['Wind Direction'] = time_series.apply(lambda x: text_to_angle.get(x.Wind), axis=1)
+    time_series['Humidity'] = time_series['Humidity'] * 0.01
     time_series['Wind Speed'] = time_series['Wind Speed'] * 1.6
     time_series['Wind Gust'] = time_series['Wind Gust'] * 1.6
     time_series['Pressure'] = time_series['Pressure'] * 33.86
     time_series['Precip.'] = time_series['Precip.'] * 25.4
     time_series = time_series.drop('Wind', axis=1)
     return time_series.set_index("Time")
+
+
+def eliminate_invalid_values(raw_data_copy):
+    raw_data_copy.Temperature = raw_data_copy.Temperature.mask(raw_data_copy.Temperature < 0, np.nan).astype(float)
+    raw_data_copy['Dew Point'] = raw_data_copy['Dew Point'].mask(raw_data_copy['Dew Point'] < 0, np.nan).astype(float)
+    raw_data_copy.Pressure = raw_data_copy.Pressure.mask(raw_data_copy.Pressure == 0, np.nan).astype(float)
+    raw_data_copy.Humidity = raw_data_copy.Humidity.mask(raw_data_copy.Humidity == 0, np.nan).astype(float)
+    return raw_data_copy
+
+
+def impute_by_previous_next_average_value(raw_data_copy):
+    missing_data_linear_hourly = raw_data_copy[linear_var].resample("H").mean()
+    clean_data_linear_var_hourly = pd.concat(
+        [missing_data_linear_hourly[linear_var].ffill(), missing_data_linear_hourly[linear_var].bfill()]).groupby(
+        level=0).mean()
+    return clean_data_linear_var_hourly
+
+
+def prepare_wind_vector_data(raw_data):
+    circular_data_daily_samples = raw_data[circular_var].resample('H')
+    wind_vector_list = [vector_calculation(x) for idx, x in circular_data_daily_samples]
+    wind_vector_hourly = pd.DataFrame(wind_vector_list, columns=circular_var[::-1],
+                                      index=circular_data_daily_samples.groups)
+    return wind_vector_hourly
+
+
+def clean_and_process_all_varible_data(raw_data):
+    clean_data_with_missing = eliminate_invalid_values(raw_data)
+    clean_data_linear_var_hourly = impute_by_previous_next_average_value(clean_data_with_missing)
+    clean_data_circular_var_hourly = prepare_wind_vector_data(clean_data_with_missing)
+    hourly_data_prepared = pd.concat((clean_data_linear_var_hourly, clean_data_circular_var_hourly), axis=1)
+    return hourly_data_prepared

@@ -20,6 +20,7 @@ berkeley_earth_data_compressed = berkeley_earth_data + 'compressed/'
 meteoblue_data_path = aq_directory + 'Meteoblue Scrapped Data/'
 meteoblue_data_path_2019 = aq_directory + 'Meteoblue Data/MeteoBlue Data 2019'
 wunderground_data_path = aq_directory + 'Wunderground Data/'
+wunderground_data_path_compressed = aq_directory + 'Wunderground Data/Compressed/'
 
 mobility_path = aq_directory + 'Mobility/Region_Mobility_Report_CSVs/'
 

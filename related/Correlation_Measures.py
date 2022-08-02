@@ -25,51 +25,7 @@ def PearsonCorr(df):
     plt.show()
 
 
-def crosscorr(datax, datay, lag=0, wrap=False):
-    if wrap:
-        shiftedy = datay.shift(lag)
-        shiftedy.iloc[:lag] = datay.iloc[-lag:].values
-        return datax.corr(shiftedy)
 
-    # print(datax.dtype())
-
-    return datax.corr(datay.shift(lag))
-
-
-def CrossCorr(df):
-    # r_window_size = 120
-    # # Interpolate missing data.
-    # # df_interpolated = df.interpolate()
-    # # Compute rolling window synchrony
-    # rolling_r = df.iloc[:,0].rolling(window=r_window_size, center=True).corr(df.iloc[:,1])
-    # f, ax = plt.subplots(2, 1, figsize=(14, 6), sharex=True)
-    # df.rolling(window=30, center=True).median().plot(ax=ax[0])
-    # ax[0].set(xlabel='Frame', ylabel='Smiling Evidence')
-    # rolling_r.plot(ax=ax[1])
-    # ax[1].set(xlabel='Frame', ylabel='Pearson r')
-    # plt.suptitle("Smiling data and rolling window correlation")
-    # plt.show()
-
-    d1 = df.iloc[:, 0]
-    d2 = df.iloc[:, 1]
-    # seconds = 5
-    # fps = 3
-    lagRange = 15
-    rs = [crosscorr(d1, d2, lag) for lag in range(-lagRange, lagRange + 1)]
-    offset = np.floor(len(rs) / 2) - np.argmax(rs)
-    f, ax = plt.subplots(figsize=(14, 3))
-    print(offset)
-
-    ax.plot(rs)
-    ax.axvline(np.ceil(len(rs) / 2), color='k', linestyle='--', label='Center')
-    ax.axvline(np.argmax(rs), color='r', linestyle='--', label='Peak synchrony')
-    # ax.set(title=f'Offset = {offset} frames\nS1 leads <> S2 leads', ylim=[.1, .31], xlim=[0, 301], xlabel='Offset',
-    ax.set(title=f'Offset = {offset} frames\nS1 leads <{max(rs)}> S2 leads', xlabel='Offset',
-           ylabel='Pearson r')
-    # ax.set_xticks([0, 50, 100, 151, 201, 251, 301])
-    # ax.set_xticklabels([-150, -100, -50, 0, 50, 100, 150])
-    plt.legend()
-    plt.show()
 
 
 def Windowed(df):

@@ -1,37 +1,9 @@
 import pandas as pd
 import plotly.graph_objects as go
 from data_preparation import get_metadata, get_series, clip_missing_prone_values, prepare_region_and_country_series
+from visualization import grouped_box
 
-bd_lockdown_dates = '2020-03-26','2020-05-16','2021-04-05','2021-07-14','2021-07-23','2021-08-10'
-
-def grouped_box(x):
-    fig = go.Figure()
-
-    color_pal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500', '#2471A3']
-
-    # for year in pd.DatetimeIndex(x.index).year.unique():
-    for year in x.index.year.unique():
-        fig.add_trace(go.Box(
-            # y=x[str(year)],
-            y=x[str(year)],
-            x=pd.DatetimeIndex(x.index).month_name(),
-            name=year,
-            marker_color=color_pal[year - 2017]
-        ))
-
-    fig.update_layout(
-        title=x.name,
-        yaxis_title='PM2.5 Concentration',
-        boxmode='group',
-        yaxis=dict(
-            range=[0, 180]),
-        legend_orientation="h",
-        height = 450,
-        font_size = 18
-    )
-
-    fig.show()
-
+bd_lockdown_dates = '2020-03-26', '2020-05-16', '2021-04-05', '2021-07-14', '2021-07-23', '2021-08-10'
 
 if __name__ == '__main__':
     series_with_heavy_missing, metadata_with_heavy_missing = get_series()[:'2021'], get_metadata()

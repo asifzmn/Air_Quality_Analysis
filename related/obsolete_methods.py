@@ -7,6 +7,8 @@ import seaborn as sns
 import pickle as pk
 from collections import Counter
 from itertools import combinations
+
+from folium.plugins import HeatMap
 from matplotlib import pyplot as plt, cm
 from plotly import express as px
 from plotly import graph_objects as go
@@ -16,6 +18,8 @@ from data_preparation import get_category_info, get_common_id, read_file_as_text
 # from meteorological_functions import MapPlotting
 # from meteorological_functions import heatmap, annotate_heatmap
 from datetime import datetime, timedelta
+
+from related.GeoMapMatplotLib import MapPlotting
 
 [Year, Month, Day, UTC_Hour, PM25, PM10_mask, Retrospective] = range(7)
 

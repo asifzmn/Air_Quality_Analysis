@@ -1,11 +1,8 @@
-from datetime import timedelta
-
 import pandas as pd
 import numpy as np
 import xarray as xr
-
 from os import listdir
-
+from datetime import timedelta
 from data_preparation import get_metadata
 from meteorological_functions import MeteorologicalVariableType
 from paths import meteoblue_data_path, meteoblue_data_path_2019
@@ -43,7 +40,6 @@ factors = ['Temperature [2 m elevation corrected]', 'Growing Degree Days [2 m el
            'UV Radiation', 'Mean Sea Level Pressure [MSL]', 'Evapotranspiration']
 
 factor = factors[-3]
-
 
 factor_list = ['Temperature [2 m elevation corrected]', 'Temperature [900 mb]', 'Temperature [850 mb]',
                'Temperature [800 mb]', 'Temperature [700 mb]', 'Temperature [500 mb]']
@@ -167,6 +163,10 @@ def process_one_folder(location_main, date_folder):
 def create_meteo_data_file():
     meteo_data = process_one_folder(meteoblue_data_path_2019, '2019-01-01 to 2019-12-31')
     meteo_data.to_netcdf('meteoData_2019.nc')
+
+
+def read_meteo_data():
+    return xr.open_dataset('../Files/meteo data/meteoblue/meteoData_2019_BD_WB_NCT.nc')['meteo']
 
 
 if __name__ == '__main__':

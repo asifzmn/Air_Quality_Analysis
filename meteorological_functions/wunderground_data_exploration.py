@@ -1,7 +1,7 @@
 import plotly.express as px
 import plotly.graph_objects as go
 from data_preparation import *
-from meteorological_functions.wunderground_data_preparation import prepare_data, text_to_angle
+from meteorological_functions.wunderground_data_preparation import read_single_date_data, text_to_angle
 from data_preparation import get_metadata, get_series, clip_missing_prone_values, read_region_and_country_series
 
 # from visualization import missing_data_heatmap
@@ -11,7 +11,7 @@ if __name__ == '__main__':
     reading_data = region_series["2019":"2021"].Dhaka
     reading_data.name = "Reading"
 
-    raw_data = prepare_data()
+    raw_data = read_single_date_data()
 
     # print(raw_data.Condition.value_counts())
     # ConditionStats(raw_data)

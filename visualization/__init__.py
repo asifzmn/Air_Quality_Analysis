@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 
 color_scale, category_name, aq_scale = get_category_info()
 
-country_color_dict = {'India':'#F4C430','Myanmar': '#990000', 'Bangladesh': '#228B22'}
+country_color_dict = {'India': '#F4C430', 'Myanmar': '#990000', 'Bangladesh': '#228B22'}
 
 
 def prepare_color_table():
@@ -181,8 +181,6 @@ def pltSetUpAx(ax, xlabel=None, ylabel=None, title=None, xlim=None, ylim=None, s
 def custom_time_series(df):
     resampled_df = df.resample('M')
 
-
-
     aggregated_value = pd.concat(
         [sampledSeries.stack().apply(['min', 'mean', 'median', 'max']) for _, sampledSeries in resampled_df], axis=1).T
     aggregated_value.index = [time for time, _ in resampled_df]
@@ -323,7 +321,6 @@ def box_plot_series(df):
 
 
 def box_plot_week(df):
-
     day_colors = ["#ff0000"] * 2 + ["#8fcadd"] * 5
     seasons = ['Weekday', 'Weekend']
     my_pal = dict(zip((np.unique(df.index.day_name())), day_colors))
@@ -343,6 +340,35 @@ def PLotlyTimeSeries(df, missing=None):
 
     fig.update_traces(mode='markers+lines', marker=dict(line_width=0, symbol='circle', size=5))
     # fig.update_layout(title_text='Time Series with Rangeslider',xaxis_rangeslider_visible=True)
+    fig.show()
+
+
+def grouped_box(x):
+    fig = go.Figure()
+
+    color_pal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500', '#2471A3']
+
+    # for year in pd.DatetimeIndex(x.index).year.unique():
+    for year in x.index.year.unique():
+        fig.add_trace(go.Box(
+            # y=x[str(year)],
+            y=x[str(year)],
+            x=pd.DatetimeIndex(x.index).month_name(),
+            name=year,
+            marker_color=color_pal[year - 2017]
+        ))
+
+    fig.update_layout(
+        title=x.name,
+        yaxis_title='PM2.5 Concentration',
+        boxmode='group',
+        yaxis=dict(
+            range=[0, 180]),
+        legend_orientation="h",
+        height=450,
+        font_size=18
+    )
+
     fig.show()
 
 

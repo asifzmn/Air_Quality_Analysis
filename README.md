@@ -6,6 +6,7 @@ There are several python pakages which are the representation each phase of our 
 Start with this module. Berkeley Earth air quality data and other meteorological data can be collected from here. 
 
 ## data_preparation
+This module contains preparation of berkeley earth dataset.
 
 ## visualization
 
@@ -16,6 +17,7 @@ First Meteoblue data for 2019 only read for individual zonal files. Then some si
 ## cross_correlation
 
 ## covid_mobility
+
 
 ## forecasting_model
 The forecasting model can be found at Google Colab.

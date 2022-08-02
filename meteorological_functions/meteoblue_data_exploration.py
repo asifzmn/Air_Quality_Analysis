@@ -14,7 +14,7 @@ from pandas_profiling import ProfileReport
 
 from data_preparation import *
 
-from meteoblue_data_preparation import factors, factor, get_factor_data
+from meteoblue_data_preparation import factors, factor, get_factor_data, read_meteo_data
 from meteoblue_data_preparation import prepare_multi_file_and_save_meteo_data, \
     meteorological_variable_type_list_linear
 from meteoblue_data_preparation import temperature_factor, humidity_factor, precipitation_factor
@@ -36,10 +36,6 @@ def profile_report():
     df = get_factor_data(meteo_data, factor)
     prof = ProfileReport(df, minimal=False, title='Meteo Data')
     prof.to_file(output_file='Meteo Data.html')
-
-
-def read_meteo_data():
-    return xr.open_dataset('../Files/meteo data/meteoblue/meteoData_2019_BD_WB_NCT.nc')['meteo']
 
 
 def meteo_data_basic_info():

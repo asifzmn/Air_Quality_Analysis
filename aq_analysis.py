@@ -5,17 +5,15 @@
 # from CoronaBeforeAfter import GroupedBox
 # from GeoMapPlotly import SliderMapCommon
 # from Correlation_Measures import *
-
 from collections import Counter
 from sklearn.cluster import KMeans
 from itertools import combinations
 from plotly.subplots import make_subplots
 from GIS.GeoPandas import mapArrow, mapPlot
-from covid_mobility import grouped_box
 from cross_correlation import CrossCorrelation
 from data_exporting import latex_custom_table_format, paper_comparison, missing_data_fraction
 # from meteorological_functions import get_factor_data, get_cardinal_direction, plotly_rose_plot
-from meteorological_functions import get_factor_data
+from meteorological_functions.meteoblue_data_preparation import get_factor_data
 from related.GeoMapMatplotLib import MapPlotting
 from visualization import *
 import plotly.graph_objects as go
@@ -107,71 +105,7 @@ def missing_data_info(df):
     # HeatMapDriver(dfm.corr(), -1, 1, '', 'RdBu')
 
 
-def shifted_series(df, dis, lag_range, offset, rs):
-    plt.figure(figsize=(9, 3))
-    df[dis[0]].plot(linestyle='-', linewidth=1, c="Blue")
-    df[dis[1]].plot(linestyle='-', linewidth=1, c="Red")
-    df[dis[1]].shift(offset).plot(linestyle=':', linewidth=3, c="palevioletred")
-    plt.xlabel('Time')
-    plt.ylabel('PM2.5 Concentration')
-    plt.legend([dis[0], dis[1], dis[1] + " Shifted"],
-               loc='upper left')
-
-    # loc = 'shiftedSeries/'+df.columns.values[comb[0]]+df.columns.values[comb[1]]+'Reading.png'
-    # plt.savefig(loc,dpi=300)
-    # plt.clf()
-    plt.show()
-
-    f, ax = plt.subplots(figsize=(9, 3))
-    ax.plot(list(range(-lag_range, lag_range + 1)), rs, marker='o', )
-    # ax.axvline(np.ceil(len(rs) / 2), color='k', linestyle='--', label='Center')
-    # ax.axvline(np.argmax(rs), color='r', linestyle='--', label='Peak synchrony')
-    ax.axvline(offset, color='k', linestyle='--', label='Peak synchrony')
-    ax.set(title='Offset for {dis[0]} to {dis[1]} = {offset} hours',
-           ylim=[-1, 1], xlabel='Offset', ylabel='Pearson r')
-    plt.legend()
-
-    # loc = 'shiftedSeries/' + df.columns.values[comb[0]] + df.columns.values[comb[1]] + 'Offset.png'
-    # plt.savefig(loc, dpi=300)
-    # plt.clf()
-    plt.show()
-
-
-def meteo_analysis(df):
-    meteo_data = xr.open_dataset('Files/meteo_data.nc')['meteo']
-
-    factors, districts = pd.Series(
-        ['Temperature [2 m]', 'Relative Humidity [2 m]', 'Mean Sea Level Pressure', 'Precipitation',
-         'Cloud Cover High', 'Cloud Cover Medium', 'Cloud Cover Low', 'Sunshine Duration', 'Shortwave Radiation',
-         'Direct Shortwave Radiation', 'Diffuse Shortwave Radiation', 'Wind Gust', 'Wind Speed [10 m]',
-         'Wind Direction [10 m]', 'Wind Speed [80 m]', 'Wind Direction [80 m]', 'Wind Speed [900 mb]',
-         'Wind Direction [900 mb]', 'Wind Speed [850 mb]', 'Wind Direction [850 mb]', 'Wind Speed [700 mb]',
-         'Wind Direction [700 mb]', 'Wind Speed [500 mb]', 'Wind Direction [500 mb]', 'Temperature [1000 mb]',
-         'Temperature [850 mb]', 'Temperature [700 mb]', 'Surface Temperature', 'Soil Temperature [0-10 cm down]',
-         'Soil Moisture [0-10 cm down]']), df.columns.values
-
-    for lag in range(0, 3, 3):
-        z = factors.apply(lambda x: df.shift(lag).corrwith(get_factor_data(meteo_data, x), axis=0))
-        z.index = factors.values
-        print(z)
-
-        fig = go.Figure(data=go.Heatmap(
-            z=z, y=factors, x=districts,
-            colorscale='icefire',
-            zmin=-1, zmax=1,
-            reversescale=True
-        ))
-        fig.update_layout(
-            autosize=False, width=1800, height=450 * 3,
-            title="PM2.5 correaltion with meteorological factors",
-            xaxis_title="District", yaxis_title="Factors",
-            font=dict(size=21, color="#3D3C3A"
-                      )
-        )
-        fig.show(config={'displayModeBar': False, 'responsive': True})
-
-
-def missing_bar(df):
+def missing_sequence_length_bar_plot(df):
     single_district_data = df['Dhaka'].values
     idx_pairs = np.where(np.diff(np.hstack(([False], (np.isnan(single_district_data)), [False]))))[0].reshape(-1, 2)
     counts = (Counter(idx_pairs[:, 1] - idx_pairs[:, 0]))
@@ -187,21 +121,6 @@ def missing_bar(df):
     fig.update_traces(marker_color='#3090C7', marker_line_color='#2554C7', marker_line_width=1.2, opacity=0.8)
     fig.update_layout(title_text='Missing Value Length')
     fig.show()
-
-
-def FillMissingDataFromHours(x, hours=1):
-    ss = [x.shift(shft, freq='H') for shft in np.delete(np.arange(-hours, hours + 1), hours)]
-    return x.fillna((pd.concat(ss, axis=1).mean(axis=1)))
-
-
-def FillMissingDataFromDays(x, days=3):
-    ss = [x.shift(shft, freq='D') for shft in np.delete(np.arange(-days, days + 1), days)]
-    return x.fillna((pd.concat(ss, axis=1).mean(axis=1)))
-
-
-def FillMissingDataFromYears(y):
-    ss = [y.shift(shft, freq='D') for shft in [-365 * 2, -365, 365, 365 * 2]]
-    return y.fillna((pd.concat(ss, axis=1).mean(axis=1)))
 
 
 def correlation_seasonal(corrArray, rows=2, cols=2, title=''):
@@ -267,7 +186,7 @@ def stacked_bar(timeseries):
                     name=idx, opacity=.666) for idx, row in category_frquency.iterrows()]
     fig = go.Figure(data=datas)
     fig.update_layout(
-        width = 300,
+        width=300,
         legend_orientation="h",
         font=dict(size=24),
         barmode='stack',

@@ -1,3 +1,5 @@
+from plotly.subplots import make_subplots
+
 from data_preparation import get_diurnal_period
 from meteorological_functions.meteoblue_data_preparation import get_factor_data
 import plotly.express as px
@@ -24,6 +26,27 @@ def meteo_time_series(meteo_data, meteorological_variable):
     fig.show()
 
 
+def meteo_time_series_subplots(data, meteorological_variable_type_list_linear):
+    sub_plot_rows = len(meteorological_variable_type_list_linear)
+    fig = make_subplots(rows=sub_plot_rows, cols=1,
+                        shared_xaxes=True,
+                        vertical_spacing=0.02)
+
+    for j, meteorological_variable in enumerate(meteorological_variable_type_list_linear):
+        meteo_data = data.mean(axis=0).resample(time="M").mean().loc[:, meteorological_variable.factor_list]
+        for i, factor in enumerate(meteo_data['factor'].values):
+            fig.add_trace(
+                go.Scatter(x=pd.Series(meteo_data['time'].values), y=meteo_data.loc[:, factor], name=factor,
+                           marker_color=meteorological_variable.color_list[i]), row=j + 1, col=1)
+        fig.update_yaxes(title_text=f"{meteorological_variable.name} ({meteorological_variable.unit})", row=j + 1,
+                         col=1)
+
+    fig.update_layout(height=800, width=1600,
+                      title_text="Stacked Subplots with Shared X-Axes", legend_orientation='h', font_size=15)
+
+    fig.show()
+
+
 def meteo_box_plot(meteo_data, time_series):
     factor = [['Surface Temperature', 'indianred'], ['Relative Humidity [2 m]', 'skyblue']][1]
     fig = go.Figure()
@@ -47,16 +70,6 @@ def scatter_plot_factor_vs_pm_diurnal_seasonal(meteo_data, time_series):
         all_data = all_data[all_data.index.month.isin([1, 2, 6, 7, 8, 12])]
         all_data['month'] = all_data.index.month
         all_data['season'] = all_data.apply(lambda x: 'summer' if x.month in (range(6, 9)) else 'winter', axis=1)
-
-        # # print((all_data[factor_rename].shift(30*1)))
-        # lag_range = list(range(0,24))
-        # lag_series = pd.Series(data=[abs(all_data['PM2.5 Reading'].shift(30*i).corr(all_data[factor_rename]))
-        # for i in lag_range],index=lag_range)
-        # fig = px.scatter(lag_series)
-        # fig.show()
-        # print(lag_series)
-        # print(lag_series.idxmax())
-        # print()
 
         all_data = all_data.join(get_diurnal_period()).sample(1310 * 3)
         # all_data = all_data.join(get_diurnal_period()['2019']).sample(1310 * 3)
@@ -107,4 +120,3 @@ def nominal_condition_stats(all_data):
         go.Bar(y=direction_group.Reading, x=direction_group.index, marker_color="grey")
     ])
     fig.show()
-
