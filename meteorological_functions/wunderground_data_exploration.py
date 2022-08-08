@@ -4,7 +4,20 @@ from data_preparation import *
 from meteorological_functions.wunderground_data_preparation import read_single_date_data, text_to_angle
 from data_preparation import get_metadata, get_series, clip_missing_prone_values, read_region_and_country_series
 
+
 # from visualization import missing_data_heatmap
+def lineplot_all(raw_data):
+    fig = px.line(raw_data, x=raw_data.index,
+                  y=['Temperature', 'Dew Point', 'Humidity', 'Wind Gust', 'Pressure', 'Precip.', 'Wind Speed'],
+                  # hover_data={"date": "|%B %d, %Y"},
+                  # title='custom tick labels'
+                  )
+
+    fig.update_xaxes(
+        dtick="M1",
+        tickformat="%b\n%Y")
+    fig.show()
+
 
 if __name__ == '__main__':
     region_series, metadata_region, country_series, metadata_country = read_region_and_country_series()

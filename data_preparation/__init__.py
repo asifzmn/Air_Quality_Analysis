@@ -188,9 +188,9 @@ def prepare_region_and_country_series(series, metadata):
 
 def read_region_and_country_series():
     files_path = get_compressed_save_location()
-    region_series = pd.read_csv(files_path + "region_series.csv", index_col='time')
+    region_series = pd.read_csv(files_path + "region_series.csv", index_col='time',parse_dates=[0])
     metadata_region = pd.read_csv(files_path + "metadata_region.csv", index_col='Division')
-    country_series = pd.read_csv(files_path + "country_series.csv", index_col='time')
+    country_series = pd.read_csv(files_path + "country_series.csv", index_col='time',parse_dates=[0])
     metadata_country = pd.read_csv(files_path + "metadata_country.csv", index_col='Country')
     return region_series, metadata_region, country_series, metadata_country
 

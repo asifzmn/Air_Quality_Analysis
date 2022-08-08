@@ -37,7 +37,8 @@ def PlotlyRosePlotBasic(info=None):
     fig.show()
 
 
-def plotly_rose_plot(info, color_pal, all_districts):
+def plotly_rose_plot(info, color_pal, all_districts, title='Wind'):
+    title = ''
     fig = go.Figure()
     # for [r,name] in info:fig.add_trace(go.Barpolar(r=r,name=name,marker_color=colorPal))
     for infod in info:
@@ -64,8 +65,9 @@ def plotly_rose_plot(info, color_pal, all_districts):
         text=['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'])
     # fig.update_traces(text=['North', 'N-E', 'East', 'S-E', 'South', 'S-W', 'West', 'N-W'])
     fig.update_layout(
-        title='Wind', font_size=16, legend_font_size=16, polar_radialaxis_ticksuffix='', polar_angularaxis_rotation=90,
-        template="plotly_dark", polar_angularaxis_direction="clockwise"
+        title=title, font_size=16, legend_font_size=16, polar_radialaxis_ticksuffix='', polar_angularaxis_rotation=90,
+        # template="plotly_dark", polar_angularaxis_direction="clockwise"
+        template="seaborn", polar_angularaxis_direction="clockwise"
     )
     fig.show()
 
@@ -84,7 +86,8 @@ def get_cardinal_direction(x, seg=16):
 
 
 def WindGraphTeamEstimate(meteoData, alldis):
-    colorPal = np.array(['#ffffff'])
+    # colorPal = np.array(['#ffffff'])
+    colorPal = np.array(['#CECECE'])
     directions = np.array([[[get_cardinal_direction(meteoData), 'Wind']]], dtype=object)
     # print(directions)
     plotly_rose_plot(directions, colorPal, alldis)
@@ -102,11 +105,19 @@ def wind_graph_multi_zone(meteo_data, wind_direction_factor):
 
 
 def monthly_rose_plot(meteo_data, wind_direction_factor):
-    meteo_data_wind_direction = meteo_data.loc[:, :, wind_direction_factors(wind_direction_factor)[0]]
+    meteo_data_wind_direction = meteo_data.loc[:, :, wind_direction_factor.factor_list]
     for month, data in meteo_data_wind_direction.groupby('time.month'):
         print(data.shape)
         # wind_graph_multi_zone(data)
         WindGraphTeamEstimate(data.stack(z=("time", "district", "factor")).values, ['bd'])
+
+
+def monthly_rose_plot_no_slow_wind(meteo_data_wind,wind_speed_factor,wind_direction_factor):
+    meteo_data_wind = meteo_data_wind[wind_direction_factor.factor_list + wind_speed_factor.factor_list]
+    meteo_data_wind = meteo_data_wind[meteo_data_wind[wind_speed_factor.factor_list[0]] >= 1]
+
+    for month, meteo_data_wind_monthly in meteo_data_wind.groupby(meteo_data_wind.index.month):
+        WindGraphTeamEstimate(meteo_data_wind_monthly[wind_direction_factor.factor_list[0]].values, ['Dhaka'])
 
 
 # def WindGraph(x): PlotlyRosePlot([[getSides(x), 'Wind', '#3f65b1']])
@@ -120,9 +131,6 @@ def VectorAnalysis():
     # print(timeSeries['wind_angle'].resample('M').apply(lambda x: x.value_counts().iloc[:3]))
     # print(timeSeries.Wind.value_counts())
     # print(timeSeries.Wind.value_counts().sort_index())
-
-
-
 
 # [totalReadings]; // number between 0 and 360
 # SpeedArray[totalReadings]; //speed of wind

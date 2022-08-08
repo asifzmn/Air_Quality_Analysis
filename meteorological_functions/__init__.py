@@ -1,5 +1,10 @@
 import math
 import numpy as np
+import xarray as xr
+
+def read_meteo_data():
+    return xr.open_dataset('../Files/meteo data/meteoblue/meteoData_2019_BD_WB_NCT.nc')['meteo']
+
 
 class MeteorologicalVariableType:
     def __init__(self, name, unit, factor_list, color_list):
@@ -8,6 +13,14 @@ class MeteorologicalVariableType:
         self.unit = unit
         self.factor_list = factor_list
         self.color_list = color_list
+
+
+def get_factor_data(meteo_data, factor):
+    return meteo_data.sel(factor=factor).to_dataframe().drop('factor', axis=1).unstack().T.droplevel(level=0)
+
+
+def get_district_data(meteo_data, district):
+    return meteo_data.sel(district=district).to_dataframe().drop('district', axis=1).unstack().T.droplevel(level=0).T
 
 
 def vector_calculation(x):

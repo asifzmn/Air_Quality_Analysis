@@ -86,13 +86,6 @@ meteorological_variable_type_list_linear = [temperature_factor, humidity_factor,
 # sampleFactors = ['Wind Gust', 'Wind Speed [10 m]', 'Wind Direction [10 m]', 'Temperature [2 m elevation corrected]',
 #                  'Relative Humidity [2 m]']
 
-def get_factor_data(meteo_data, factor):
-    return meteo_data.sel(factor=factor).to_dataframe().drop('factor', axis=1).unstack().T.droplevel(level=0)
-
-
-def get_district_data(meteo_data, district):
-    return meteo_data.sel(district=district).to_dataframe().drop('district', axis=1).unstack().T.droplevel(level=0).T
-
 
 def prepare_multi_file_and_save_meteo_data():
     location_main = meteoblue_data_path + 'Meteoblue Scrapped Data'
@@ -163,10 +156,6 @@ def process_one_folder(location_main, date_folder):
 def create_meteo_data_file():
     meteo_data = process_one_folder(meteoblue_data_path_2019, '2019-01-01 to 2019-12-31')
     meteo_data.to_netcdf('meteoData_2019.nc')
-
-
-def read_meteo_data():
-    return xr.open_dataset('../Files/meteo data/meteoblue/meteoData_2019_BD_WB_NCT.nc')['meteo']
 
 
 if __name__ == '__main__':

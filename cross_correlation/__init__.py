@@ -193,7 +193,7 @@ def shifted_series(df, dis, lag_range, offset, rs):
     plt.show()
 
 
-def cross_correlation_with_linear_meteorological_variables(df):
+def correlation_heatmap_with_linear_meteorological_variables_with_lag(df):
     meteo_data = xr.open_dataset('Files/meteo_data.nc')['meteo']
 
     factors, districts = pd.Series(
@@ -206,7 +206,7 @@ def cross_correlation_with_linear_meteorological_variables(df):
          'Temperature [850 mb]', 'Temperature [700 mb]', 'Surface Temperature', 'Soil Temperature [0-10 cm down]',
          'Soil Moisture [0-10 cm down]']), df.columns.values
 
-    for lag in range(0, 3, 3):
+    for lag in range(0, 6, 1):
         z = factors.apply(lambda x: df.shift(lag).corrwith(get_factor_data(meteo_data, x), axis=0))
         z.index = factors.values
         print(z)
@@ -218,7 +218,7 @@ def cross_correlation_with_linear_meteorological_variables(df):
             reversescale=True
         ))
         fig.update_layout(
-            autosize=False, width=1800, height=450 * 3,
+            autosize=False, width=1800, height=450*3,
             title="PM2.5 correaltion with meteorological factors",
             xaxis_title="District", yaxis_title="Factors",
             font=dict(size=21, color="#3D3C3A"
