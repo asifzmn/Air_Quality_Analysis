@@ -2,7 +2,6 @@
 # import geojsoncontour
 # from scipy.spatial.distance import cdist
 # from pandas_profiling import ProfileReport
-# from CoronaBeforeAfter import GroupedBox
 # from GeoMapPlotly import SliderMapCommon
 # from Correlation_Measures import *
 from collections import Counter
@@ -10,12 +9,13 @@ from sklearn.cluster import KMeans
 from itertools import combinations
 from plotly.subplots import make_subplots
 from GIS.GeoPandas import mapArrow, mapPlot
-from cross_correlation import CrossCorrelation
 from data_exporting import latex_custom_table_format, paper_comparison, missing_data_fraction
+# from cross_correlation import CrossCorrelation
 # from meteorological_functions import get_factor_data, get_cardinal_direction, plotly_rose_plot
-from meteorological_functions.meteoblue_data_preparation import get_factor_data
+# from meteorological_functions.meteoblue_data_preparation import get_factor_data
+from sklearn.preprocessing import StandardScaler
 from related.GeoMapMatplotLib import MapPlotting
-from visualization import *
+from exploration import *
 import plotly.graph_objects as go
 import xarray as xr
 import more_itertools
@@ -101,7 +101,6 @@ def missing_data_info(df):
     print((df.isna().sum()))
     print(df.isnull().any(axis=1).sum())  # any null reading of a district for a time stamp
     print(df.isnull().all(axis=1).sum())  # all null reading of a district for a time stamp
-
     # HeatMapDriver(dfm.corr(), -1, 1, '', 'RdBu')
 
 
@@ -364,11 +363,12 @@ if __name__ == '__main__':
     # df.describe().T.to_csv('GenralStats.csv')
 
     series_with_heavy_missing, metadata_with_heavy_missing = get_series(), get_metadata()
-    division_missing_counts, metadata, series = clip_missing_prone_values(metadata_with_heavy_missing,
-                                                                          series_with_heavy_missing)
-    region_series, metadata_region, country_series, metadata_country = prepare_region_and_country_series(series,
-                                                                                                         metadata)
+    # division_missing_counts, metadata, series = clip_missing_prone_values(metadata_with_heavy_missing,
+    #                                                                       series_with_heavy_missing)
+    # region_series, metadata_region, country_series, metadata_country = prepare_region_and_country_series(series,
+    #                                                                                                      metadata)
     # day_night_distribution(country_series)
     # PLotlyTimeSeries(country_series)
-    stacked_bar(country_series)
-    stacked_bar(region_series)
+    # stacked_bar(country_series)
+    # stacked_bar(region_series)
+    missing_data_heatmap(series_with_heavy_missing)

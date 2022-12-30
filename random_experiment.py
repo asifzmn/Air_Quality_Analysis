@@ -5,12 +5,12 @@
 # PLotlyTimeSeries(df)
 # MeteoAnalysis(df)
 # SliderMapCommon(df, metaFrame, ['M', '%Y %B'])
+# SliderMapCommon(df['2017':'2020'], metaFrame, ['Y', '%Y %B'])
+# SliderMapCommon(df['2020'], metaFrame, ['D', '%Y %B %D'],True)
 # StackedBar(df)
 # MapPlotting(metaFrame, df[date].mean().values,vec=lagMatrix)
 # TriangularHeatmap(df)
 # SeasonalDecomposition(monthData[-1][2].iloc[:,3])
-
-# df = df.fillna(df.rolling(6, min_periods=1, ).mean()).round(3)
 
 # PLotlyTimeSeries(df[[cols]],missing[[cols]])
 # PLotlyTimeSeries(missing[[cols]],missing)
@@ -20,9 +20,6 @@
 # df = df.apply(FillMissingDataFromYears)
 
 # dfm = GetAllMeteoData()
-
-# SliderMapCommon(df['2017':'2020'], metaFrame, ['Y', '%Y %B'])
-# SliderMapCommon(df['2020'], metaFrame, ['D', '%Y %B %D'],True)
 
 # for freq,data in df['2020'].resample('W').mean().iterrows():
 #     print(data)
@@ -40,6 +37,16 @@
 #     [-3+7,-2+7,-1+7,0+7,1+7,2+7,3+7])*24]
 #     df[cols] = df[cols].fillna((pd.concat(ss, axis=1).mean(axis=1)))
 
+# totalEstimate = []
+# for i, [timeDel, timeStamp, reading] in enumerate(readings[:]):
+#     print(i, timeStamp)
+#     # ratioMapPlotting(reading)
+#     # BoxPlotHour(reading)
+#     l1, l2 = CrossCorr(timeDel, timeStamp, reading, lagRange=2)
+#     totalEstimate.extend(l2)
+#     # BoxPlotSeason(reading)
+#     # TriangularHeatmap(timeStamp,reading.astype('float64'))
+# # WindGraphTeamEstimate(np.array(totalEstmare), ['Overall'])
 
 # corrArray = np.array([df['2017-12':'2017-12'].corr().values,
 #                       df['2018-03':'2018-03'].corr().values,
@@ -52,7 +59,6 @@
 #                       df['2018-07':'2018-07'].corr().values,
 #                       df['2018-10':'2018-10'].corr().values]).reshape((2, 2, df.shape[1], df.shape[1]))
 # CorrationSeasonal(corrArray)
-#
 #
 # corrArray = np.array([df['2018-02':'2018-02'].corr().values,
 #                       df['2018-05':'2018-05'].corr().values,
@@ -86,32 +92,6 @@
 # readings = dayData
 # print(len(readings))
 #
-# totalEstimate = []
-# for i, [timeDel, timeStamp, reading] in enumerate(readings[:]):
-#     print(i, timeStamp)
-#     # ratioMapPlotting(reading)
-#     # BoxPlotHour(reading)
-#     l1, l2 = CrossCorr(timeDel, timeStamp, reading, lagRange=2)
-#     totalEstimate.extend(l2)
-#     # BoxPlotSeason(reading)
-#     # TriangularHeatmap(timeStamp,reading.astype('float64'))
-# # WindGraphTeamEstimate(np.array(totalEstmare), ['Overall'])
-
-# for dis1 in metaFrame.index.values:
-#     for dis2 in metaFrame.index.values:
-#         lagRange = 3
-#         rs = [crosscorr(df[dis1], df[dis2], lag) for lag in range(-lagRange, 0)]
-#         offset = - int(np.floor(len(rs) / 2) - np.argmax(rs))
-#         if offset<0:
-#             print(offset)
-#             print(angleFromCoordinate(dis1, dis2))
-
-
-# df = df.resample('3D').max()
-# plt.figure(figsize=(9, 6))
-# ax = sns.boxplot(data=df.T, color="blue")
-# pltSetUpAx(ax, "Hour of Day", "PM Reading", 'district' + ' in ' + str('timeStamp'), ylim=(0, 500))
-# # pltSetUpAx(ax, "Hour of Day", "PM Reading", 'district' + ' in ' + str('timeStamp'))
 
 # # b = np.array([0, 4, 8, 12, 16, 20, 24])
 # b = np.array([pd.to_datetime(0, format='%H'), pd.to_datetime(12, format='%H')])
@@ -119,14 +99,10 @@
 # l = ['Day',  'Night']
 # df1['session'] = pd.cut(df.index, bins=b, labels=l)
 
-
 # print([df1[2].mean().mean() for df1 in yearData])
 # popYear = [157977153, 159685424, 161376708, 163046161]
 # print(np.corrcoef([df1[2].mean().mean() for df1 in yearData][1:],popYear[1:]))
 # print(metaFrame[['Population','avgRead']].corr())
-
-# data.resample('S', fill_method='pad')  # forming a series of seconds
-
 
 # for label, content in df.items():print(label,content)
 

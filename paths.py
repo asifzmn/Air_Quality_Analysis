@@ -5,9 +5,10 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
-dataset_url = 'http://berkeleyearth.lbl.gov/air-quality/maps/cities/'
+berkeley_earth_dataset_url = 'http://berkeleyearth.lbl.gov/air-quality/maps/cities/'
 
-aq_directory = '/home/asif/Datasets/AQ Dataset/'  # change this main dataset location
+# aq_directory = '/home/asif/Datasets/AQ Dataset/'  # change this main dataset location Desktop
+aq_directory = '/home/asif/Data/Dataset/AQ Dataset/'  # change this main dataset location Laptop
 # aq_directory = getcwd() + '/Project Data/'
 
 aq_directory_local = 'Files/'
@@ -21,6 +22,8 @@ meteoblue_data_path = aq_directory + 'Meteoblue Scrapped Data/'
 meteoblue_data_path_2019 = aq_directory + 'Meteoblue Data/MeteoBlue Data 2019'
 wunderground_data_path = aq_directory + 'Wunderground Data/'
 wunderground_data_path_compressed = aq_directory + 'Wunderground Data/Compressed/'
+
+sun_rise_set_time_2017_2020 = aq_directory + 'Day Night Time/sun_rise_set_time_2017_2020.csv'
 
 mobility_path = aq_directory + 'Mobility/Region_Mobility_Report_CSVs/'
 

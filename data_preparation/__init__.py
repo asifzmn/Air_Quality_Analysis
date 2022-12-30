@@ -6,11 +6,11 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
-metadata_attributes = ['Country', 'Zone', 'Division', 'Population', 'Latitude', 'Longitude']
+metadata_attributes = ['Country', 'Zone', 'Region', 'Population', 'Latitude', 'Longitude']
 rename_dict = {'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}
 
 
-def get_common_id(id=3): return ['study_area', 'SouthAsianCountries', 'allbd', 'bd_and_neighbours'][id]
+def get_common_id(id=3): return ['study_area', 'SouthAsianCountries', 'allbd', 'bd_and_neighbours', 'usa_west'][id]
 
 
 def get_save_location(): return berkeley_earth_data_prepared + get_common_id() + '/'
@@ -32,6 +32,15 @@ def get_category_info():
     return color_scale, category_name, aq_scale
 
 
+def web_crawl():
+    for idx, zone_info in get_zones_info().iterrows():
+        zone_file = join(raw_data_path + get_common_id(), zone_info['Division'] + '_' + zone_info['Zone'] + '.txt')
+        url = f'{berkeley_earth_dataset_url}{zone_info["Country"]}/{zone_info["Division"]}/{zone_info["Zone"]}.txt'
+        print(url)
+        data = [line.decode('unicode_escape')[:-1] for line in urlopen(url)]
+        with open(zone_file, 'w') as file: file.write('\n'.join(map(str, data)))
+
+
 def make_header_only(meta_data):
     meta_data = meta_data.assign(Country='Bangladesh')
     meta_data = meta_data.reset_index()[['Country', 'Division', 'Zone']]
@@ -39,18 +48,19 @@ def make_header_only(meta_data):
 
 
 def read_all_bd_zones_and_make_header():
-    alldatapath = berkeley_earth_data + 'total/'
-    allFiles = [alldatapath + f for f in listdir(alldatapath)]
-    allDistrictMetaData = []
+    all_data_path = berkeley_earth_data + 'total/'
+    allFiles = [all_data_path + f for f in listdir(all_data_path)]
+    all_district_meta_data = []
 
     for file in allFiles:
         data = read_file_as_text(file)
-        allDistrictMetaData.append(np.array([d.split(':')[1][1:-1] for d in data[:9]]))
+        all_district_meta_data.append(np.array([d.split(':')[1][1:-1] for d in data[:9]]))
 
-    allDistrictMetaData = pd.DataFrame(np.array(allDistrictMetaData)[:, [4, 2]], columns=['Division', 'Zone']).assign(
+    all_district_meta_data = pd.DataFrame(np.array(all_district_meta_data)[:, [4, 2]],
+                                          columns=['Division', 'Zone']).assign(
         Country='Bangladesh')
-    allDistrictMetaData = allDistrictMetaData[['Country', 'Division', 'Zone']]
-    allDistrictMetaData.to_csv(berkeley_earth_data + 'zones/allbd.csv', index=False)
+    all_district_meta_data = all_district_meta_data[['Country', 'Division', 'Zone']]
+    all_district_meta_data.to_csv(berkeley_earth_data + 'zones/allbd.csv', index=False)
 
 
 def handle_mislabeled_duplicates(series):
@@ -59,19 +69,11 @@ def handle_mislabeled_duplicates(series):
     firsts = series.loc[duplicated_series.index].time
     lasts = series.loc[duplicated_series.index + 1].time + timedelta(hours=1)
     firsts, lasts = firsts.reset_index(), lasts.reset_index()
+    print(firsts, lasts)
     # print((firsts.time == lasts.time).value_counts())
     # print(duplicated_series.time.dt.year.unique())
     # print(duplicated_series.to_string())
     # print(series.duplicated(keep=False).value_counts())
-
-
-def web_crawl():
-    for idx, zone_info in get_zones_info().iterrows():
-        zone_file = join(raw_data_path + get_common_id(), zone_info['Division'] + '_' + zone_info['Zone'] + '.txt')
-        url = f'{dataset_url}{zone_info["Country"]}/{zone_info["Division"]}/{zone_info["Zone"]}.txt'
-        print(url)
-        data = [line.decode('unicode_escape')[:-1] for line in urlopen(url)]
-        with open(zone_file, 'w') as file: file.write('\n'.join(map(str, data)))
 
 
 def read_file_as_text(file):
@@ -92,6 +94,9 @@ def data_cleaning_and_preparation():
         series['time'] = pd.to_datetime(series[series.columns[:4]])
         series = series[['time', 'PM25']]
 
+        # series = series.groupby('time').PM25.mean().reset_index()  # usa
+        # series = series.set_index('time').reindex(pd.date_range('2004-01-01', '2022-01-01', freq='h')[:-1])  # usa
+
         if get_common_id() != 'SouthAsianCountries' and get_common_id() != 'bd_and_neighbours':
             duplicates = (series.duplicated(subset=['time'], keep='first'))
             series.loc[duplicates, 'time'] = series.loc[duplicates, 'time'] + timedelta(hours=1)
@@ -108,7 +113,8 @@ def data_cleaning_and_preparation():
     metadata = metadata.sort_values('Zone').set_index('Zone')
     metadata[metadata_attributes[3:]] = metadata[metadata_attributes[3:]].apply(pd.to_numeric).round(5)
     metadata = metadata.reset_index()
-    metadata.index = metadata.Zone + "_" + metadata.Division
+    metadata.index = metadata.Zone + "_" + metadata.Region
+    metadata.index.name = 'index'
     metadata.to_csv(get_save_location() + 'metadata.csv')
 
     time_series = pd.concat(zone_reading, axis=1)
@@ -120,14 +126,16 @@ def data_cleaning_and_preparation():
 def clip_missing_prone_values(metadata, series):
     # metadata = metadata.reset_index()
     # metadata.index = metadata.Zone + "_" + metadata.Division
-    series.columns = metadata.index
+    # series.columns = metadata.index
 
-    division_missing_counts = metadata.groupby('Division').apply(
-        lambda divisional_zone: series[divisional_zone.index].isna().all(axis=1)).sum(axis=1).sort_values()
-    division_valid_data = division_missing_counts[division_missing_counts < 10000].index
-    metadata = metadata[metadata.Division.isin(division_valid_data)]
+    region_missing_counts = metadata.groupby('Region').apply(
+        lambda regional_zone: series[regional_zone.index].isna().all(axis=1)).sum(axis=1).sort_values()
+    region_valid_data = region_missing_counts[region_missing_counts < 10000].index
+    # region_valid_data = region_missing_counts[region_missing_counts >= 10000].index
+    # region_valid_data = region_missing_counts[region_missing_counts < 15000].index
+    metadata = metadata[metadata.Region.isin(region_valid_data)]
     series = series[metadata.index]
-    return division_missing_counts, metadata, series
+    return region_missing_counts, metadata, series
 
 
 def get_series():
@@ -142,22 +150,6 @@ def get_metadata():
     #     index=rename_dict).sort_index(axis=0)
 
 
-def get_diurnal_period():
-    sun_time = pd.read_csv(aq_directory + 'Day Night Time/sun_rise_set_time_2017_2020.csv', sep='\t')
-    sun_time['Sunrise_date'] = sun_time['Date '] + ' ' + sun_time['Sunrise ']
-    sun_time['Sunset_date'] = sun_time['Date '] + ' ' + sun_time['Sunset ']
-    sun_time = sun_time[['Sunrise_date', 'Sunset_date']].apply(pd.to_datetime).apply(lambda x: x.dt.round('H'))
-    sun_time_matrix = sun_time.apply(
-        lambda x: pd.Series(['day' if x.Sunrise_date.hour <= i <= x.Sunset_date.hour else 'night' for i in range(24)]),
-        axis=1)
-    sun_time_series = sun_time_matrix.stack().reset_index(drop=True)
-
-    print(pd.date_range('2017', '2021', freq='H')[:-1])
-    sun_time_series.index = pd.date_range('2017', '2021', freq='H')[:-1]
-    sun_time_series.name = 'diurnal_name'
-    return sun_time_series
-
-
 def save_data():
     meta_data, timeseries = get_metadata(), get_series()['2017':'2019']
     meta_data.to_csv('zone_data.csv')
@@ -168,31 +160,67 @@ def prepare_region_and_country_series(series, metadata):
     def process_by_region(divisional_zone, series):
         return series[divisional_zone.index].mean(axis=1)
 
-    metadata_division_group = metadata.groupby('Division')
+    # used for bd_and_neighbors to remove zones east of Bangladesh
+    # metadata = metadata[(metadata.Country != 'Myanmar') & (metadata.Region != 'Tripura')]
+
+    metadata_region_group = metadata.groupby('Region')
     metadata_country_group = metadata.groupby('Country')
 
-    region_series = metadata_division_group.apply(process_by_region, series=series).T.round(2)
+    region_series = metadata_region_group.apply(process_by_region, series=series).T.round(2)
     country_series = metadata_country_group.apply(process_by_region, series=series).T.round(2)
 
-    metadata_region = metadata_division_group.agg({
+    metadata_region = metadata_region_group.agg({
         'Country': lambda x: x.sample(), 'Population': 'sum', 'Latitude': 'mean', 'Longitude': 'mean'})
 
     metadata_country = metadata_country_group.agg({
         'Population': 'sum', 'Latitude': 'mean', 'Longitude': 'mean', })
 
-    metadata_region['Count'] = metadata_division_group.Division.count()
+    metadata_region['Count'] = metadata_region_group.Region.count()
     metadata_country['Count'] = metadata_country_group.Country.count()
 
     return region_series, metadata_region, country_series, metadata_country
 
 
+# def read_region_and_country_series_ignore_myanmar():
+#     region_series, metadata_region, country_series, metadata_country = read_region_and_country_series()
+
+def save_region_and_country_series(region_series, country_series, metadata_region, metadata_country):
+    region_series.to_csv("region_series.csv")
+    country_series.to_csv("country_series.csv")
+    metadata_region.to_csv("metadata_region.csv")
+    metadata_country.to_csv("metadata_country.csv")
+
+
 def read_region_and_country_series():
     files_path = get_compressed_save_location()
-    region_series = pd.read_csv(files_path + "region_series.csv", index_col='time',parse_dates=[0])
-    metadata_region = pd.read_csv(files_path + "metadata_region.csv", index_col='Division')
-    country_series = pd.read_csv(files_path + "country_series.csv", index_col='time',parse_dates=[0])
+    region_series = pd.read_csv(files_path + "region_series.csv", index_col='time', parse_dates=[0])
+    metadata_region = pd.read_csv(files_path + "metadata_region.csv", index_col='Region')
+    country_series = pd.read_csv(files_path + "country_series.csv", index_col='time', parse_dates=[0])
     metadata_country = pd.read_csv(files_path + "metadata_country.csv", index_col='Country')
     return region_series, metadata_region, country_series, metadata_country
+
+
+def get_all_granularity_data():
+    metadata_all_with_heavy_missing, series_all_with_heavy_missing = get_metadata(), get_series()
+    # division_missing_counts, metadata_all, series_all = clip_missing_prone_values(metadata_all_with_heavy_missing,
+    #                                                                               series_all_with_heavy_missing)
+    metadata_all, series_all = metadata_all_with_heavy_missing, series_all_with_heavy_missing
+
+    # region_series_all, metadata_region_all, country_series_all, metadata_country_all = \
+    #     prepare_region_and_country_series(series_all, metadata_all)
+    # save_region_and_country_series(region_series_all, country_series_all, metadata_region_all, metadata_country_all)
+
+    region_series_all, metadata_region_all, country_series_all, metadata_country_all = read_region_and_country_series()
+    return metadata_all, series_all, metadata_region_all, region_series_all, metadata_country_all, country_series_all
+
+
+def get_bd_data():
+    metadata_all, series_all, metadata_region_all, region_series_all, metadata_country_all, \
+    country_series_all = get_all_granularity_data()
+    metadata, series = filter_country_bd(metadata_all, series_all)
+    metadata_region, region_series = filter_country_bd(metadata_region_all, region_series_all)
+    metadata_country, country_series = metadata_country_all.loc[["Bangladesh"]], country_series_all[["Bangladesh"]]
+    return metadata, series, metadata_region, region_series, metadata_country, country_series
 
 
 def filter_country_bd(meta_data, time_series):

@@ -46,7 +46,7 @@ def prepare_firefox_driver(savePath):
 def Scrap_2019(savePath):
     meta_data = get_metadata()
     meta_data = selcet_meteoblue_zones(meta_data)
-    print(meta_data[meta_data.Division=='NCT'])
+    print(meta_data[meta_data.Division == 'NCT'])
     exit()
 
     era5list = ['Temperature [2 m]', 'Growing degree days [2 m]', 'Temperature [900 hPa]', 'Temperature [850 hPa]',
@@ -128,7 +128,8 @@ def Scrap(savePath):
         searchTable[1].find_elements_by_xpath(".//td")[1].click()
 
         factorInput = '/html/body/div[3]/div/main/div/div[2]/form/div[5]/div[1]/span[1]/span[1]/span/ul/li/input'
-        # factorInput = '//*[@id="wrapper-main"]/div/main/div/div[2]/form/div[5]/div[1]/span/span[1]/span/ul/li[4]/input'
+        # factorInput = '//*[@id="wrapper-main"]/div/main/div/div[2]/form/div[5]/div[1]/span/span[1]/span/ul/li[
+        # 4]/input'
         factors = WebDriverWait(driver, 30).until(expected_conditions.presence_of_all_elements_located
                                                   ((By.XPATH, factorInput)))[0]
         # factors.send_keys('Total cloud cover' + '\n' )
@@ -136,8 +137,8 @@ def Scrap(savePath):
         sleep(1)
 
         # for tickBox in ["relhum2m", "pressure", "clouds", "sunshine", "swrad", "directrad", "diffuserad", "windgust",
-        #                 "wind+dir80m", "wind+dir900mb", "wind+dir850mb", "wind+dir700mb", "wind+dir500mb", "temp1000mb",
-        #                 "temp850mb", "temp700mb", "tempsfc", "soiltemp0to10", "soilmoist0to10"
+        #                 "wind+dir80m", "wind+dir900mb", "wind+dir850mb", "wind+dir700mb", "wind+dir500mb"
+        #                 , "temp1000mb","temp850mb", "temp700mb", "tempsfc", "soiltemp0to10", "soilmoist0to10"
         #                 ]: driver.find_element_by_id(tickBox).click()
 
         datePicker = driver.find_element_by_id('daterange')
@@ -184,8 +185,9 @@ if __name__ == '__main__':
     # Scrap(meteoblue_data_path)
     Scrap_2019(meteoblue_data_path_2019)
 
-    # df = pd.read_excel('/home/asif/Work/Air Analysis/AQ Dataset/Meteoblue Scrapped Data/2021-03-08 to 2021-03-22/Azimpur.xlsx',engine='openpyxl',header=9)
-    # df = open('/home/asif/Work/Air Analysis/AQ Dataset/Meteoblue Scrapped Data/2021-03-08 to 2021-03-22/Azimpur.xlsx','rb').read().decode(
-    #                 'unicode_escape')
+    # df = pd.read_excel('/home/asif/Work/Air Analysis/AQ Dataset/Meteoblue Scrapped Data/
+    # 2021-03-08 to 2021-03-22/Azimpur.xlsx',engine='openpyxl',header=9)
+    # df = open('/home/asif/Work/Air Analysis/AQ Dataset/Meteoblue Scrapped Data/
+    # 2021-03-08 to 2021-03-22/Azimpur.xlsx','rb').read().decode('unicode_escape')
     # print(df)
     exit()

@@ -1,5 +1,5 @@
 import pandas as pd
-from paths import confirmed, deaths, mobility_path
+from paths import confirmed, deaths, mobility_path, sun_rise_set_time_2017_2020
 
 
 def prepare_covid_dataset():
@@ -23,3 +23,19 @@ def get_mobility_data():
     mobility.index = pd.to_datetime(mobility.index)
     mobility.columns = mobility.columns.str.split('_percent').str[0]
     return mobility
+
+
+def get_diurnal_period():
+    sun_time = pd.read_csv(sun_rise_set_time_2017_2020, sep='\t')
+    sun_time['Sunrise_date'] = sun_time['Date '] + ' ' + sun_time['Sunrise ']
+    sun_time['Sunset_date'] = sun_time['Date '] + ' ' + sun_time['Sunset ']
+    sun_time = sun_time[['Sunrise_date', 'Sunset_date']].apply(pd.to_datetime).apply(lambda x: x.dt.round('H'))
+    sun_time_matrix = sun_time.apply(
+        lambda x: pd.Series(['day' if x.Sunrise_date.hour <= i <= x.Sunset_date.hour else 'night' for i in range(24)]),
+        axis=1)
+    sun_time_series = sun_time_matrix.stack().reset_index(drop=True)
+
+    print(pd.date_range('2017', '2021', freq='H')[:-1])
+    sun_time_series.index = pd.date_range('2017', '2021', freq='H')[:-1]
+    sun_time_series.name = 'diurnal_name'
+    return sun_time_series

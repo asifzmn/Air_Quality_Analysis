@@ -159,7 +159,7 @@ def mapArrow(data, mat, times, save=None):
 
 
 def heatmapgeoJson(meta_data, title):
-    with open('/home/asif/Datasets/Bangladesh/bdBounds.geojson') as file:
+    with open('/home/asif/Data/Dataset/Bangladesh/bdBounds.geojson') as file:
         bdBounds = json.load(file)
 
     rounding_num, correction_coeff, segments, regions = 0.015, 0.5, 500, 75
@@ -260,7 +260,7 @@ if __name__ == '__main__':
     # df, metaFrame= region_series.groupby(country_series.index.month).mean() , metadata_region
     # df, metaFrame= region_series.groupby(country_series.index.year).median() , metadata_region
 
-    for i, row in df.iloc[:48].iterrows():
+    for i, row in df.iloc[24*2+6:24*2+18].iterrows():
         # if row.isnull().any(): continue
         if row.isnull().any(): row = row.fillna(1)
         metadata = metaFrame.assign(Value=row.values)

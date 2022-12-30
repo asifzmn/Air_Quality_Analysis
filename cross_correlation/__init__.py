@@ -1,8 +1,8 @@
 from collections import Counter
 from itertools import combinations
 from GIS.GeoPandas import mapArrow, mapPlot
-from meteorological_functions.meteoblue_data_preparation import get_factor_data
-from visualization import *
+from meteorology.meteoblue_data_preparation import get_factor_data
+from exploration import *
 import plotly.graph_objects as go
 import xarray as xr
 import more_itertools
@@ -218,7 +218,7 @@ def correlation_heatmap_with_linear_meteorological_variables_with_lag(df):
             reversescale=True
         ))
         fig.update_layout(
-            autosize=False, width=1800, height=450*3,
+            autosize=False, width=1800, height=450 * 3,
             title="PM2.5 correaltion with meteorological factors",
             xaxis_title="District", yaxis_title="Factors",
             font=dict(size=21, color="#3D3C3A"
@@ -235,3 +235,12 @@ def correlation_heatmap_with_linear_meteorological_variables_with_lag(df):
         # print(lag_series)
         # print(lag_series.idxmax())
         # print()
+
+# for dis1 in metaFrame.index.values:
+#     for dis2 in metaFrame.index.values:
+#         lagRange = 3
+#         rs = [crosscorr(df[dis1], df[dis2], lag) for lag in range(-lagRange, 0)]
+#         offset = - int(np.floor(len(rs) / 2) - np.argmax(rs))
+#         if offset<0:
+#             print(offset)
+#             print(angleFromCoordinate(dis1, dis2))

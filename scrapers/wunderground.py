@@ -2,8 +2,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
-import plotly.express as px
 
 from paths import wunderground_data_path
 from scrapers import prepare_firefox_driver
@@ -12,6 +10,16 @@ if __name__ == '__main__':
     regions = ['Dhaka', 'West Bengal', 'NCT', 'Uttar Pradesh', 'Telangana', 'Shan'][1] + '/'
     region_url_key = ['bd/dhaka/VGHS', 'in/dum-dum/VECC', 'in/new-delhi/VIDP',
                       'in/lucknow/VILK', 'in/hyderabad/VOHS', 'mm/yangon/VYYY'][1]
+
+    # regions = ['San_Francisco', 'Austin', 'Seattle',
+    #            'Phoenix', 'Denver', 'Salt_Lake_City',
+    #            'Portland', 'Las_Vegas', 'Boise',
+    #            'Albuquerque', 'Billings', 'Cheyenne'][6] + '/'
+    # region_url_key = ['ca/san-francisco/KSFO', 'tx/austin/KAUS', 'wa/seattle/KSEA',
+    #                   'az/phoenix/KPHX', 'co/denver/KDEN', 'ut/salt-lake-city/KSLC',
+    #                   'or/portland/KPDX', 'nv/las-vegas/KVGT', 'id/boise/KBOI',
+    #                   'nm/albuquerque/KABQ', 'mt/billings/KBIL', 'wy/cheyenne/KCYS'][6]   # usa
+
     viewButton = '//*[@id="inner-content"]/div[2]/div[1]/div[1]/div[1]/div/lib-date-selector/div/input'
     tableElem = '//*[@id="inner-content"]/div[2]/div[1]/div[5]/div[1]/div/lib-city-history-observation/div/div[2]/table'
 
@@ -24,7 +32,9 @@ if __name__ == '__main__':
     # options.add_experimental_option("prefs", prefs)
     # driver = webdriver.Chrome('/home/az/.wdm/drivers/chromedriver/linux64/86.0.4240.22/chromedriver', options=options)
     driver = prepare_firefox_driver()
-    timeRange = pd.date_range('2021-06-15', '2021-12-31')
+
+    # timeRange = pd.date_range('2012-01-01', '2016-12-31')  # usa
+    timeRange = pd.date_range('2012-05-13', '2016-12-31')
 
     for single_date in timeRange:
         print(single_date)
@@ -44,6 +54,7 @@ if __name__ == '__main__':
         df[temp_columns] = df[temp_columns].apply(lambda x: ((x - 32) * 5 / 9).round(2))
         # df.agg({'Time': lambda x: pd.to_datetime(str(singleDate.date()) + ' ' + x)})
         save_path = wunderground_data_path + regions + str(single_date.date())
+        # save_path = wunderground_data_path + 'USA/' + regions + str(single_date.date())  # usa
         df.to_csv(save_path)
 
     # headers = ['Time', 'Temperature', 'Dew Point', 'Humidity', 'Wind', 'Wind Speed', 'Wind Gust', 'Pressure', 'Precip.',
