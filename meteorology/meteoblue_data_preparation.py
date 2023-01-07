@@ -82,6 +82,8 @@ wind_direction_factor = MeteorologicalVariableType(name, unit, factor_list, colo
 meteorological_variable_type_list_linear = [temperature_factor, humidity_factor, precipitation_factor,
                                             cloud_cover_factor, radiation_factor, pressure_factor, wind_speed_factor]
 
+meteorological_variable_type_list_circular = [wind_direction_factor, wind_speed_factor]
+
 
 # sampleFactors = ['Wind Gust', 'Wind Speed [10 m]', 'Wind Direction [10 m]', 'Temperature [2 m elevation corrected]',
 #                  'Relative Humidity [2 m]']
@@ -139,11 +141,14 @@ def prepare_meteo_data(file, district):
 
 
 def process_one_folder(location_main, date_folder):
+    from data_preparation.spatio_temporal_filtering import read_bd_meta_data
+
     time = pd.to_datetime(date_folder.split(' to '))
     time = pd.date_range(start=time.min(), end=time.max() + timedelta(days=1), freq='H')[:-1]
 
-    meta_data = get_metadata()
-    meta_data = selcet_meteoblue_zones(meta_data)
+    # meta_data = get_metadata()
+    # meta_data = selcet_meteoblue_zones(meta_data)
+    meta_data = read_bd_meta_data()
 
     meteo_data = np.array(
         [prepare_meteo_data(f'{location_main}/{date_folder}/{district}.csv', district) for district in
@@ -158,6 +163,22 @@ def create_meteo_data_file():
     meteo_data.to_netcdf('meteoData_2019.nc')
 
 
+def read_meteo_data():
+    return xr.open_dataset('../Files/meteo data/meteoblue/meteoData_2019.nc')['meteo']
+
+
+def read_meteo_data_file_bd_and_neighbours():
+    return xr.open_dataset('meteoblue_data_2019_bd_and_neighbours.nc')['meteo']
+
+
+def create_meteo_data_file_bd_and_neighbours():
+    from paths import aq_directory
+    meteoblue_data_path_2019_bd_and_neighbours = aq_directory + 'Meteoblue Data/MeteoBlue Data 2019 BD-WB_NCT/BD'
+    meteo_data = process_one_folder(meteoblue_data_path_2019_bd_and_neighbours, '2019-01-01 to 2019-12-31')
+    meteo_data.to_netcdf('meteoblue_data_2019_bd_and_neighbours.nc')
+
+
 if __name__ == '__main__':
     # print(len(factors))
-    create_meteo_data_file()
+    # create_meteo_data_file_bd_and_neighbours()
+    print(read_meteo_data_file_bd_and_neighbours())

@@ -19,6 +19,7 @@ def get_save_location(): return berkeley_earth_data_prepared + get_common_id() +
 def get_compressed_save_location(): return berkeley_earth_data_compressed + get_common_id() + '/'
 
 
+
 def get_zones_info(): return pd.read_csv(zone_data_path + get_common_id() + '.csv').sort_values('Zone', ascending=True)
 
 
@@ -97,7 +98,8 @@ def data_cleaning_and_preparation():
         # series = series.groupby('time').PM25.mean().reset_index()  # usa
         # series = series.set_index('time').reindex(pd.date_range('2004-01-01', '2022-01-01', freq='h')[:-1])  # usa
 
-        if get_common_id() != 'SouthAsianCountries' and get_common_id() != 'bd_and_neighbours':
+        # if get_common_id() != 'SouthAsianCountries' and get_common_id() != 'bd_and_neighbours':
+        if get_common_id() in ['study_area', 'allbd']:
             duplicates = (series.duplicated(subset=['time'], keep='first'))
             series.loc[duplicates, 'time'] = series.loc[duplicates, 'time'] + timedelta(hours=1)
         else:
@@ -124,15 +126,9 @@ def data_cleaning_and_preparation():
 
 
 def clip_missing_prone_values(metadata, series):
-    # metadata = metadata.reset_index()
-    # metadata.index = metadata.Zone + "_" + metadata.Division
-    # series.columns = metadata.index
-
     region_missing_counts = metadata.groupby('Region').apply(
         lambda regional_zone: series[regional_zone.index].isna().all(axis=1)).sum(axis=1).sort_values()
     region_valid_data = region_missing_counts[region_missing_counts < 10000].index
-    # region_valid_data = region_missing_counts[region_missing_counts >= 10000].index
-    # region_valid_data = region_missing_counts[region_missing_counts < 15000].index
     metadata = metadata[metadata.Region.isin(region_valid_data)]
     series = series[metadata.index]
     return region_missing_counts, metadata, series
@@ -148,12 +144,6 @@ def get_metadata():
     return pd.read_csv(get_save_location() + 'metadata.csv', index_col='index', parse_dates=[0])
     # return pd.read_csv(get_save_location() + 'metadata.csv', index_col='Zone', parse_dates=[0]).rename(
     #     index=rename_dict).sort_index(axis=0)
-
-
-def save_data():
-    meta_data, timeseries = get_metadata(), get_series()['2017':'2019']
-    meta_data.to_csv('zone_data.csv')
-    timeseries.to_csv('pm_time_series.csv')
 
 
 def prepare_region_and_country_series(series, metadata):
@@ -214,27 +204,11 @@ def get_all_granularity_data():
     return metadata_all, series_all, metadata_region_all, region_series_all, metadata_country_all, country_series_all
 
 
-def get_bd_data():
-    metadata_all, series_all, metadata_region_all, region_series_all, metadata_country_all, \
-    country_series_all = get_all_granularity_data()
-    metadata, series = filter_country_bd(metadata_all, series_all)
-    metadata_region, region_series = filter_country_bd(metadata_region_all, region_series_all)
-    metadata_country, country_series = metadata_country_all.loc[["Bangladesh"]], country_series_all[["Bangladesh"]]
-    return metadata, series, metadata_region, region_series, metadata_country, country_series
-
-
-def filter_country_bd(meta_data, time_series):
-    meta_data = meta_data[meta_data.Country == 'Bangladesh']
-    time_series = time_series[meta_data.index]
-    return meta_data, time_series
-
-
 if __name__ == '__main__':
     # web_crawl()
     data_cleaning_and_preparation()
-    # timeseies = get_series()
+
+    # timeseries = get_series()
     # meta_data = get_metadata()
 
-    # print(metaFrame[['Population','avgRead']].corr())
-    # popYear = [157977153,159685424,161376708,163046161]
     exit()

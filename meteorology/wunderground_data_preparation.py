@@ -4,7 +4,7 @@ import numpy as np
 import xarray as xr
 from datetime import timedelta, datetime
 
-from meteorological_functions import MeteorologicalVariableType, vector_calculation
+from meteorology import MeteorologicalVariableType, vector_calculation
 from paths import wunderground_data_path, wunderground_data_path_compressed
 
 nc_file_path = '../Files/meteo data/wunderground/meteoData_BD_WB_NCT.nc'

@@ -2,9 +2,6 @@ import math
 import numpy as np
 import xarray as xr
 
-def read_meteo_data():
-    return xr.open_dataset('../Files/meteo data/meteoblue/meteoData_2019_BD_WB_NCT.nc')['meteo']
-
 
 class MeteorologicalVariableType:
     def __init__(self, name, unit, factor_list, color_list):

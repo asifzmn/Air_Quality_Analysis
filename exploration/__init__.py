@@ -6,6 +6,8 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 from data_preparation import *
 import plotly.graph_objects as go
 
+from data_preparation.additional_data_preparation import get_diurnal_period
+
 color_scale, category_name, aq_scale = get_category_info()
 
 country_color_dict = {'India': '#F4C430', 'Myanmar': '#990000', 'Bangladesh': '#228B22'}
@@ -198,8 +200,8 @@ def pltSetUp(xlabel=None, ylabel=None, title=None, xlim=None, ylim=None, save=No
         plt.clf()
 
 
-def pltSetUpAx(ax, xlabel=None, ylabel=None, title=None, xlim=None, ylim=None, save='Box_plots/Save'):
-    # def pltSetUpAx(ax, xlabel=None, ylabel=None, title=None, xlim=None, ylim=None, save=None):
+# def pltSetUpAx(ax, xlabel=None, ylabel=None, title=None, xlim=None, ylim=None, save='Box_plots/Save'):
+def pltSetUpAx(ax, xlabel=None, ylabel=None, title=None, xlim=None, ylim=None, save=None):
     if not xlabel is None: ax.set_xlabel(xlabel)
     if not ylabel is None: ax.set_ylabel(ylabel)
     if not title is None: ax.set_title(title)
@@ -310,8 +312,10 @@ def custom_time_series(df):
 
 
 def missing_data_heatmap(df):
+    import plotly.graph_objects as go
+
     missing = df.T.isnull().astype(int)
-    print(df.isnull().sum())
+    # print(missing.sum(axis=1))
 
     bvals, dcolorsc = np.array([0, .5, 1]), []
     tickvals = [np.mean(bvals[k:k + 2]) for k in range(len(bvals) - 1)]
@@ -321,20 +325,23 @@ def missing_data_heatmap(df):
     for k in range(len(colors)): dcolorsc.extend([[nvals[k], colors[k]], [nvals[k + 1], colors[k]]])
 
     fig = go.Figure(data=go.Heatmap(
-        z=missing.values,
-        y=missing.index.values,
-        x=pd.Series(df.index),
+        z=missing,
+        y=missing.index,
+        x=missing.columns,
         colorscale=dcolorsc,
         colorbar=dict(thickness=75, tickvals=tickvals, ticktext=ticktext),
     ))
     fig.update_layout(
         title="Missing Data Information",
-        yaxis_title="District",
-        xaxis_title="Days",
+        yaxis_title="Zone",
+        xaxis_title="Time",
         font=dict(
             size=15,
             color="#3D3C3A"
-        )
+        ),
+        # legend = dict(font = dict(family = "Courier", size = 50, color = "black")),
+        # legend_font_size=27,
+        height = 900
     )
     fig.show()
 
@@ -342,7 +349,7 @@ def missing_data_heatmap(df):
 def violin_plot_year(df):
     fig = go.Figure()
     # df = df.resample('M').mean()
-    years = ['2017', '2018', '2019', '2020', '2021']
+    years = ['2018', '2019', '2020', '2021']
 
     for year in years:
         fig.add_trace(go.Violin(y=df[year].stack(),
@@ -418,41 +425,36 @@ def grouped_box(x):
     fig.show()
 
 
+def box_plot_basic_experiment():
+    df = region_series.resample('3D').max()
+    plt.figure(figsize=(9, 6))
+    ax = sns.boxplot(data=df.T, color="blue")
+    pltSetUpAx(ax, "Hour of Day", "PM Reading", 'district' + ' in ' + str('timeStamp'), ylim=(0, 500))
+    # pltSetUpAx(ax, "Hour of Day", "PM Reading", 'district' + ' in ' + str('timeStamp'))# df = df.resample('3D').max()
+    # plt.figure(figsize=(9, 6))
+    # ax = sns.boxplot(data=df.T, color="blue")
+    # pltSetUpAx(ax, "Hour of Day", "PM Reading", 'district' + ' in ' + str('timeStamp'), ylim=(0, 500))
+    # # pltSetUpAx(ax, "Hour of Day", "PM Reading", 'district' + ' in ' + str('timeStamp'))
+
+
 if __name__ == '__main__':
+    metadata, series, metadata_region, region_series, metadata_country, country_series = read_bd_data()
+
     # # plt.close("all")
     # # sns.set()
     # # # sns.set_style("whitegrid")
-    # metadata, series = get_metadata(), get_series()
+
     # prepare_color_table()
-    # exit()
-    # series = series.sample(50, axis=1)["2019":]
-    # missing_data_heatmap(series)
+    missing_data_heatmap(region_series)
     # # violin_plot_year(series)
     # # BoxPlotHour(series)
-
-    # series_with_heavy_missing, metadata_with_heavy_missing = get_series()[:], get_metadata()
-    # division_missing_counts, metadata, series = clip_missing_prone_values(metadata_with_heavy_missing,
-    #                                                                       series_with_heavy_missing)
-    # region_series, metadata_region, country_series, metadata_country = prepare_region_and_country_series(series,
-    #                                                                                                      metadata)
-
-    from data_preparation import read_region_and_country_series
-
-    region_series, metadata_region, country_series, metadata_country = read_region_and_country_series()
 
     # day_night_distribution(country_series)
     # day_night_distribution_monthly(country_series[["Bangladesh"]])
     # PLotlyTimeSeries(country_series)
-    print(region_series.columns)
-    custom_time_series(region_series)
+    # print(region_series.columns)
+    # custom_time_series(region_series)
     # box_plot_week(country_series)
 
-# df = df.resample('3D').max()
-# plt.figure(figsize=(9, 6))
-# ax = sns.boxplot(data=df.T, color="blue")
-# pltSetUpAx(ax, "Hour of Day", "PM Reading", 'district' + ' in ' + str('timeStamp'), ylim=(0, 500))
-# # pltSetUpAx(ax, "Hour of Day", "PM Reading", 'district' + ' in ' + str('timeStamp'))# df = df.resample('3D').max()
-# # plt.figure(figsize=(9, 6))
-# # ax = sns.boxplot(data=df.T, color="blue")
-# # pltSetUpAx(ax, "Hour of Day", "PM Reading", 'district' + ' in ' + str('timeStamp'), ylim=(0, 500))
-# # # pltSetUpAx(ax, "Hour of Day", "PM Reading", 'district' + ' in ' + str('timeStamp'))
+    # print(metaFrame[['Population','avgRead']].corr())
+    # popYear = [157977153,159685424,161376708,163046161]
