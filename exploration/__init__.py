@@ -7,32 +7,17 @@ from data_preparation import *
 import plotly.graph_objects as go
 
 from data_preparation.additional_data_preparation import get_diurnal_period
+from data_preparation.spatio_temporal_filtering import read_bd_data, get_bd_data_4_years
 
 color_scale, category_name, aq_scale = get_category_info()
 
 country_color_dict = {'India': '#F4C430', 'Myanmar': '#990000', 'Bangladesh': '#228B22'}
 
 
-def prepare_color_table():
-    color_scale, category_name, aq_scale = get_category_info()
-    range_str = [str(a) + " - " + str(b) for a, b in zip(aq_scale, aq_scale[1:])]
-    data = {'category_name': category_name, 'color_scale': color_scale, 'range_str': range_str}
-    df = pd.DataFrame(data)
-
-    fig = go.Figure(data=[go.Table(
-        header=dict(
-            values=["<b>Category</b>", "<b>Concentration Range (&#956;gm<sup>-3</sup>) </b>"],
-            line_color='grey', fill_color='silver',
-            align='center', font=dict(color='black', size=12)
-        ),
-        cells=dict(
-            values=[df.category_name, df.range_str],
-            line_color='grey', fill_color=[df.color_scale],
-            align='center', font=dict(color='black', size=9)
-        ))
-    ])
-    fig.update_layout(width=333)
-    fig.show()
+def overall_stats(timeseries):
+    all_data = timeseries.stack()
+    # print(all_data.droplevel(1))
+    print(all_data.describe())
 
 
 def yearly_seasonal_decomposition_bd(series):
@@ -279,8 +264,13 @@ def custom_time_series(df):
     #         line_color=country_color_dict[country_name], line_width=2, name=country_name,
     #     ))
 
-    for zone, color in zip(['Dhaka', 'Khulna', 'Barisal', 'Chittagong', 'Rajshahi'],
-                           ['red', 'orange', 'blue', 'green', 'yellow']):
+    # region_names = ['Dhaka', 'Khulna', 'Barisal', 'Chittagong', 'Rajshahi']
+    # color_codes = ['red', 'orange', 'blue', 'green', 'yellow']
+
+    region_names = ['Dhaka', 'Khulna', 'Barisal', 'Chittagong', 'Rajshahi']
+    color_codes = ['red', 'orange', 'blue', 'green', 'yellow']
+
+    for zone, color in zip(region_names, color_codes):
         print(zone)
         country_monthly_series = df[zone].resample('M').mean()
 
@@ -341,7 +331,7 @@ def missing_data_heatmap(df):
         ),
         # legend = dict(font = dict(family = "Courier", size = 50, color = "black")),
         # legend_font_size=27,
-        height = 900
+        height=900
     )
     fig.show()
 
@@ -369,6 +359,8 @@ def box_plot_series(df):
     ax = sns.boxplot(data=df, color="grey")
     for i, c in enumerate(color_scale): ax.axhspan(aq_scale[i], aq_scale[i + 1], facecolor=c, alpha=0.3)
     ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right", size=21)
+    ax.set_yticklabels(ax.get_yticklabels(), size=21)
+    ax.set_ylabel('reading', fontsize=15)
     ax.set(ylim=(0, 250))
     plt.show()
 
@@ -396,11 +388,14 @@ def PLotlyTimeSeries(df, missing=None):
     fig.show()
 
 
-def grouped_box(x):
+def grouped_box_month_year(x):
     fig = go.Figure()
 
-    color_pal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500', '#2471A3']
+    # color_pal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500', '#2471A3']
+    color_pal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500']
 
+    print(x)
+    print(x.index.year.unique())
     # for year in pd.DatetimeIndex(x.index).year.unique():
     for year in x.index.year.unique():
         fig.add_trace(go.Box(
@@ -408,7 +403,7 @@ def grouped_box(x):
             y=x[str(year)],
             x=pd.DatetimeIndex(x.index).month_name(),
             name=year,
-            marker_color=color_pal[year - 2017]
+            marker_color=color_pal[year - 2018]
         ))
 
     fig.update_layout(
@@ -418,7 +413,7 @@ def grouped_box(x):
         yaxis=dict(
             range=[0, 180]),
         legend_orientation="h",
-        height=450,
+        height=600,
         font_size=18
     )
 
@@ -438,22 +433,25 @@ def box_plot_basic_experiment():
 
 
 if __name__ == '__main__':
-    metadata, series, metadata_region, region_series, metadata_country, country_series = read_bd_data()
+    metadata, series, metadata_region, region_series, metadata_country, country_series = get_bd_data_4_years()
+
+    custom_time_series(region_series)
+    # grouped_box_month_year(country_series['Bangladesh'])
+    # day_night_distribution_monthly(country_series[["Bangladesh"]])
 
     # # plt.close("all")
     # # sns.set()
     # # # sns.set_style("whitegrid")
 
     # prepare_color_table()
-    missing_data_heatmap(region_series)
-    # # violin_plot_year(series)
+    # missing_data_heatmap(region_series)
     # # BoxPlotHour(series)
+    # # violin_plot_year(country_series)
 
     # day_night_distribution(country_series)
     # day_night_distribution_monthly(country_series[["Bangladesh"]])
     # PLotlyTimeSeries(country_series)
     # print(region_series.columns)
-    # custom_time_series(region_series)
     # box_plot_week(country_series)
 
     # print(metaFrame[['Population','avgRead']].corr())

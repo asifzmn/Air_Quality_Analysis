@@ -1,7 +1,7 @@
 from collections import Counter
 from itertools import combinations
 from GIS.GeoPandas import mapArrow, mapPlot
-from meteorology.meteoblue_data_preparation import get_factor_data
+# from meteorology.meteoblue_data_preparation import get_factor_data
 from exploration import *
 import plotly.graph_objects as go
 import xarray as xr

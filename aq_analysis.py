@@ -9,16 +9,20 @@ from sklearn.cluster import KMeans
 from itertools import combinations
 from plotly.subplots import make_subplots
 from GIS.GeoPandas import mapArrow, mapPlot
+from cross_correlation import CrossCorrelation
 from data_exporting import latex_custom_table_format, paper_comparison, missing_data_fraction
 # from cross_correlation import CrossCorrelation
 # from meteorological_functions import get_factor_data, get_cardinal_direction, plotly_rose_plot
 # from meteorological_functions.meteoblue_data_preparation import get_factor_data
-from sklearn.preprocessing import StandardScaler
+# from sklearn.preprocessing import StandardScaler
+
+from data_preparation.spatio_temporal_filtering import get_bd_data
 from related.GeoMapMatplotLib import MapPlotting
 from exploration import *
 import plotly.graph_objects as go
-import xarray as xr
-import more_itertools
+
+# import xarray as xr
+# import more_itertools
 
 month_names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
                'November', 'December']
@@ -92,9 +96,9 @@ def bucketing(reading, bins): return reading.apply(
     lambda x: x / x.sum())
 
 
-def ratio_map_plotting(reading, time_stamp):
+def ratio_map_plotting(reading, time_stamp, meta_data):
     norm = bucketing(reading, [55.5, 500])
-    MapPlotting(meta_data, timeseries.mean().values, ratiodata=norm, title=str(time_stamp.year))
+    MapPlotting(meta_data, reading.mean().values, ratiodata=norm, title=str(time_stamp.year))
 
 
 def missing_data_info(df):
@@ -122,7 +126,7 @@ def missing_sequence_length_bar_plot(df):
     fig.show()
 
 
-def correlation_seasonal(corrArray, rows=2, cols=2, title=''):
+def correlation_seasonal(corrArray, meta_data, timeseries, rows=2, cols=2, title=''):
     sub_titles = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
                   'November', 'December']
     # sub_titles = ['Winter', 'Spring', 'Summer', 'Autumn']
@@ -166,9 +170,9 @@ def correlation_seasonal(corrArray, rows=2, cols=2, title=''):
 
 
 def stacked_bar(timeseries):
-    def ranking(timeseries): return timeseries.mean().sort_values()
-
     def cut_and_count(x): return pd.cut(x, AQScale, labels=categoryName).value_counts() / x.count()
+
+    def ranking(timeseries): return timeseries.mean().sort_values()
 
     ranking = ranking(timeseries)
     category_frquency = timeseries.apply(cut_and_count)
@@ -185,12 +189,12 @@ def stacked_bar(timeseries):
                     name=idx, opacity=.666) for idx, row in category_frquency.iterrows()]
     fig = go.Figure(data=datas)
     fig.update_layout(
-        width=300,
+        width=1800,
         legend_orientation="h",
         font=dict(size=24),
         barmode='stack',
         template='plotly_white',
-        legend={"x": 0, "y": -.3}
+        # legend={"x": 0, "y": -.3}
     )
     fig.show()
 
@@ -235,12 +239,6 @@ def changes_in_districts(timeseries):
             name=name
         ))
     fig.show()
-
-
-def overall_stats(timeseries):
-    allData = timeseries.stack()
-    # print(allData.droplevel(1))
-    print(allData.describe())
 
 
 def frequency_clustering(df):
@@ -306,23 +304,23 @@ def representative_district_analysis(df):
 
     cross_corr_columns = ['Nawabganj', 'Sherpur', 'Kishorganj', 'Kushtia', 'Nagarpur',
                           'Narsingdi', 'Satkhira', 'Pirojpur', 'Lakshmipur']
-    CrossCorrelation(timeseries[cross_corr_columns])
-    CrossCorrelation(timeseries)
+    CrossCorrelation(df[cross_corr_columns])
+    CrossCorrelation(df)
     paper_comparison(df)
 
-    city_analysis(timeseries['Dhaka']['2017'])
+    city_analysis(df['Dhaka']['2017'])
     city_analysis(df['Narayanganj']['2017-02':'2018-02'])
     city_analysis(df['Mymensingh']['2019-02':'2019-04'])
 
-    latex_custom_table_format(timeseries.describe().T)
-    missing_data_fraction(timeseries)
+    latex_custom_table_format(df.describe().T)
+    missing_data_fraction(df)
 
     df = df.fillna('0')
 
     box_plot_series(df)
     violin_plot_year(df)
 
-    df[respresentativeDistricts].apply(grouped_box)
+    df[respresentativeDistricts].apply(grouped_box_month_year)
     BoxPlotSeason(df[respresentativeDistricts])
     BoxPlotHour(df[respresentativeDistricts])
     pair_distribution_summary(df[respresentativeDistricts])
@@ -343,13 +341,12 @@ if __name__ == '__main__':
     sns.set()
     # save_data()
     # sns.set_style("whitegrid")
-    meta_data, timeseries = get_metadata(), get_series()
+    # meta_data, timeseries = get_metadata(), get_series()
 
     # PairDistribution(timeseries)
     # day_night_distribution(timeseries)
     # changes_in_districts(timeseries)
     # changes_in_months(timeseries)
-    # print(Ranking(timeseries))
 
     # SimpleTimeseries(timeseries)
     # overall_stats(timeseries)
@@ -362,13 +359,16 @@ if __name__ == '__main__':
 
     # df.describe().T.to_csv('GenralStats.csv')
 
-    series_with_heavy_missing, metadata_with_heavy_missing = get_series(), get_metadata()
+    # series_with_heavy_missing, metadata_with_heavy_missing = get_series(), get_metadata()
     # division_missing_counts, metadata, series = clip_missing_prone_values(metadata_with_heavy_missing,
     #                                                                       series_with_heavy_missing)
     # region_series, metadata_region, country_series, metadata_country = prepare_region_and_country_series(series,
     #                                                                                                      metadata)
+
+    metadata, series, metadata_region, region_series, metadata_country, country_series = get_bd_data()
+
     # day_night_distribution(country_series)
     # PLotlyTimeSeries(country_series)
     # stacked_bar(country_series)
-    # stacked_bar(region_series)
-    missing_data_heatmap(series_with_heavy_missing)
+    stacked_bar(region_series)
+    # missing_data_heatmap(series_with_heavy_missing)

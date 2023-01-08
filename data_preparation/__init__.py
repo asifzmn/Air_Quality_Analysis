@@ -19,7 +19,6 @@ def get_save_location(): return berkeley_earth_data_prepared + get_common_id() +
 def get_compressed_save_location(): return berkeley_earth_data_compressed + get_common_id() + '/'
 
 
-
 def get_zones_info(): return pd.read_csv(zone_data_path + get_common_id() + '.csv').sort_values('Zone', ascending=True)
 
 
@@ -31,6 +30,28 @@ def get_category_info():
         ['Good', 'Moderate', 'Unhealthy for Sensitive Groups', 'Unhealthy', 'Very Unhealthy', 'Hazardous'])
     aq_scale = np.array([0, 12.1, 35.5, 55.5, 150.5, 250.5, 500])
     return color_scale, category_name, aq_scale
+
+
+def prepare_color_table():
+    color_scale, category_name, aq_scale = get_category_info()
+    range_str = [str(a) + " - " + str(b) for a, b in zip(aq_scale, aq_scale[1:])]
+    data = {'category_name': category_name, 'color_scale': color_scale, 'range_str': range_str}
+    df = pd.DataFrame(data)
+
+    fig = go.Figure(data=[go.Table(
+        header=dict(
+            values=["<b>Category</b>", "<b>Concentration Range (&#956;gm<sup>-3</sup>) </b>"],
+            line_color='grey', fill_color='silver',
+            align='center', font=dict(color='black', size=12)
+        ),
+        cells=dict(
+            values=[df.category_name, df.range_str],
+            line_color='grey', fill_color=[df.color_scale],
+            align='center', font=dict(color='black', size=9)
+        ))
+    ])
+    fig.update_layout(width=333)
+    fig.show()
 
 
 def web_crawl():
