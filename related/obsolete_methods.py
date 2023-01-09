@@ -8,7 +8,7 @@ import pickle as pk
 from collections import Counter
 from itertools import combinations
 
-from folium.plugins import HeatMap
+# from folium.plugins import HeatMap
 from matplotlib import pyplot as plt, cm
 from plotly import express as px
 from plotly import graph_objects as go
@@ -553,6 +553,7 @@ def getAllData(raw_data_path, update=True):
 
 
 def weightedChoice():
+
     x = []
     x.append(Counter(np.random.choice(['H', 'T'], 10, p=[0.5, 0.5]))['H'] / 10)
     x.append((Counter(np.random.choice(['H', 'T'], 100, p=[0.5, 0.5]))['H'] / 100))

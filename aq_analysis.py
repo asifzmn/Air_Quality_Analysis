@@ -169,36 +169,6 @@ def correlation_seasonal(corrArray, meta_data, timeseries, rows=2, cols=2, title
     fig.show()
 
 
-def stacked_bar(timeseries):
-    def cut_and_count(x): return pd.cut(x, AQScale, labels=categoryName).value_counts() / x.count()
-
-    def ranking(timeseries): return timeseries.mean().sort_values()
-
-    ranking = ranking(timeseries)
-    category_frquency = timeseries.apply(cut_and_count)
-    category_frquency = category_frquency[ranking.index]
-
-    # category_frquency = category_frquency.T
-    # category_frquency['grp'] = category_frquency['Hazardous'] + category_frquency['Very Unhealthy'] + category_frquency['Unhealthy']
-    # category_frquency['grp'] = category_frquency['Good'] + category_frquency['Moderate'] + category_frquency['Unhealthy for Sensitive Groups']
-    # category_frquency = category_frquency.sort_values(by=['grp']).T
-    # category_frquency = category_frquency.drop('grp')
-
-    datas = [go.Bar(x=category_frquency.columns.values, y=row,
-                    marker_color=colorScale[categoryName.tolist().index(idx)],
-                    name=idx, opacity=.666) for idx, row in category_frquency.iterrows()]
-    fig = go.Figure(data=datas)
-    fig.update_layout(
-        width=1800,
-        legend_orientation="h",
-        font=dict(size=24),
-        barmode='stack',
-        template='plotly_white',
-        # legend={"x": 0, "y": -.3}
-    )
-    fig.show()
-
-
 def changes_in_months(timeseries):
     monthly_average = pd.concat(
         [timeseries[timeseries.index.month == i + 1].stack().droplevel(1).resample('Y').median() for i in range(12)],

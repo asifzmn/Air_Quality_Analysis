@@ -7,11 +7,13 @@ from data_preparation import *
 import plotly.graph_objects as go
 
 from data_preparation.additional_data_preparation import get_diurnal_period
-from data_preparation.spatio_temporal_filtering import read_bd_data, get_bd_data_4_years
+from data_preparation.spatio_temporal_filtering import read_bd_data, get_bd_data_4_years, read_bd_data_4_years
 
 color_scale, category_name, aq_scale = get_category_info()
 
 country_color_dict = {'India': '#F4C430', 'Myanmar': '#990000', 'Bangladesh': '#228B22'}
+
+colorScale, categoryName, AQScale = get_category_info()
 
 
 def overall_stats(timeseries):
@@ -48,7 +50,7 @@ def seasonal_decomposition(df):
     # plt.show()
 
 
-def day_night_distribution(time_series, sampling_hours=1):
+def day_night_distribution_zonal(time_series, sampling_hours=1):
     # time_series = time_series.iloc[6:-18]
     time_series = time_series.resample(str(sampling_hours) + 'H').mean()
     time_series = time_series.fillna(-1)
@@ -115,7 +117,7 @@ def day_night_distribution_monthly(time_series, sampling_hours=1):
                   )
     fig.update_traces(meanline_visible=True)
     fig.update_layout(violingap=0, violinmode='overlay', font_size=27, legend_orientation='h',
-                      xaxis_title="Zone", yaxis_title="PM2.5 Concentration", )
+                      xaxis_title="Zone", yaxis_title="PM2.5 Concentration", height=900)
     fig.show()
 
 
@@ -202,7 +204,7 @@ def pltSetUpAx(ax, xlabel=None, ylabel=None, title=None, xlim=None, ylim=None, s
 
 
 def custom_time_series(df):
-    resampled_df = df.resample('M')
+    resampled_df = df.resample('W')
 
     aggregated_value = pd.concat(
         [sampledSeries.stack().apply(['min', 'mean', 'median', 'max']) for _, sampledSeries in resampled_df], axis=1).T
@@ -264,15 +266,20 @@ def custom_time_series(df):
     #         line_color=country_color_dict[country_name], line_width=2, name=country_name,
     #     ))
 
+    region_names = ['Bangladesh']
+    color_codes = ['royalblue']
+
     # region_names = ['Dhaka', 'Khulna', 'Barisal', 'Chittagong', 'Rajshahi']
     # color_codes = ['red', 'orange', 'blue', 'green', 'yellow']
 
-    region_names = ['Dhaka', 'Khulna', 'Barisal', 'Chittagong', 'Rajshahi']
-    color_codes = ['red', 'orange', 'blue', 'green', 'yellow']
+    # region_names = ['Dhaka', 'Khulna', 'Chittagong', 'Rajshahi']
+    # color_codes = ['red', 'blue', 'green', 'orange']
 
     for zone, color in zip(region_names, color_codes):
         print(zone)
-        country_monthly_series = df[zone].resample('M').mean()
+        # country_monthly_series = df[zone].resample('WS').mean()
+        # country_monthly_series = resampled_df[zone].mean()
+        country_monthly_series = resampled_df[zone].median()
 
         fig.add_trace(go.Scatter(
             x=country_monthly_series.index.tolist(), y=country_monthly_series,
@@ -292,6 +299,7 @@ def custom_time_series(df):
 
     fig.update_traces(mode='lines')
     fig.update_layout(
+        height=900,
         yaxis_title="PM2.5 Concentration",
         xaxis_title="Time",
         font=dict(size=27),
@@ -411,10 +419,10 @@ def grouped_box_month_year(x):
         yaxis_title='PM2.5 Concentration',
         boxmode='group',
         yaxis=dict(
-            range=[0, 180]),
+            range=[0, 250]),
         legend_orientation="h",
-        height=600,
-        font_size=18
+        height=900,
+        font_size=21
     )
 
     fig.show()
@@ -432,12 +440,52 @@ def box_plot_basic_experiment():
     # # pltSetUpAx(ax, "Hour of Day", "PM Reading", 'district' + ' in ' + str('timeStamp'))
 
 
-if __name__ == '__main__':
-    metadata, series, metadata_region, region_series, metadata_country, country_series = get_bd_data_4_years()
+def make_category_frequency(timeseries):
+    def cut_and_count(x): return pd.cut(x, AQScale, labels=categoryName).value_counts() / x.count()
 
-    custom_time_series(region_series)
+    def ranking(timeseries): return timeseries.mean().sort_values()
+
+    ranking = ranking(timeseries)
+    category_frequency = timeseries.apply(cut_and_count)
+    category_frequency = category_frequency[ranking.index] * 100
+    return category_frequency
+
+
+def stacked_bar(timeseries):
+    category_frquency = make_category_frequency(timeseries)
+
+    # category_frquency = category_frquency.T
+    # category_frquency['grp'] = category_frquency['Hazardous'] + category_frquency['Very Unhealthy'] + category_frquency['Unhealthy']
+    # category_frquency['grp'] = category_frquency['Good'] + category_frquency['Moderate'] + category_frquency['Unhealthy for Sensitive Groups']
+    # category_frquency = category_frquency.sort_values(by=['grp']).T
+    # category_frquency = category_frquency.drop('grp')
+
+    datas = [go.Bar(x=category_frquency.columns.values, y=row,
+                    marker_color=colorScale[categoryName.tolist().index(idx)],
+                    name=idx, opacity=.666) for idx, row in category_frquency.iterrows()]
+    fig = go.Figure(data=datas)
+    fig.update_layout(
+        width=1500,
+        height=600,
+        legend_orientation="h",
+        font=dict(size=24),
+        barmode='stack',
+        template='plotly_white',
+        yaxis_title='Percentage of occurrence'
+        # legend={"x": 0, "y": -.3}
+    )
+    fig.show()
+
+
+if __name__ == '__main__':
+    metadata, series, metadata_region, region_series, metadata_country, country_series = read_bd_data_4_years()
+
+    # box_plot_series(region_series)
+    # stacked_bar(region_series)
+
+    # custom_time_series(country_series)
     # grouped_box_month_year(country_series['Bangladesh'])
-    # day_night_distribution_monthly(country_series[["Bangladesh"]])
+    day_night_distribution_monthly(country_series[["Bangladesh"]])
 
     # # plt.close("all")
     # # sns.set()

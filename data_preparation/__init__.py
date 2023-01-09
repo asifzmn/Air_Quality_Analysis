@@ -133,6 +133,7 @@ def data_cleaning_and_preparation():
 
     metadata = pd.concat(zone_metadata, axis=1).T
     metadata.columns = metadata_attributes
+    metadata = metadata.replace({'Mymensingh Division': 'Mymensingh', 'Rangpur Division': 'Rangpur'})  # BD Regions
     metadata = metadata.sort_values('Zone').set_index('Zone')
     metadata[metadata_attributes[3:]] = metadata[metadata_attributes[3:]].apply(pd.to_numeric).round(5)
     metadata = metadata.reset_index()
@@ -153,18 +154,6 @@ def clip_missing_prone_values(metadata, series):
     metadata = metadata[metadata.Region.isin(region_valid_data)]
     series = series[metadata.index]
     return region_missing_counts, metadata, series
-
-
-def get_series():
-    return pd.read_csv(get_save_location() + 'time_series.csv', index_col='time', parse_dates=[0])
-    # return pd.read_csv(get_save_location() + 'time_series.csv', index_col='time', parse_dates=[0]).rename(
-    #     columns=rename_dict).sort_index(axis=1)
-
-
-def get_metadata():
-    return pd.read_csv(get_save_location() + 'metadata.csv', index_col='index', parse_dates=[0])
-    # return pd.read_csv(get_save_location() + 'metadata.csv', index_col='Zone', parse_dates=[0]).rename(
-    #     index=rename_dict).sort_index(axis=0)
 
 
 def prepare_region_and_country_series(series, metadata):
@@ -192,6 +181,18 @@ def prepare_region_and_country_series(series, metadata):
     return region_series, metadata_region, country_series, metadata_country
 
 
+def get_series():
+    return pd.read_csv(get_save_location() + 'time_series.csv', index_col='time', parse_dates=[0])
+    # return pd.read_csv(get_save_location() + 'time_series.csv', index_col='time', parse_dates=[0]).rename(
+    #     columns=rename_dict).sort_index(axis=1)
+
+
+def get_metadata():
+    return pd.read_csv(get_save_location() + 'metadata.csv', index_col='index', parse_dates=[0])
+    # return pd.read_csv(get_save_location() + 'metadata.csv', index_col='Zone', parse_dates=[0]).rename(
+    #     index=rename_dict).sort_index(axis=0)
+
+
 # def read_region_and_country_series_ignore_myanmar():
 #     region_series, metadata_region, country_series, metadata_country = read_region_and_country_series()
 
@@ -200,6 +201,16 @@ def save_region_and_country_series(region_series, country_series, metadata_regio
     country_series.to_csv("country_series.csv")
     metadata_region.to_csv("metadata_region.csv")
     metadata_country.to_csv("metadata_country.csv")
+
+
+def save_all_granularity_data():
+    metadata_all_with_heavy_missing, series_all_with_heavy_missing = get_metadata(), get_series()
+    # division_missing_counts, metadata_all, series_all = clip_missing_prone_values(metadata_all_with_heavy_missing,
+    #                                                                               series_all_with_heavy_missing)
+    metadata_all, series_all = metadata_all_with_heavy_missing, series_all_with_heavy_missing
+    region_series_all, metadata_region_all, country_series_all, metadata_country_all = \
+        prepare_region_and_country_series(series_all, metadata_all)
+    save_region_and_country_series(region_series_all, country_series_all, metadata_region_all, metadata_country_all)
 
 
 def read_region_and_country_series():
@@ -211,15 +222,11 @@ def read_region_and_country_series():
     return region_series, metadata_region, country_series, metadata_country
 
 
-def get_all_granularity_data():
+def read_all_granularity_data():
     metadata_all_with_heavy_missing, series_all_with_heavy_missing = get_metadata(), get_series()
     # division_missing_counts, metadata_all, series_all = clip_missing_prone_values(metadata_all_with_heavy_missing,
     #                                                                               series_all_with_heavy_missing)
     metadata_all, series_all = metadata_all_with_heavy_missing, series_all_with_heavy_missing
-
-    # region_series_all, metadata_region_all, country_series_all, metadata_country_all = \
-    #     prepare_region_and_country_series(series_all, metadata_all)
-    # save_region_and_country_series(region_series_all, country_series_all, metadata_region_all, metadata_country_all)
 
     region_series_all, metadata_region_all, country_series_all, metadata_country_all = read_region_and_country_series()
     return metadata_all, series_all, metadata_region_all, region_series_all, metadata_country_all, country_series_all
@@ -227,7 +234,8 @@ def get_all_granularity_data():
 
 if __name__ == '__main__':
     # web_crawl()
-    data_cleaning_and_preparation()
+    # data_cleaning_and_preparation()
+    # save_all_granularity_data()
 
     # timeseries = get_series()
     # meta_data = get_metadata()
