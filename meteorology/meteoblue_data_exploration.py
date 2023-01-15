@@ -14,16 +14,17 @@ from pandas_profiling import ProfileReport
 
 from data_preparation import *
 
-from meteoblue_data_preparation import factors, factor, get_factor_data, read_meteo_data
+from meteoblue_data_preparation import factors, factor, read_meteo_data
+from meteorology import get_factor_data
 from meteoblue_data_preparation import prepare_multi_file_and_save_meteo_data, \
     meteorological_variable_type_list_linear
 from meteoblue_data_preparation import temperature_factor, humidity_factor, precipitation_factor
 from meteoblue_data_preparation import cloud_cover_factor, radiation_factor, pressure_factor
 from meteoblue_data_preparation import wind_speed_factor, wind_direction_factor
-from meteorological_functions.linear_data_visualization import meteo_time_series
+from meteorology.linear_data_visualization import meteo_time_series
 
-from meteorological_functions.wind_data_visualization import wind_direction_factors
-from meteorological_functions.wind_data_visualization import *
+from meteorology.wind_data_visualization import wind_direction_factors
+from meteorology.wind_data_visualization import *
 
 
 def date_continuity(df):

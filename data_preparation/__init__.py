@@ -9,6 +9,7 @@ import pandas as pd
 metadata_attributes = ['Country', 'Zone', 'Region', 'Population', 'Latitude', 'Longitude']
 rename_dict = {'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}
 
+country_color_dict = {'India': '#F4C430', 'Myanmar': '#990000', 'Bangladesh': '#228B22'}
 
 def get_common_id(id=3): return ['study_area', 'SouthAsianCountries', 'allbd', 'bd_and_neighbours', 'usa_west'][id]
 

@@ -1,7 +1,7 @@
 import plotly.express as px
 import plotly.graph_objects as go
 from data_preparation import *
-from meteorological_functions.wunderground_data_preparation import read_all_single_day_data_and_merge, text_to_angle
+from meteorology.wunderground_data_preparation import read_all_single_day_data_and_merge, text_to_angle
 from data_preparation import get_metadata, get_series, clip_missing_prone_values, read_region_and_country_series
 
 

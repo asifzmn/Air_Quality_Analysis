@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
 
-from meteorological_functions.wunderground_data_preparation import read_all_single_day_data_and_merge, text_to_angle
+from meteorology.wunderground_data_preparation import read_all_single_day_data_and_merge, text_to_angle
 
 
 def PlotlyRosePlotBasic(info=None):

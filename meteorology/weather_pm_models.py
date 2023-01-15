@@ -1,7 +1,7 @@
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import xarray as xr
-from meteorological_functions.meteoblue_data_preparation import get_district_data, get_factor_data
+from meteorology import get_district_data, get_factor_data
 import statsmodels.api as sm
 
 

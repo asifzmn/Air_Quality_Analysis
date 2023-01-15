@@ -7,8 +7,9 @@ from datetime import timedelta, datetime
 from meteorology import MeteorologicalVariableType, vector_calculation
 from paths import wunderground_data_path, wunderground_data_path_compressed
 
-nc_file_path = '../Files/meteo data/wunderground/meteoData_BD_WB_NCT.nc'
-regions = ['Dhaka', 'West Bengal', 'NCT']
+# wg_nc_file_path = '../Files/meteo data/wunderground/wunderground_data_bd_and_neighbours.nc'
+wg_nc_file_path = 'wunderground_data_bd_and_neighbours.nc'
+wg_regions_list = ['Dhaka', 'West Bengal', 'NCT']
 
 linear_var = ['Temperature', 'Dew Point', 'Humidity', 'Wind Gust', 'Pressure', 'Precip.']
 circular_var = ['Wind Direction', 'Wind Speed']
@@ -114,21 +115,35 @@ def prepare_xarray_dataset():
     time = pd.date_range(start='2019-01-01', end='2022-01-01', freq='H')[:-1]
 
     meteo_data_array = np.array(
-        [clean_and_process_all_variable_data(read_compressed_data(region)) for region in regions])
+        [clean_and_process_all_variable_data(read_compressed_data(region)) for region in wg_regions_list])
 
     factor = ['Temperature', 'Dew Point', 'Humidity', 'Wind Gust', 'Pressure', 'Precip.', 'Wind Speed',
               'Wind Direction']
 
     meteo_data = xr.DataArray(data=meteo_data_array,
-                              coords={"district": regions, "time": time, "factor": factor},
+                              coords={"district": wg_regions_list, "time": time, "factor": factor},
                               dims=["district", "time", "factor"], name='meteo')
     return meteo_data
 
 
-def create_meteo_data_file(raw_data):
-    meteo_data = clean_and_process_all_variable_data(raw_data)
-    meteo_data.to_netcdf(nc_file_path)
+def create_meteo_data_file_wg():
+    meteo_data = prepare_xarray_dataset()
+    meteo_data.to_netcdf(wg_nc_file_path)
 
 
-def read_meteo_data_file(nc_file_path):
-    return xr.open_dataset(nc_file_path)['meteo']
+def read_meteo_data_file_wg():
+    return xr.open_dataset(wg_nc_file_path)['meteo']
+
+
+# def create_meteo_data_file_wg(raw_data):
+#     meteo_data = clean_and_process_all_variable_data(raw_data)
+#     meteo_data.to_netcdf(wg_nc_file_path)
+#
+#
+# def read_meteo_data_file_wg(nc_file_path):
+#     return xr.open_dataset(nc_file_path)['meteo']
+
+if __name__ == '__main__':
+    create_meteo_data_file_wg()
+    meteo_data = read_meteo_data_file_wg
+    print(meteo_data)

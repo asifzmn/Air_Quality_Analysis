@@ -11,7 +11,6 @@ from data_preparation.spatio_temporal_filtering import read_bd_data, get_bd_data
 
 color_scale, category_name, aq_scale = get_category_info()
 
-country_color_dict = {'India': '#F4C430', 'Myanmar': '#990000', 'Bangladesh': '#228B22'}
 
 colorScale, categoryName, AQScale = get_category_info()
 
