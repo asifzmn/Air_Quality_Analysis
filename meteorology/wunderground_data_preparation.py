@@ -79,12 +79,12 @@ def read_compressed_data(region="Dhaka"):
     return fix_units_and_columns_compressed_data(time_series)
 
 
-def eliminate_invalid_values(raw_data_copy):
-    raw_data_copy.Temperature = raw_data_copy.Temperature.mask(raw_data_copy.Temperature < 0, np.nan).astype(float)
-    raw_data_copy['Dew Point'] = raw_data_copy['Dew Point'].mask(raw_data_copy['Dew Point'] < 0, np.nan).astype(float)
-    raw_data_copy.Pressure = raw_data_copy.Pressure.mask(raw_data_copy.Pressure == 0, np.nan).astype(float)
-    raw_data_copy.Humidity = raw_data_copy.Humidity.mask(raw_data_copy.Humidity == 0, np.nan).astype(float)
-    return raw_data_copy
+def eliminate_invalid_values(raw_data):
+    raw_data.Temperature = raw_data.Temperature.mask(raw_data.Temperature < 0, np.nan).astype(float)
+    raw_data['Dew Point'] = raw_data['Dew Point'].mask(raw_data['Dew Point'] < 0, np.nan).astype(float)
+    raw_data.Pressure = raw_data.Pressure.mask(raw_data.Pressure == 0, np.nan).astype(float)
+    raw_data.Humidity = raw_data.Humidity.mask(raw_data.Humidity == 0, np.nan).astype(float)
+    return raw_data
 
 
 def impute_by_previous_next_average_value(raw_data_copy):
@@ -144,6 +144,6 @@ def read_meteo_data_file_wg():
 #     return xr.open_dataset(nc_file_path)['meteo']
 
 if __name__ == '__main__':
-    create_meteo_data_file_wg()
-    meteo_data = read_meteo_data_file_wg
+    # create_meteo_data_file_wg()
+    meteo_data = read_meteo_data_file_wg()
     print(meteo_data)

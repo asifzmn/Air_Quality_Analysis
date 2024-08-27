@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 berkeley_earth_dataset_url = 'http://berkeleyearth.lbl.gov/air-quality/maps/cities/'
 
 # aq_directory = '/home/asif/Datasets/AQ Dataset/'  # change this main dataset location Desktop
-aq_directory = '/home/asif/Data/Dataset/AQ Dataset/'  # change this main dataset location Laptop
+aq_directory = '/home/asif/Desktop/Work/Dataset/AQ Dataset/'  # change this main dataset location Laptop
 # aq_directory = getcwd() + '/Project Data/'
 
 aq_directory_local = 'Files/'
