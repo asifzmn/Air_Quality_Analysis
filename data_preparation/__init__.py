@@ -11,6 +11,7 @@ rename_dict = {'Azimpur': 'Dhaka', 'Tungi': 'Tongi'}
 
 country_color_dict = {'India': '#F4C430', 'Myanmar': '#990000', 'Bangladesh': '#228B22'}
 
+
 def get_common_id(id=3): return ['study_area', 'SouthAsianCountries', 'allbd', 'bd_and_neighbours', 'usa_west'][id]
 
 
@@ -105,6 +106,8 @@ def read_file_as_text(file):
 
 def data_cleaning_and_preparation():
     zone_reading, zone_metadata = [], []
+    duplicates_bd = pd.Series()
+    duplicates_bd_time_list = []
 
     for idx, row in get_zones_info().iterrows():
         # file = join(raw_data_path + get_common_id(), row['Zone'] + '.txt')
@@ -119,6 +122,34 @@ def data_cleaning_and_preparation():
 
         # series = series.groupby('time').PM25.mean().reset_index()  # usa
         # series = series.set_index('time').reindex(pd.date_range('2004-01-01', '2022-01-01', freq='h')[:-1])  # usa
+
+        #
+        # Duplicate Statistics
+        duplicates = (series.duplicated(subset=['time'], keep='first'))
+        if row.Country=="Bangladesh":
+            print(row["Zone"],duplicates.sum())
+            # duplicates_bd[row["Division"]+"_"+row["Zone"]] = duplicates.sum()
+            duplicates_values = series[duplicates]
+            # duplicates_bd_time_list.extend(duplicates_values.time.to_list())
+
+            duplicates_values_time = duplicates_values['time'].copy()
+            duplicates_values_time_next = series.loc[duplicates_values.index + 1]['time'].copy()
+            duplicates_values_time_next.index = duplicates_values_time.index
+
+            time_difference = (duplicates_values_time_next-duplicates_values_time) #.dt.hour
+            not_two_hours = time_difference[time_difference == pd.Timedelta(hours=2)]
+
+            # print()
+            # print(duplicates_values_time)
+            # print(duplicates_values_time_next)
+            # print(time_differance.value_counts())
+            print(not_two_hours.sort_values())
+            print(series.loc[not_two_hours.index])
+
+            # return
+
+        # break
+        # continue
 
         # if get_common_id() != 'SouthAsianCountries' and get_common_id() != 'bd_and_neighbours':
         if get_common_id() in ['study_area', 'allbd']:
@@ -140,12 +171,16 @@ def data_cleaning_and_preparation():
     metadata = metadata.reset_index()
     metadata.index = metadata.Zone + "_" + metadata.Region
     metadata.index.name = 'index'
-    metadata.to_csv(get_save_location() + 'metadata.csv')
+    # metadata.to_csv(get_save_location() + 'metadata.csv')
 
     time_series = pd.concat(zone_reading, axis=1)
     time_series.index.name = 'time'
     time_series.columns = metadata.index
-    time_series.to_csv(get_save_location() + 'time_series.csv')
+    # time_series.to_csv(get_save_location() + 'time_series.csv')
+
+    # duplicates_bd.to_csv("duplicates_bd.csv")
+    # duplicates_bd_time_frequency = pd.Series(duplicates_bd_time_list).value_counts()
+    # duplicates_bd_time_frequency.to_csv("duplicates_bd_time_frequency.csv")
 
 
 def clip_missing_prone_values(metadata, series):
@@ -235,7 +270,7 @@ def read_all_granularity_data():
 
 if __name__ == '__main__':
     # web_crawl()
-    # data_cleaning_and_preparation()
+    data_cleaning_and_preparation()
     # save_all_granularity_data()
 
     # timeseries = get_series()
