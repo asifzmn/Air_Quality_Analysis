@@ -11,7 +11,6 @@ from data_preparation.spatio_temporal_filtering import read_bd_data, get_bd_data
 
 color_scale, category_name, aq_scale = get_category_info()
 
-
 colorScale, categoryName, AQScale = get_category_info()
 
 
@@ -47,6 +46,41 @@ def seasonal_decomposition(df):
     # plot_acf(diff, lags=10)
     # plot_pacf(diff, lags=10)
     # plt.show()
+
+
+def missing_data_heatmap(df):
+    import plotly.graph_objects as go
+
+    missing = df.T.isnull().astype(int)
+    # print(missing.sum(axis=1))
+
+    bvals, dcolorsc = np.array([0, .5, 1]), []
+    tickvals = [np.mean(bvals[k:k + 2]) for k in range(len(bvals) - 1)]
+    ticktext, colors = ['Present', 'Missing'], ['#C6DEFF', '#2B3856']
+
+    nvals = [(v - bvals[0]) / (bvals[-1] - bvals[0]) for v in bvals]  # normalized values
+    for k in range(len(colors)): dcolorsc.extend([[nvals[k], colors[k]], [nvals[k + 1], colors[k]]])
+
+    fig = go.Figure(data=go.Heatmap(
+        z=missing,
+        y=missing.index,
+        x=missing.columns,
+        colorscale=dcolorsc,
+        colorbar=dict(thickness=75, tickvals=tickvals, ticktext=ticktext),
+    ))
+    fig.update_layout(
+        title="Missing Data Information",
+        yaxis_title="Zone",
+        xaxis_title="Time",
+        font=dict(
+            size=15,
+            color="#3D3C3A"
+        ),
+        # legend = dict(font = dict(family = "Courier", size = 50, color = "black")),
+        # legend_font_size=27,
+        height=900
+    )
+    fig.show()
 
 
 def day_night_distribution_zonal(time_series, sampling_hours=1):
@@ -308,41 +342,6 @@ def custom_time_series(df):
     fig.show()
 
 
-def missing_data_heatmap(df):
-    import plotly.graph_objects as go
-
-    missing = df.T.isnull().astype(int)
-    # print(missing.sum(axis=1))
-
-    bvals, dcolorsc = np.array([0, .5, 1]), []
-    tickvals = [np.mean(bvals[k:k + 2]) for k in range(len(bvals) - 1)]
-    ticktext, colors = ['Present', 'Missing'], ['#C6DEFF', '#2B3856']
-
-    nvals = [(v - bvals[0]) / (bvals[-1] - bvals[0]) for v in bvals]  # normalized values
-    for k in range(len(colors)): dcolorsc.extend([[nvals[k], colors[k]], [nvals[k + 1], colors[k]]])
-
-    fig = go.Figure(data=go.Heatmap(
-        z=missing,
-        y=missing.index,
-        x=missing.columns,
-        colorscale=dcolorsc,
-        colorbar=dict(thickness=75, tickvals=tickvals, ticktext=ticktext),
-    ))
-    fig.update_layout(
-        title="Missing Data Information",
-        yaxis_title="Zone",
-        xaxis_title="Time",
-        font=dict(
-            size=15,
-            color="#3D3C3A"
-        ),
-        # legend = dict(font = dict(family = "Courier", size = 50, color = "black")),
-        # legend_font_size=27,
-        height=900
-    )
-    fig.show()
-
-
 def violin_plot_year(df):
     fig = go.Figure()
     # df = df.resample('M').mean()
@@ -414,14 +413,15 @@ def grouped_box_month_year(x):
         ))
 
     fig.update_layout(
-        title=x.name,
+        # title=x.name,
         yaxis_title='PM2.5 Concentration',
+        xaxis_title='Zone',
         boxmode='group',
         yaxis=dict(
             range=[0, 250]),
         legend_orientation="h",
         height=900,
-        font_size=21
+        font_size=24
     )
 
     fig.show()
@@ -483,8 +483,8 @@ if __name__ == '__main__':
     # stacked_bar(region_series)
 
     # custom_time_series(country_series)
-    # grouped_box_month_year(country_series['Bangladesh'])
-    day_night_distribution_monthly(country_series[["Bangladesh"]])
+    grouped_box_month_year(country_series['Bangladesh'])
+    # day_night_distribution_monthly(country_series[["Bangladesh"]])
 
     # # plt.close("all")
     # # sns.set()
