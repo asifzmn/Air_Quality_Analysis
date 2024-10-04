@@ -1,7 +1,7 @@
 from plotly.subplots import make_subplots
 
 from data_preparation.additional_data_preparation import get_diurnal_period
-from meteorology.meteoblue_data_preparation import get_factor_data
+from meteorology import get_factor_data
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd

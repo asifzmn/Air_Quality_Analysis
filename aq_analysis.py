@@ -127,8 +127,7 @@ def missing_sequence_length_bar_plot(df):
 
 
 def correlation_seasonal(corrArray, meta_data, timeseries, rows=2, cols=2, title=''):
-    sub_titles = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
-                  'November', 'December']
+    sub_titles = month_names
     # sub_titles = ['Winter', 'Spring', 'Summer', 'Autumn']
     fig = make_subplots(rows=rows, cols=cols, subplot_titles=sub_titles, vertical_spacing=0.1)
     # fig = fig.update_yaxes(side='right')

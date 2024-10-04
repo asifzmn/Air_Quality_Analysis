@@ -398,7 +398,8 @@ def grouped_box_month_year(x):
     fig = go.Figure()
 
     # color_pal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500', '#2471A3']
-    color_pal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500']
+    # color_pal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500']
+    color_pal = ['#FF69B4', '#FF6EB4', '#44C5FF', '#64C0FF']
 
     print(x)
     print(x.index.year.unique())
