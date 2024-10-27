@@ -56,15 +56,6 @@ def prepare_color_table():
     fig.show()
 
 
-def web_crawl():
-    for idx, zone_info in get_zones_info().iterrows():
-        zone_file = join(raw_data_path + get_common_id(), zone_info['Division'] + '_' + zone_info['Zone'] + '.txt')
-        url = f'{berkeley_earth_dataset_url}{zone_info["Country"]}/{zone_info["Division"]}/{zone_info["Zone"]}.txt'
-        print(url)
-        data = [line.decode('unicode_escape')[:-1] for line in urlopen(url)]
-        with open(zone_file, 'w') as file: file.write('\n'.join(map(str, data)))
-
-
 def make_header_only(meta_data):
     meta_data = meta_data.assign(Country='Bangladesh')
     meta_data = meta_data.reset_index()[['Country', 'Division', 'Zone']]
@@ -85,6 +76,15 @@ def read_all_bd_zones_and_make_header():
         Country='Bangladesh')
     all_district_meta_data = all_district_meta_data[['Country', 'Division', 'Zone']]
     all_district_meta_data.to_csv(berkeley_earth_data + 'zones/allbd.csv', index=False)
+
+
+def web_crawl():
+    for idx, zone_info in get_zones_info().iterrows():
+        zone_file = join(raw_data_path + get_common_id(), zone_info['Division'] + '_' + zone_info['Zone'] + '.txt')
+        url = f'{berkeley_earth_dataset_url}{zone_info["Country"]}/{zone_info["Division"]}/{zone_info["Zone"]}.txt'
+        print(url)
+        data = [line.decode('unicode_escape')[:-1] for line in urlopen(url)]
+        with open(zone_file, 'w') as file: file.write('\n'.join(map(str, data)))
 
 
 def handle_mislabeled_duplicates(series):
@@ -126,8 +126,8 @@ def data_cleaning_and_preparation():
         #
         # Duplicate Statistics
         duplicates = (series.duplicated(subset=['time'], keep='first'))
-        if row.Country=="Bangladesh":
-            print(row["Zone"],duplicates.sum())
+        if row.Country == "Bangladesh":
+            print(row["Zone"], duplicates.sum())
             # duplicates_bd[row["Division"]+"_"+row["Zone"]] = duplicates.sum()
             duplicates_values = series[duplicates]
             # duplicates_bd_time_list.extend(duplicates_values.time.to_list())
@@ -136,7 +136,7 @@ def data_cleaning_and_preparation():
             duplicates_values_time_next = series.loc[duplicates_values.index + 1]['time'].copy()
             duplicates_values_time_next.index = duplicates_values_time.index
 
-            time_difference = (duplicates_values_time_next-duplicates_values_time) #.dt.hour
+            time_difference = (duplicates_values_time_next - duplicates_values_time)  # .dt.hour
             not_two_hours = time_difference[time_difference == pd.Timedelta(hours=2)]
 
             # print()

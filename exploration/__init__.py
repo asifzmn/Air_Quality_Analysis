@@ -141,16 +141,17 @@ def day_night_distribution_monthly(time_series, sampling_hours=1):
     fig.add_trace(go.Violin(x=time_series['month'][time_series['diurnal_name'] == 'day'],
                             y=time_series['reading'][time_series['diurnal_name'] == 'day'],
                             legendgroup='Yes', scalegroup='Yes', name='Day',
-                            side='negative', line_color='orange')
+                            # side='negative', line_color='orange')
+                            side='negative', line_color='#C0C6C7')
                   )
     fig.add_trace(go.Violin(x=time_series['month'][time_series['diurnal_name'] == 'night'],
                             y=time_series['reading'][time_series['diurnal_name'] == 'night'],
                             legendgroup='No', scalegroup='No', name='Night',
-                            side='positive', line_color='blue')
+                            side='positive', line_color='#040720')
                   )
     fig.update_traces(meanline_visible=True)
     fig.update_layout(violingap=0, violinmode='overlay', font_size=27, legend_orientation='h',
-                      xaxis_title="Zone", yaxis_title="PM2.5 Concentration", height=900)
+                      xaxis_title="Zone", yaxis_title="PM2.5 Concentration (µgm<sup>-3</sup>)", height=900, template='plotly_white')
     fig.show()
 
 
@@ -393,13 +394,13 @@ def PLotlyTimeSeries(df, missing=None):
     # fig.update_layout(title_text='Time Series with Rangeslider',xaxis_rangeslider_visible=True)
     fig.show()
 
-
 def grouped_box_month_year(x):
     fig = go.Figure()
 
     # color_pal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500', '#2471A3']
     # color_pal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500']
-    color_pal = ['#FF69B4', '#FF6EB4', '#44C5FF', '#64C0FF']
+    # color_pal = ['#FF69B4', '#FF6EB4', '#44C5FF', '#64C0FF']
+    color_pal = ['#726E6D', '#726E6D', '#040720', '#040720']
 
     print(x)
     print(x.index.year.unique())
@@ -415,14 +416,15 @@ def grouped_box_month_year(x):
 
     fig.update_layout(
         # title=x.name,
-        yaxis_title='PM2.5 Concentration',
+        yaxis_title='PM2.5 Concentration (µgm<sup>-3</sup>)',
         xaxis_title='Zone',
         boxmode='group',
         yaxis=dict(
             range=[0, 250]),
         legend_orientation="h",
         height=900,
-        font_size=24
+        font_size=24,
+        template='plotly_white'
     )
 
     fig.show()
