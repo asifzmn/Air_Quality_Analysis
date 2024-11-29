@@ -14,7 +14,7 @@ from pandas_profiling import ProfileReport
 
 from data_preparation import *
 
-from meteoblue_data_preparation import factors, factor, read_meteo_data
+from meteoblue_data_preparation import factors, factor, read_meteo_data, read_meteo_data_file_bd_and_neighbours
 from meteorology import get_factor_data
 from meteoblue_data_preparation import prepare_multi_file_and_save_meteo_data, \
     meteorological_variable_type_list_linear
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     meta_data, time_series = get_metadata(), get_series()['2019']
 
     # prepare_and_save_meteo_data()
-    meteo_data = read_meteo_data()
+    meteo_data = read_meteo_data_file_bd_and_neighbours()
     # pm_vs_factor_scatter()
     # wind_graph_multi_zone(meteo_data)
     # exit()
