@@ -317,7 +317,7 @@ def custom_time_series(df):
 
         fig.add_trace(go.Scatter(
             x=country_monthly_series.index.tolist(), y=country_monthly_series,
-            line_color=color, line_width=2, name=zone,
+            line_color=color, line_width=3, name=zone,
         ))
 
     # # annotate_points = ['2017-01-01', '2018-01-14', '2019-01-13', '2017-07-02', '2018-07-15', '2019-07-14']
@@ -333,7 +333,7 @@ def custom_time_series(df):
 
     fig.update_traces(mode='lines')
     fig.update_layout(
-        height=900,
+        height=1050,
         yaxis_title="PM2.5 Concentration",
         xaxis_title="Time",
         font=dict(size=27),
@@ -422,7 +422,7 @@ def grouped_box_month_year(x):
         yaxis=dict(
             range=[0, 250]),
         legend_orientation="h",
-        height=900,
+        height=1050,
         font_size=24,
         template='plotly_white'
     )
@@ -456,19 +456,24 @@ def make_category_frequency(timeseries):
 def stacked_bar(timeseries):
     category_frquency = make_category_frequency(timeseries)
 
+    print(category_frquency.round(2).to_string())
+
     # category_frquency = category_frquency.T
     # category_frquency['grp'] = category_frquency['Hazardous'] + category_frquency['Very Unhealthy'] + category_frquency['Unhealthy']
     # category_frquency['grp'] = category_frquency['Good'] + category_frquency['Moderate'] + category_frquency['Unhealthy for Sensitive Groups']
     # category_frquency = category_frquency.sort_values(by=['grp']).T
     # category_frquency = category_frquency.drop('grp')
 
-    datas = [go.Bar(x=category_frquency.columns.values, y=row,
+    data = [go.Bar(y=category_frquency.columns.values, x=row,
+                    text=row.round(1),  # Show percentage labels
+                    textposition='inside',  # Place inside the bars
                     marker_color=colorScale[categoryName.tolist().index(idx)],
+                    orientation='h',  # Set horizontal orientation
                     name=idx, opacity=.666) for idx, row in category_frquency.iterrows()]
-    fig = go.Figure(data=datas)
+    fig = go.Figure(data=data)
     fig.update_layout(
-        width=1500,
-        height=600,
+        width=1800,
+        height=900,
         legend_orientation="h",
         font=dict(size=24),
         barmode='stack',
@@ -477,6 +482,14 @@ def stacked_bar(timeseries):
         # legend={"x": 0, "y": -.3}
     )
     fig.show()
+
+#                                     Sylhet  Chittagong  Rangpur  Barisal  Mymensingh  Rajshahi  Khulna  Dhaka
+# Good                              7.21        5.31     3.54     4.01        3.38      2.34    3.16   3.76
+# Moderate                         39.33       40.15    41.13    38.99       38.53     37.04   36.80  33.90
+# Unhealthy for Sensitive Groups   18.05       18.02    17.21    17.29       17.02     17.39   17.51  17.43
+# Unhealthy                        33.75       34.24    36.17    36.10       37.10     38.79   37.16  36.42
+# Very Unhealthy                    1.61        2.23     1.92     3.58        3.90      4.36    5.25   8.16
+# Hazardous                         0.04        0.04     0.03     0.04        0.06      0.08    0.12   0.34
 
 
 if __name__ == '__main__':

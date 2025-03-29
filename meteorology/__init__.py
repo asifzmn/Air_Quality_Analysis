@@ -27,7 +27,8 @@ def all_factor_correlation_matrix(corr_matrix):
                     dict(
                         x=corr_matrix.columns[i],
                         y=corr_matrix.columns[j],
-                        text=str(round(corr_matrix.corr().iloc[j, i], 2)),
+                        # text=str(round(corr_matrix.corr().iloc[j, i], 2)),
+                        text=str(round(corr_matrix.iloc[j, i], 2)),
                         showarrow=False,
                         font=dict(size=18)
                     )
