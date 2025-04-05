@@ -68,7 +68,8 @@ def plotly_density_mapbox():
 
 
 def heatmapgeoJson(meta_data, title):
-    with open('/home/asif/Data/Dataset/Bangladesh/bdBounds.geojson') as file:
+    # with open('/home/asif/Data/Dataset/Bangladesh/bdBounds.geojson') as file:
+    with open('/home/asif/Desktop/Work/Dataset/Bangladesh/bdBounds.geojson') as file:
         bdBounds = json.load(file)
 
     rounding_num, correction_coeff, segments, regions = 0.015, 0.5, 500, 75

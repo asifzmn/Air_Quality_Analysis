@@ -151,7 +151,7 @@ def day_night_distribution_monthly(time_series, sampling_hours=1):
                   )
     fig.update_traces(meanline_visible=True)
     fig.update_layout(violingap=0, violinmode='overlay', font_size=27, legend_orientation='h',
-                      xaxis_title="Zone", yaxis_title="PM2.5 Concentration (µgm<sup>-3</sup>)", height=900, template='plotly_white')
+                      xaxis_title="Zone", yaxis_title="PM2.5 Concentration (µgm<sup>-3</sup>)", height=1000, template='plotly_white')
     fig.show()
 
 
@@ -238,11 +238,14 @@ def pltSetUpAx(ax, xlabel=None, ylabel=None, title=None, xlim=None, ylim=None, s
 
 
 def custom_time_series(df):
-    resampled_df = df.resample('W')
+    resampled_df = df.resample('M')
 
     aggregated_value = pd.concat(
         [sampledSeries.stack().apply(['min', 'mean', 'median', 'max']) for _, sampledSeries in resampled_df], axis=1).T
     aggregated_value.index = [time for time, _ in resampled_df]
+
+    print(aggregated_value[['min', 'median', 'max']])
+
 
     # aggregated_value = aggregated_value.iloc[:-1]
     # print(aggregated_value.to_string())
@@ -499,8 +502,8 @@ if __name__ == '__main__':
     # stacked_bar(region_series)
 
     # custom_time_series(country_series)
-    grouped_box_month_year(country_series['Bangladesh'])
-    # day_night_distribution_monthly(country_series[["Bangladesh"]])
+    # grouped_box_month_year(country_series['Bangladesh'])
+    day_night_distribution_monthly(country_series[["Bangladesh"]])
 
     # # plt.close("all")
     # # sns.set()
