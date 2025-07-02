@@ -405,10 +405,42 @@ def grouped_box_month_year(x):
     # color_pal = ['#FF69B4', '#FF6EB4', '#44C5FF', '#64C0FF']
     color_pal = ['#726E6D', '#726E6D', '#040720', '#040720']
 
+    boxplot_stats = {}
+
     print(x)
     print(x.index.year.unique())
     # for year in pd.DatetimeIndex(x.index).year.unique():
     for year in x.index.year.unique():
+
+        year_data = x[str(year)]
+        monthly_data = {}
+        for month_idx, month_name in enumerate(pd.DatetimeIndex(x.index).month_name().unique()):
+            month_values = year_data[pd.DatetimeIndex(year_data.index).month_name() == month_name]
+            if not month_values.empty:
+                monthly_data[month_name] = month_values
+
+                # Calculate boxplot statistics
+                q1 = month_values.quantile(0.25)
+                median = month_values.median()
+                q3 = month_values.quantile(0.75)
+                iqr = q3 - q1
+                lower_bound = max(month_values.min(), q1 - 1.5 * iqr)
+                upper_bound = min(month_values.max(), q3 + 1.5 * iqr)
+
+                # Store statistics
+                if year not in boxplot_stats:
+                    boxplot_stats[year] = {}
+                boxplot_stats[year][month_name] = {
+                    'min': lower_bound,
+                    'q1': q1,
+                    'median': median,
+                    'q3': q3,
+                    'max': upper_bound
+                }
+
+
+
+
         fig.add_trace(go.Box(
             # y=x[str(year)],
             y=x[str(year)],
@@ -431,6 +463,17 @@ def grouped_box_month_year(x):
     )
 
     fig.show()
+
+    print("\nBoxplot Statistics:")
+    for year in boxplot_stats:
+        print(f"\nYear: {year}")
+        for month, stats in boxplot_stats[year].items():
+            print(f"  {month}:")
+            print(f"    Min: {stats['min']:.2f}")
+            print(f"    Q1: {stats['q1']:.2f}")
+            print(f"    Median: {stats['median']:.2f}")
+            print(f"    Q3: {stats['q3']:.2f}")
+            print(f"    Max: {stats['max']:.2f}")
 
 
 def box_plot_basic_experiment():
@@ -502,8 +545,8 @@ if __name__ == '__main__':
     # stacked_bar(region_series)
 
     # custom_time_series(country_series)
-    # grouped_box_month_year(country_series['Bangladesh'])
-    day_night_distribution_monthly(country_series[["Bangladesh"]])
+    grouped_box_month_year(country_series['Bangladesh'])
+    # day_night_distribution_monthly(country_series[["Bangladesh"]])
 
     # # plt.close("all")
     # # sns.set()
