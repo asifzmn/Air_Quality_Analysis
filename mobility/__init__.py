@@ -15,5 +15,5 @@ if __name__ == '__main__':
     print(country_series)
     # series[['Kushtia','Dhaka','Delhi']].apply(grouped_box)
     # division_series[['Dhaka', 'NCT']].apply(grouped_box)
-    country_series.apply(grouped_box_month_year)
+    country_series[["Bangladesh"]].apply(grouped_box_month_year)
     # series.apply(grouped_box)

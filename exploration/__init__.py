@@ -13,6 +13,10 @@ color_scale, category_name, aq_scale = get_category_info()
 
 colorScale, categoryName, AQScale = get_category_info()
 
+import plotly.io as pio
+
+pio.renderers.default = "browser"
+
 
 def overall_stats(timeseries):
     all_data = timeseries.stack()
@@ -151,7 +155,7 @@ def day_night_distribution_monthly(time_series, sampling_hours=1):
                   )
     fig.update_traces(meanline_visible=True)
     fig.update_layout(violingap=0, violinmode='overlay', font_size=27, legend_orientation='h',
-                      xaxis_title="Zone", yaxis_title="PM2.5 Concentration (µgm<sup>-3</sup>)", height=1000, template='plotly_white')
+                      xaxis_title="Year", yaxis_title="PM2.5 Concentration (µgm<sup>-3</sup>)", height=1000, template='plotly_white')
     fig.show()
 
 
@@ -452,7 +456,7 @@ def grouped_box_month_year(x):
     fig.update_layout(
         # title=x.name,
         yaxis_title='PM2.5 Concentration (µgm<sup>-3</sup>)',
-        xaxis_title='Zone',
+        xaxis_title='Month',
         boxmode='group',
         yaxis=dict(
             range=[0, 250]),
@@ -558,7 +562,7 @@ if __name__ == '__main__':
     # # violin_plot_year(country_series)
 
     # day_night_distribution(country_series)
-    # day_night_distribution_monthly(country_series[["Bangladesh"]])
+    day_night_distribution_monthly(country_series[["Bangladesh"]])
     # PLotlyTimeSeries(country_series)
     # print(region_series.columns)
     # box_plot_week(country_series)
