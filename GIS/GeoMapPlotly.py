@@ -72,6 +72,15 @@ def heatmapgeoJson(meta_data, title):
     with open('/home/asif/Desktop/Work/Dataset/Bangladesh/bdBounds.geojson') as file:
         bdBounds = json.load(file)
 
+    # with open('/home/asif/Desktop/Work/Dataset/India/india-composite.geojson') as file:
+    # with open('/home/asif/Desktop/Work/Dataset/India/india-land-simplified.geojson') as file:
+    # with open('/home/asif/Desktop/Work/Dataset/India/india-osm.geojson') as file:
+    #     indBounds = json.load(file)
+
+    world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+    india_gdf = world[world.name == 'India']
+    indBounds = json.loads(india_gdf.to_json())
+
     rounding_num, correction_coeff, segments, regions = 0.015, 0.5, 500, 75
     meta_data["Longitude"] = np.round(meta_data["Longitude"] / rounding_num) * rounding_num
     meta_data["Latitude"] = np.round(meta_data["Latitude"] / (rounding_num * correction_coeff)) * (
@@ -120,6 +129,25 @@ def heatmapgeoJson(meta_data, title):
         locations=df_bd.Id, z=df_bd.Value,
         marker=dict(opacity=0.15), colorscale='greys', showscale=False
     )
+    # df_ind = pd.DataFrame({'Value': [0], 'Id': ["India"]})
+    # traceind = go.Choroplethmapbox(
+    #     geojson=indBounds, featureidkey="properties.name",
+    #     # locations=df_ind.Id, z=df_ind.Value,
+    #     # geojson=indBounds, featureidkey="properties.ID_0",
+    #     locations=df_bd.Id, z=df_bd.Value,
+    #     marker=dict(opacity=0.15), colorscale='greys', showscale=False
+    # )
+
+    df_ind = pd.DataFrame({'Value': [0], 'Id': ["India"]})  # Use index 0
+    traceind = go.Choroplethmapbox(
+        geojson=indBounds,
+        featureidkey="properties.name",  # GeoPandas uses numeric id
+        locations=df_ind.Id,
+        z=df_ind.Value,
+        marker=dict(opacity=0.15),
+        colorscale='greys',
+        showscale=False
+    )
 
     trace = go.Choroplethmapbox(
         geojson=data_geojson, z=df_contour.Value,
@@ -136,6 +164,8 @@ def heatmapgeoJson(meta_data, title):
                     (0.65, '#800080'), (1, '#400040')],  # Discreet with continuous in group
     )
 
+    # trace = go.Choroplethmapbox()
+
     layout = go.Layout(
         title=title, title_x=0.4,
         width=1250,
@@ -146,16 +176,67 @@ def heatmapgeoJson(meta_data, title):
             center=dict(lat=center_coors[0], lon=center_coors[1]),
             # zoom=6.5,
             zoom=5.5,
-            style="carto-positron"
+            # style="carto-positron"
+            style="white-bg",
+            # style="navigation-night"
         )
+
     )
 
-    figure = dict(data=[tracebd, trace, districtBorder, district], layout=layout)
-    # print(figure)
+    # figure = dict(data=[tracebd, trace, districtBorder, district], layout=layout)
+    figure = dict(data=[tracebd, traceind, trace, districtBorder, district], layout=layout)
+    print(figure)
     iplot(figure)
 
 
 if __name__ == '__main__':
+    # with open('/home/asif/Desktop/Work/Dataset/Bangladesh/bdBounds.geojson') as file:
+    #     bdBounds = json.load(file)
+
+    # with open('/home/asif/Desktop/Work/Dataset/India/india-composite.geojson') as file:
+    # with open('/home/asif/Desktop/Work/Dataset/India/india-land-simplified.geojson') as file:
+    # with open('/home/asif/Desktop/Work/Dataset/India/india-osm.geojson') as file:
+    #     indBounds = json.load(file)
+
+    # 'geometry_name': 'the_geom',
+    # 'properties': {'ID_0': 19, 'ISO': 'BGD',
+    # 'NAME_ENGLI': 'Bangladesh', 'NAME_ISO': 'BANGLADESH',
+    # 'NAME_FAO': 'Bangladesh', 'NAME_LOCAL': 'Bangladesh',
+    # print(bdBounds)
+    # print(bdBounds.keys())
+    # print(type(bdBounds['features'][0]))
+    # print((bdBounds['features'][0].keys()))
+    #
+    # for k,v in bdBounds['features'][0].items():
+    #     print(f"{k}: {type(v)} {len(v)}")
+
+    # print(bdBounds['features'][0]['properties'])
+    # print(bdBounds['features'][0]['geometry'])
+
+    # print(indBounds)
+    # print(indBounds.keys())
+    # print(indBounds['features'][0])
+    # print(indBounds['features'][0].keys())
+    # print(indBounds['features'][0]['properties'])
+    # print(indBounds['features'][0]['type'])
+    # # print(type(indBounds['features'][0]['geometry']))
+    # print(indBounds['features'][0]['geometry'].keys())
+    # print(indBounds['type'])
+    # print(indBounds['crs'])
+
+    # world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+    # india_gdf = world[world.name == 'India']
+    #
+    # indBounds = json.loads(india_gdf.to_json())
+    #
+    # # DEBUG: Check the geojson structure
+    # print("India bounds keys:", indBounds.keys())
+    # if 'features' in indBounds and len(indBounds['features']) > 0:
+    #     print("India feature properties:", indBounds['features'][0]['properties'])
+
+    # exit()
+
+
     metaFrame, df = get_metadata(), get_series()['2018-01':'2021-12'].resample('H').mean()
     metadata_all, series_all, metadata_region_all, region_series_all, metadata_country_all, country_series_all = read_all_granularity_data()
     metaFrame, df = metadata_region_all, region_series_all['2018-01':'2021-12'].resample('H').mean()

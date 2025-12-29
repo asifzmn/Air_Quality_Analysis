@@ -151,11 +151,12 @@ def day_night_distribution_monthly(time_series, sampling_hours=1):
     fig.add_trace(go.Violin(x=time_series['month'][time_series['diurnal_name'] == 'night'],
                             y=time_series['reading'][time_series['diurnal_name'] == 'night'],
                             legendgroup='No', scalegroup='No', name='Night',
-                            side='positive', line_color='#040720')
+                            # side='positive', line_color='#040720')
+                            side='positive', line_color='#08306b')
                   )
     fig.update_traces(meanline_visible=True)
     fig.update_layout(violingap=0, violinmode='overlay', font_size=27, legend_orientation='h',
-                      xaxis_title="Year", yaxis_title="PM2.5 Concentration (µgm<sup>-3</sup>)", height=1000, template='plotly_white')
+                      xaxis_title="Month", yaxis_title="PM2.5 Concentration (µgm<sup>-3</sup>)", height=1000, template='plotly_white')
     fig.show()
 
 
@@ -407,7 +408,8 @@ def grouped_box_month_year(x):
     # color_pal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500', '#2471A3']
     # color_pal = ['#4AA02C', '#6AA121', '#7D0552', '#7D0500']
     # color_pal = ['#FF69B4', '#FF6EB4', '#44C5FF', '#64C0FF']
-    color_pal = ['#726E6D', '#726E6D', '#040720', '#040720']
+    # color_pal = ['#726E6D', '#726E6D', '#040720', '#040720']
+    color_pal = ['#726E6D', '#726E6D', '#2171b5', '#4292c6']
 
     boxplot_stats = {}
 
@@ -549,20 +551,21 @@ if __name__ == '__main__':
     # stacked_bar(region_series)
 
     # custom_time_series(country_series)
-    grouped_box_month_year(country_series['Bangladesh'])
-    # day_night_distribution_monthly(country_series[["Bangladesh"]])
+    # grouped_box_month_year(country_series['Bangladesh'])      # PAPER FIGURE
+    day_night_distribution_monthly(country_series[["Bangladesh"]]) # PAPER FIGURE
 
     # # plt.close("all")
     # # sns.set()
     # # # sns.set_style("whitegrid")
 
     # prepare_color_table()
+    # missing_data_heatmap(series)
     # missing_data_heatmap(region_series)
     # # BoxPlotHour(series)
     # # violin_plot_year(country_series)
 
     # day_night_distribution(country_series)
-    day_night_distribution_monthly(country_series[["Bangladesh"]])
+    # day_night_distribution_monthly(country_series[["Bangladesh"]])  # PAPER FIGURE
     # PLotlyTimeSeries(country_series)
     # print(region_series.columns)
     # box_plot_week(country_series)

@@ -1,0 +1,17 @@
+plotly==4.8.2
+scipy==1.4.1
+xarray==0.15.1
+statsmodels==0.12.2
+matplotlib==3.2.2
+seaborn==0.10.1
+more_itertools==8.4.0
+geojsoncontour==0.4.0
+pandas==1.0.5
+selenium==3.141.0
+tensorflow==2.2.0
+numpy==1.19.0
+requests==2.24.0
+geopandas==0.8.0
+geopy==2.0.0
+pyshp==2.3.0
+scikit_learn==0.24.2
