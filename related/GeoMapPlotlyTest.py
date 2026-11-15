@@ -29,7 +29,8 @@ def plotly_marker_static_map(metaFrame):
 
 def plotly_marker_scatter_mapbox():
     # mapbox_access_token = open(".mapbox_token").read()
-    mapbox_access_token = 'pk.eyJ1IjoiaG9vbmtlbmc5MyIsImEiOiJjam43cGhpNng2ZmpxM3JxY3Z4ODl2NWo3In0.SGRvJlToMtgRxw9ZWzPFrA'
+    from paths import MAPBOX_TOKEN  # kept in the git-ignored .env file
+    mapbox_access_token = MAPBOX_TOKEN
 
     fig = go.Figure(go.Scattermapbox(
         lat=['45.5017'],

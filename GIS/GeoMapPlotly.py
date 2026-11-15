@@ -15,7 +15,8 @@ import matplotlib.pyplot as plt
 
 from data_preparation import get_category_info, get_metadata, get_series, read_all_granularity_data
 
-access_token = 'pk.eyJ1IjoiaG9vbmtlbmc5MyIsImEiOiJjam43cGhpNng2ZmpxM3JxY3Z4ODl2NWo3In0.SGRvJlToMtgRxw9ZWzPFrA'
+from paths import MAPBOX_TOKEN  # kept in the git-ignored .env file
+access_token = MAPBOX_TOKEN
 
 
 def plotly_slider_mapbox(df, meta_data, timeformat, discrete=True):

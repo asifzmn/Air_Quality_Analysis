@@ -5,6 +5,18 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
+# Secrets live in a local, git-ignored .env file next to this module (e.g. MAPBOX_TOKEN=...).
+import os as _os
+_env_file = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '.env')
+if _os.path.exists(_env_file):
+    with open(_env_file) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith('#') and '=' in _line:
+                _k, _v = _line.split('=', 1)
+                _os.environ.setdefault(_k.strip(), _v.strip())
+MAPBOX_TOKEN = _os.environ.get('MAPBOX_TOKEN', '')
+
 berkeley_earth_dataset_url = 'http://berkeleyearth.lbl.gov/air-quality/maps/cities/'
 
 # aq_directory = '/home/asif/Datasets/AQ Dataset/'  # change this main dataset location Desktop
