@@ -10,6 +10,7 @@ Asif Zaman and Moinul Zaber. This folder holds the forecasting notebooks and the
 | `notebooks/AQ_NASA_FIRMS.ipynb` | Google Colab notebook: NASA FIRMS fire download and aggregation |
 | `figure_scripts/` | Scripts that produce the final figures and the numbers quoted in the text |
 | `figure_scripts/final_review/` | Checks added in the final revision: forecast significance and PM2.5-only ablation, cross-border distance decay, income vs location |
+| `data/` | Processed hourly PM2.5 series (55 zones, 8 divisions, 10 Indian states; UTC) and metadata, see `data/README.md` |
 | `validation_us_embassy/scripts/` | Berkeley Earth vs U.S. Embassy Dhaka validation and a stdlib `.xlsx` to `.csv` converter |
 
 ## Scripts and outputs
@@ -50,7 +51,7 @@ The scripts contain absolute paths for the data folder and some outputs (`/home/
 
 ## Data sources and licences
 
-Raw data are not redistributed here; obtain them from the providers.
+Raw data are not redistributed here; obtain them from the providers. The processed Berkeley Earth series in `data/` are shared under CC BY-NC 4.0.
 
 | Data | Licence / terms |
 |---|---|
