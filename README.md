@@ -23,3 +23,6 @@ Effect of mobility changes on air qulaity
 
 ## forecasting_model
 The forecasting model can be found at Google Colab.
+
+## Notebooks and scripts for the PLOS ONE paper
+The forecasting notebooks (Google Colab) and the scripts that reproduce the figures, tables and verification numbers of the PLOS ONE paper "Understanding and forecasting the pattern of air pollution in Bangladesh" are in [`paper_plos_one/`](paper_plos_one/README.md).
